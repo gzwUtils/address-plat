@@ -6,6 +6,7 @@ const api = axios.create({
   timeout: 10000
 })
 
+
 // 获取分类
 export const getCategories = () =>
   api.get('/projects/categories').then(res => res.data)
