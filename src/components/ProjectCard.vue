@@ -1,34 +1,27 @@
-<!-- src/components/ProjectCard.vue -->
 <template>
   <div class="project-card" @click="handleCardClick">
-    <!-- 图片区域 -->
+    <div class="card-glow" />
     <div class="card-image">
       <img
         :src="computedBackgroundImage"
-        @error="handleImageError"
         alt="项目封面"
         class="project-logo"
+        @error="handleImageError"
       />
     </div>
 
-    <!-- 内容区 -->
     <div class="card-content">
-      <h3 class="card-title">
-        {{ project.projectName || '未命名项目' }}
-      </h3>
-      <p class="card-desc">
-        {{ project.description || '点击卡片进入项目' }}
-      </p>
+      <div class="card-badge">{{ project.category || project.type || '门户资源' }}</div>
+      <h3 class="card-title">{{ project.projectName || '未命名项目' }}</h3>
+      <p class="card-desc">{{ project.description || '点击卡片进入项目' }}</p>
+      <div class="card-meta">
+        <span>{{ project.shortName || 'Portal' }}</span>
+        <span>{{ project.type || '项目' }}</span>
+      </div>
     </div>
 
-    <!-- 操作按钮（仅编辑者可见，hover 显示） -->
     <div v-if="isEditor" class="card-actions-overlay">
-      <el-button
-        circle
-        size="small"
-        @click.stop="emit('edit', project)"
-        title="编辑"
-      >
+      <el-button circle size="small" @click.stop="emit('edit', project)" title="编辑">
         <el-icon><EditPen /></el-icon>
       </el-button>
       <el-button
@@ -37,7 +30,6 @@
         type="danger"
         @click.stop="emit('delete', project.id)"
         title="删除"
-        style="margin-left: 6px;"
       >
         <el-icon><Delete /></el-icon>
       </el-button>
@@ -46,8 +38,9 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useUserStore } from '@/store'
-import { ElMessage } from 'element-plus'
 import { EditPen, Delete } from '@element-plus/icons-vue'
 
 const props = defineProps({
@@ -60,131 +53,138 @@ const props = defineProps({
 
 const emit = defineEmits(['edit', 'delete'])
 
+const router = useRouter()
 const userStore = useUserStore()
 const isEditor = userStore.isEditor
 
-// ✅ 计算最终的背景图 URL
 const computedBackgroundImage = computed(() => {
-  // 如果已有 backgroundImage 且非空，直接用
   if (props.project.backgroundImage) {
     return props.project.backgroundImage
   }
 
-  // 否则用 shortName 生成占位图
-  const shortName = (props.project.shortName || props.project.projectName || 'App').substring(0, 6)
-  // 对中文做安全处理：如果包含中文，用拼音首字母或固定缩写（简化方案：统一用英文 App）
-  const hasChinese = /[\u4e00-\u9fa5]/.test(shortName)
-  const displayText = hasChinese ? shortName : encodeURIComponent(shortName)
-
-  return `https://placehold.co/600x300/4F46E5/FFFFFF?text= ${displayText}`
+  const shortName = (props.project.shortName || props.project.projectName || 'Portal').substring(0, 8)
+  return `https://placehold.co/600x300/0F3A5E/EAF6FF?text=${encodeURIComponent(shortName)}`
 })
 
-const handleImageError = (e) => {
-  // 如果图片加载失败，fallback 到默认占位图
-  e.target.src = 'https://placehold.co/600x300/4F46E5/FFFFFF?text=App'
+const handleImageError = (event) => {
+  event.target.src = 'https://placehold.co/600x300/0F3A5E/EAF6FF?text=Portal'
 }
 
 const handleCardClick = () => {
-  const url = props.project.platformUrl
-  if (!url) {
-    ElMessage.warning('该项目未配置访问地址')
+  if (!props.project.id) {
     return
   }
-  window.open(url, '_blank', 'noopener,noreferrer')
+  router.push(`/project/${props.project.id}`)
 }
-</script>
-
-<script>
-import { computed } from 'vue'
 </script>
 
 <style scoped>
 .project-card {
-  background: white;
-  border-radius: 14px;
+  position: relative;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  transition: all 0.25s ease;
-  height: 100%;
   display: flex;
   flex-direction: column;
+  height: 100%;
+  border-radius: 22px;
+  border: 1px solid var(--portal-line);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02)),
+    rgba(7, 20, 37, 0.9);
   cursor: pointer;
-  position: relative;
-  border: 1px solid #f0f2f5;
+  transition: transform 0.26s ease, border-color 0.26s ease, box-shadow 0.26s ease;
 }
 
 .project-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
-  border-color: #e5e7eb;
+  transform: translateY(-6px);
+  border-color: rgba(89, 208, 255, 0.4);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.22);
+}
+
+.card-glow {
+  position: absolute;
+  inset: -40% auto auto 55%;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(89, 208, 255, 0.24), transparent 65%);
+  pointer-events: none;
 }
 
 .card-image {
-  width: 100%;
-  height: 120px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  overflow: hidden;
+  min-height: 138px;
+  padding: 20px;
 }
 
 .project-logo {
-  max-width: 90%;
-  max-height: 80px;
-  object-fit: contain;
-  transition: transform 0.2s;
-}
-
-.project-card:hover .project-logo {
-  transform: scale(1.05);
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 16px;
 }
 
 .card-content {
-  padding: 16px;
-  flex: 1;
+  position: relative;
+  z-index: 1;
   display: flex;
+  flex: 1;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
+  padding: 0 20px 20px;
+}
+
+.card-badge,
+.card-meta span {
+  display: inline-flex;
+  width: fit-content;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+.card-badge {
+  color: var(--portal-accent);
+  background: rgba(89, 208, 255, 0.12);
 }
 
 .card-title {
   margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: #1e293b;
+  font-size: 18px;
   line-height: 1.4;
-  word-break: break-word;
 }
 
 .card-desc {
   margin: 0;
-  color: #64748b;
-  font-size: 13px;
-  line-height: 1.5;
+  color: var(--portal-text-soft);
+  line-height: 1.7;
   flex: 1;
-  word-break: break-word;
 }
 
-/* 右上角操作按钮 */
+.card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.card-meta span {
+  color: #d9e8ff;
+  background: rgba(255, 255, 255, 0.06);
+}
+
 .card-actions-overlay {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 14px;
+  right: 14px;
+  z-index: 2;
   display: flex;
+  gap: 8px;
   opacity: 0;
-  transition: opacity 0.2s;
-  z-index: 10;
+  transition: opacity 0.2s ease;
 }
 
 .project-card:hover .card-actions-overlay {
   opacity: 1;
-}
-
-/* 禁用文本选中 */
-.project-card {
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  user-select: none;
 }
 </style>

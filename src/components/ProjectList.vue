@@ -1,12 +1,6 @@
-<!-- src/views/HomeView.vue -->
+<!-- src/components/ProjectList.vue -->
 <template>
-  <div class="home">
-    <!-- 头部 -->
-    <div class="header">
-      <h1 class="platform-title">kd门户聚合平台</h1>
-      <p class="tip">温馨提示：该平台为公司内部各项目地址聚合平台，不提供账号密码。如需访问，请联系负责人。</p>
-    </div>
-
+  <div class="project-list">
     <!-- 分类标签 -->
     <el-tabs
       v-model="activeCategory"
@@ -38,12 +32,7 @@
       <div class="grid">
         <!-- 加载中 -->
         <template v-if="loading">
-          <el-skeleton
-            v-for="i in 6"
-            :key="i"
-            animated
-            :throttle="0"
-          >
+          <el-skeleton v-for="i in 6" :key="i" animated :throttle="0">
             <template #template>
               <div class="project-card-skeleton">
                 <el-skeleton-item variant="image" style="width: 100%; height: 100px;" />
@@ -93,11 +82,9 @@ import ProjectForm from '@/components/ProjectForm.vue'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 
-// ====== 用户权限 ======
 const userStore = useUserStore()
 const isEditor = userStore.isEditor
 
-// ====== 数据状态 ======
 const categories = ref([])
 const activeCategory = ref('')
 const projects = ref([])
@@ -105,7 +92,6 @@ const formVisible = ref(false)
 const editingProject = ref({})
 const loading = ref(false)
 
-// ====== 业务逻辑 ======
 const loadCategories = async () => {
   try {
     const data = await getCategories()
@@ -116,7 +102,7 @@ const loadCategories = async () => {
     await loadProjects()
   } catch (err) {
     console.warn('加载分类失败', err)
-    ElMessage.warning('加载分类失败，使用默认分类')
+    ElMessage.warning('加载分类失败,使用默认分类')
     categories.value = ['默认']
     activeCategory.value = '默认'
     await loadProjects()
@@ -128,8 +114,6 @@ const loadProjects = async () => {
   loading.value = true
   try {
     projects.value = await getProjects(activeCategory.value)
-    // 调试用：可临时保留或删除
-    // if (projects.value.length > 0) console.log('项目数据示例:', projects.value[0])
   } catch (error) {
     console.warn('加载项目失败', error)
     ElMessage.error('加载项目失败')
@@ -154,7 +138,7 @@ const editProject = (project) => {
 
 const handleDelete = async (id) => {
   try {
-    await ElMessageBox.confirm('确定删除该项目？', '提示', { type: 'warning' })
+    await ElMessageBox.confirm('确定删除该项目?', '提示', { type: 'warning' })
     await deleteProject(id)
     ElMessage.success('删除成功')
     reloadAll()
@@ -169,51 +153,42 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.home {
-  padding: 24px;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background-color: #f8fafc;
-  box-sizing: border-box;
-}
-
-.header {
-  text-align: center;
-  margin-bottom: 24px;
-  flex-shrink: 0;
-}
-
-.platform-title {
-  margin: 0;
-  font-size: 28px;
-  font-weight: 700;
-  color: #1f2d3d;
-  line-height: 1.2;
-}
-
-.tip {
-  color: #99a9bf;
-  font-size: 14px;
-  margin-top: 8px;
-  line-height: 1.5;
+.project-list {
+  width: 100%;
 }
 
 .category-tabs {
   margin-bottom: 16px;
-  flex-shrink: 0;
+}
+
+.category-tabs :deep(.el-tabs__header) {
+  margin-bottom: 8px;
+}
+
+.category-tabs :deep(.el-tabs__item) {
+  color: var(--portal-text-soft);
+}
+
+.category-tabs :deep(.el-tabs__item.is-active) {
+  color: var(--portal-accent);
+}
+
+.category-tabs :deep(.el-tabs__nav) {
+  border: 1px solid var(--portal-line);
+}
+
+.category-tabs :deep(.el-tabs__item.is-top) {
+  border-bottom: 0;
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .toolbar {
   margin: 16px 0 20px;
   text-align: right;
-  flex-shrink: 0;
 }
 
 .grid-container {
-  flex: 1;
-  overflow-y: auto;
-  padding-right: 8px;
+  width: 100%;
 }
 
 .grid {
@@ -226,14 +201,14 @@ onMounted(() => {
 .empty-tip,
 .no-projects {
   text-align: center;
-  color: #999;
+  color: var(--portal-text-soft);
   margin-top: 40px;
 }
 
 .project-card-skeleton {
-  border-radius: 12px;
+  border-radius: 18px;
   overflow: hidden;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-  background: white;
+  border: 1px solid var(--portal-line);
+  background: rgba(255, 255, 255, 0.04);
 }
 </style>

@@ -1,13 +1,14 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import path from 'path'
+import { fileURLToPath, URL } from 'node:url'
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [vue()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src')
+      '@': path.resolve(fileURLToPath(new URL('.', import.meta.url)), './src')
     }
   },
   server: {
@@ -24,6 +25,31 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: false
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules/@element-plus/icons-vue')) {
+            return 'vendor-element-icons'
+          }
+
+          if (id.includes('node_modules/element-plus')) {
+            return 'vendor-element-plus'
+          }
+
+          if (id.includes('node_modules/vue') || id.includes('node_modules/pinia') || id.includes('node_modules/vue-router')) {
+            return 'vendor-vue'
+          }
+
+          if (id.includes('node_modules/axios')) {
+            return 'vendor-axios'
+          }
+
+          if (id.includes('/src/data/') || id.includes('/src/composables/')) {
+            return 'portal'
+          }
+        }
+      }
+    }
   }
 })

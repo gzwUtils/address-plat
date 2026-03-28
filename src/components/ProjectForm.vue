@@ -139,7 +139,7 @@ const submitForm = async () => {
     ElMessage.success('保存成功')
     emit('saved')
     visible.value = false
-  } catch (err) {
+  } catch {
     ElMessage.error('保存失败')
   } finally {
     submitting.value = false
