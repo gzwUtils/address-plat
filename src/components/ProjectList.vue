@@ -58,7 +58,6 @@
           :key="p.id"
           :project="p"
           @edit="editProject"
-          @delete="handleDelete"
         />
       </div>
     </div>
@@ -76,10 +75,10 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useUserStore } from '@/store'
-import { getProjects, deleteProject, getCategories } from '@/api/project'
+import { getProjects, getCategories } from '@/api/project'
 import ProjectCard from '@/components/ProjectCard.vue'
 import ProjectForm from '@/components/ProjectForm.vue'
-import { ElMessageBox, ElMessage } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 
 const userStore = useUserStore()
@@ -136,16 +135,6 @@ const editProject = (project) => {
   showForm(project)
 }
 
-const handleDelete = async (id) => {
-  try {
-    await ElMessageBox.confirm('确定删除该项目?', '提示', { type: 'warning' })
-    await deleteProject(id)
-    ElMessage.success('删除成功')
-    reloadAll()
-  } catch (error) {
-    if (error !== 'cancel') ElMessage.error('操作失败')
-  }
-}
 
 onMounted(() => {
   loadCategories()

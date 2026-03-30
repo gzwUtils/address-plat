@@ -24,15 +24,6 @@
       <el-button circle size="small" @click.stop="emit('edit', project)" title="编辑">
         <el-icon><EditPen /></el-icon>
       </el-button>
-      <el-button
-        circle
-        size="small"
-        type="danger"
-        @click.stop="emit('delete', project.id)"
-        title="删除"
-      >
-        <el-icon><Delete /></el-icon>
-      </el-button>
     </div>
   </div>
 </template>
@@ -41,7 +32,7 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/store'
-import { EditPen, Delete } from '@element-plus/icons-vue'
+import { EditPen } from '@element-plus/icons-vue'
 
 const props = defineProps({
   project: {
@@ -51,7 +42,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['edit', 'delete'])
+const emit = defineEmits(['edit'])
 
 const router = useRouter()
 const userStore = useUserStore()

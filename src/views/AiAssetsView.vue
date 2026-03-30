@@ -5,8 +5,7 @@
         <span class="eyebrow">AI Workspace</span>
         <h1>AI 资产中心</h1>
         <p>
-          将智能体、Skill、MCP 与 OpenClaw 工作流做成可管理资产。这里已经接入后端保存接口，
-          支持真实新增、编辑、删除；当后端暂时不可用时，仍会显示本地兜底数据。
+          将智能体、Skill、MCP 与 OpenClaw 工作流做成可管理资产，支持新增与编辑。
         </p>
       </div>
       <div class="hero-stats">
@@ -52,9 +51,6 @@
 
       <div class="control-summary">
         <el-tag effect="plain" type="info">筛选结果 {{ filteredAssets.length }}</el-tag>
-        <el-tag effect="plain" :type="usingFallback ? 'warning' : 'success'">
-          {{ usingFallback ? '当前使用本地兜底数据' : '当前使用后端数据' }}
-        </el-tag>
       </div>
     </section>
 
@@ -137,9 +133,6 @@
           </el-button>
           <el-button plain :icon="DocumentCopy" @click="copyEntry(selectedAsset.entryUrl)">
             复制地址
-          </el-button>
-          <el-button type="danger" plain :icon="Delete" @click="handleDelete(selectedAsset)">
-            删除
           </el-button>
         </div>
       </aside>
@@ -225,17 +218,14 @@
 
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { Delete, DocumentCopy, EditPen, Link } from '@element-plus/icons-vue'
-import { deleteAiAsset, getAiAssetsWithFallback, saveAiAsset } from '@/api/content'
-import { portalResources } from '@/data/portal'
+import { ElMessage } from 'element-plus'
+import { DocumentCopy, EditPen, Link } from '@element-plus/icons-vue'
+import { getAiAssetsWithFallback, saveAiAsset } from '@/api/content'
 
-const fallbackAssets = portalResources.aiAssets
 const aiAssets = ref([])
 const selectedAsset = ref(null)
 const activeType = ref('all')
 const activeStatus = ref('all')
-const usingFallback = ref(false)
 const dialogVisible = ref(false)
 const submitting = ref(false)
 const formRef = ref(null)
@@ -317,12 +307,7 @@ function normalizeAsset(asset) {
 
 async function loadAssets() {
   const { data, fallback } = await getAiAssetsWithFallback({ size: 100 })
-  aiAssets.value = (fallback ? fallbackAssets : data).map(normalizeAsset)
-  usingFallback.value = fallback
-
-  if (fallback) {
-    ElMessage.warning('AI 资产接口不可用，已切换为本地数据')
-  }
+  aiAssets.value = (fallback ? [] : data).map(normalizeAsset)
 }
 
 function openCreateDialog() {
@@ -349,7 +334,6 @@ async function submitForm() {
       aiAssets.value.unshift(normalized)
     }
 
-    usingFallback.value = false
     selectedAsset.value = normalized
     dialogVisible.value = false
     ElMessage.success('保存成功')
@@ -358,20 +342,6 @@ async function submitForm() {
     ElMessage.error('保存失败，请确认后端接口已启动')
   } finally {
     submitting.value = false
-  }
-}
-
-async function handleDelete(asset) {
-  try {
-    await ElMessageBox.confirm(`确认删除「${asset.name}」？`, '提示', { type: 'warning' })
-    await deleteAiAsset(asset.id)
-    aiAssets.value = aiAssets.value.filter((item) => item.id !== asset.id)
-    ElMessage.success('删除成功')
-  } catch (error) {
-    if (error !== 'cancel') {
-      console.warn('删除 AI 资产失败', error)
-      ElMessage.error('删除失败，请确认后端接口已启动')
-    }
   }
 }
 

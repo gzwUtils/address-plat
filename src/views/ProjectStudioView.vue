@@ -88,7 +88,6 @@
         <div class="detail-actions">
           <el-button type="primary" :icon="Link" @click="openProject(selectedProject)">打开项目</el-button>
           <el-button plain :icon="EditPen" @click="openEditDialog(selectedProject)">编辑</el-button>
-          <el-button type="danger" plain :icon="Delete" @click="handleDelete(selectedProject)">删除</el-button>
         </div>
       </aside>
     </section>
@@ -104,10 +103,10 @@
 
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { Delete, EditPen, Link } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
+import { EditPen, Link } from '@element-plus/icons-vue'
 import ProjectForm from '@/components/ProjectForm.vue'
-import { deleteProject, getCategories, getProjects } from '@/api/project'
+import { getCategories, getProjects } from '@/api/project'
 
 const projects = ref([])
 const categories = ref([])
@@ -162,20 +161,6 @@ async function handleSaved() {
   await loadProjects()
   dialogVisible.value = false
   ElMessage.success('项目已更新')
-}
-
-async function handleDelete(project) {
-  try {
-    await ElMessageBox.confirm(`确认删除项目「${project.projectName}」？`, '提示', { type: 'warning' })
-    await deleteProject(project.id)
-    await loadProjects()
-    ElMessage.success('删除成功')
-  } catch (error) {
-    if (error !== 'cancel') {
-      console.warn('删除项目失败', error)
-      ElMessage.error('删除失败')
-    }
-  }
 }
 
 function openProject(project) {

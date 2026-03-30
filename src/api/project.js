@@ -5,14 +5,13 @@ const api = axios.create({
   timeout: 10000
 })
 
+const unwrap = (res) => res.data?.data ?? res.data
+
 export const getCategories = () =>
-  api.get('/projects/categories').then((res) => res.data)
+  api.get('/projects/categories').then(unwrap)
 
 export const getProjects = (category) =>
-  api.get('/projects', { params: { category } }).then((res) => res.data)
+  api.get('/projects', { params: { category } }).then(unwrap)
 
 export const saveProject = (project) =>
-  api.post('/projects', project).then((res) => res.data)
-
-export const deleteProject = (id) =>
-  api.delete(`/projects/${id}`).then((res) => res.data)
+  api.post('/projects', project).then(unwrap)

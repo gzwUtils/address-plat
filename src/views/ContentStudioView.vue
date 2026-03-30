@@ -5,8 +5,7 @@
         <span class="eyebrow">Content Studio</span>
         <h1>统一资源管理</h1>
         <p>
-          在一个视图里维护文章、AI 资产和生活内容。当前已接入后端统一资源接口，
-          可用于门户运营、知识整理和内容编排。
+          在一个视图里维护文章、AI 资产和生活内容，可用于门户运营、知识整理和内容编排。
         </p>
       </div>
       <div class="hero-stats">
@@ -40,9 +39,6 @@
       </div>
       <div class="control-summary">
         <el-tag effect="plain" type="info">筛选结果 {{ filteredResources.length }}</el-tag>
-        <el-tag effect="plain" :type="usingFallback ? 'warning' : 'success'">
-          {{ usingFallback ? '当前使用本地兜底数据' : '当前使用后端数据' }}
-        </el-tag>
       </div>
     </section>
 
@@ -100,7 +96,6 @@
         </div>
         <div class="detail-actions">
           <el-button plain :icon="EditPen" @click="openEditDialog(selectedResource)">编辑</el-button>
-          <el-button type="danger" plain :icon="Delete" @click="handleDelete(selectedResource)">删除</el-button>
         </div>
       </aside>
     </section>
@@ -194,19 +189,16 @@
 
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { Delete, EditPen } from '@element-plus/icons-vue'
-import { deleteContentResource, getContentResourcesWithFallback, saveContentResource } from '@/api/content'
-import { portalResources } from '@/data/portal'
+import { ElMessage } from 'element-plus'
+import { EditPen } from '@element-plus/icons-vue'
+import { getContentResourcesWithFallback, saveContentResource } from '@/api/content'
 import { clearContentDraft, loadContentDraft, saveContentDraft } from '@/utils/contentDraft'
 import { renderMarkdown } from '@/utils/markdown'
 
-const fallbackResources = [...portalResources.articles, ...portalResources.aiAssets, ...portalResources.lifeFeeds]
 const resources = ref([])
 const selectedResource = ref(null)
 const activeKind = ref('all')
 const keyword = ref('')
-const usingFallback = ref(false)
 const dialogVisible = ref(false)
 const submitting = ref(false)
 const formRef = ref(null)
@@ -409,11 +401,7 @@ function scheduleDraftSave() {
 
 async function loadResources() {
   const { data, fallback } = await getContentResourcesWithFallback({ size: 200 })
-  resources.value = (fallback ? fallbackResources : data).map(normalizeResource)
-  usingFallback.value = fallback
-  if (fallback) {
-    ElMessage.warning('统一资源接口不可用，已切换为本地数据')
-  }
+  resources.value = (fallback ? [] : data).map(normalizeResource)
 }
 
 function openCreateDialog() {
@@ -449,7 +437,6 @@ async function submitForm() {
       resources.value.unshift(normalized)
     }
     selectedResource.value = normalized
-    usingFallback.value = false
     if (normalized.kind === 'article') {
       clearContentDraft(normalized.kind, 'new')
       if (normalized.id) {
@@ -465,20 +452,6 @@ async function submitForm() {
     ElMessage.error('保存失败，请确认后端接口已启动')
   } finally {
     submitting.value = false
-  }
-}
-
-async function handleDelete(item) {
-  try {
-    await ElMessageBox.confirm(`确认删除「${item.name || item.title}」？`, '提示', { type: 'warning' })
-    await deleteContentResource(item.id)
-    resources.value = resources.value.filter((resource) => resource.id !== item.id)
-    ElMessage.success('删除成功')
-  } catch (error) {
-    if (error !== 'cancel') {
-      console.warn('删除统一资源失败', error)
-      ElMessage.error('删除失败，请确认后端接口已启动')
-    }
   }
 }
 
