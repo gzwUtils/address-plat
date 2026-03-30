@@ -139,10 +139,9 @@ watch(filteredProjects, (items) => {
 
 async function loadProjects() {
   try {
-    const categoryList = await getCategories()
+    const [categoryList, projectList] = await Promise.all([getCategories(), getProjects()])
     categories.value = Array.isArray(categoryList) ? categoryList : []
-    const groups = await Promise.all(categories.value.map((category) => getProjects(category)))
-    projects.value = groups.flat()
+    projects.value = Array.isArray(projectList) ? projectList : []
   } catch (error) {
     console.warn('加载项目管理数据失败', error)
     ElMessage.error('加载项目数据失败')
