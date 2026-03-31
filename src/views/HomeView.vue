@@ -68,7 +68,9 @@
           v-for="p in projects"
           :key="p.id"
           :project="p"
+          :can-edit="isOwnedByUser(p, currentUserId)"
           @edit="editProject"
+          @deleted="loadProjects"
         />
       </div>
     </div>
@@ -84,13 +86,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useUserStore } from '@/store'
 import { getProjects, getCategories } from '@/api/project'
 import ProjectCard from '@/components/ProjectCard.vue'
 import ProjectForm from '@/components/ProjectForm.vue'
 import { ElMessage } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
+import { isOwnedByUser } from '@/utils/ownership'
 
 // ====== 用户权限 ======
 const userStore = useUserStore()
@@ -103,6 +106,7 @@ const projects = ref([])
 const formVisible = ref(false)
 const editingProject = ref({})
 const loading = ref(false)
+const currentUserId = computed(() => userStore.userId)
 
 // ====== 业务逻辑 ======
 const loadCategories = async () => {
@@ -148,6 +152,10 @@ const showForm = (project = {}) => {
 }
 
 const editProject = (project) => {
+  if (!isOwnedByUser(project, currentUserId.value)) {
+    ElMessage.warning('只能修改自己上传的项目')
+    return
+  }
   showForm(project)
 }
 

@@ -78,6 +78,10 @@
             <span>归属类型</span>
             <strong>{{ selectedProject.type || '未设置' }}</strong>
           </div>
+          <div class="detail-item">
+            <span>上传人</span>
+            <strong>{{ selectedProject.ownerName || '历史共享项目' }}</strong>
+          </div>
         </div>
         <div class="link-block">
           <h3>访问地址</h3>
@@ -87,7 +91,9 @@
         </div>
         <div class="detail-actions">
           <el-button type="primary" :icon="Link" @click="openProject(selectedProject)">打开项目</el-button>
-          <el-button plain :icon="EditPen" @click="openEditDialog(selectedProject)">编辑</el-button>
+          <el-button v-if="canEditSelected" plain :icon="EditPen" @click="openEditDialog(selectedProject)">编辑</el-button>
+          <el-button v-if="canEditSelected" plain type="danger" @click="handleDelete(selectedProject)">删除</el-button>
+          <span v-else class="permission-tip">仅上传人可修改或删除</span>
         </div>
       </aside>
     </section>
@@ -103,11 +109,14 @@
 
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { EditPen, Link } from '@element-plus/icons-vue'
 import ProjectForm from '@/components/ProjectForm.vue'
-import { getCategories, getProjects } from '@/api/project'
+import { deleteProject, getCategories, getProjects } from '@/api/project'
+import { useUserStore } from '@/store'
+import { isOwnedByUser } from '@/utils/ownership'
 
+const userStore = useUserStore()
 const projects = ref([])
 const categories = ref([])
 const selectedProject = ref(null)
@@ -115,6 +124,7 @@ const activeCategory = ref('all')
 const keyword = ref('')
 const dialogVisible = ref(false)
 const editingProject = ref({})
+const canEditSelected = computed(() => isOwnedByUser(selectedProject.value, userStore.userId))
 
 const filteredProjects = computed(() =>
   projects.value.filter((item) => {
@@ -153,8 +163,34 @@ function openCreateDialog() {
 }
 
 function openEditDialog(project) {
+  if (!isOwnedByUser(project, userStore.userId)) {
+    ElMessage.warning('只能修改自己上传的项目')
+    return
+  }
   editingProject.value = { ...project }
   dialogVisible.value = true
+}
+
+async function handleDelete(project) {
+  if (!isOwnedByUser(project, userStore.userId)) {
+    ElMessage.warning('只能删除自己上传的项目')
+    return
+  }
+
+  try {
+    await ElMessageBox.confirm(`确认删除项目「${project.projectName}」吗？`, '删除确认', {
+      type: 'warning'
+    })
+    await deleteProject(project.id)
+    ElMessage.success('项目已删除')
+    await loadProjects()
+  } catch (error) {
+    if (error === 'cancel') {
+      return
+    }
+    console.warn('删除项目失败', error)
+    ElMessage.error('删除失败，请确认后端已支持删除接口')
+  }
 }
 
 async function handleSaved() {
@@ -391,6 +427,13 @@ onMounted(() => {
   flex-wrap: wrap;
   gap: 12px;
   margin-top: 24px;
+}
+
+.permission-tip {
+  display: inline-flex;
+  align-items: center;
+  color: var(--portal-text-soft);
+  font-size: 13px;
 }
 
 @media (max-width: 1080px) {

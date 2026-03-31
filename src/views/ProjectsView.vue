@@ -151,17 +151,19 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import ProjectList from '@/components/ProjectList.vue'
 import { usePortalContent } from '@/composables/usePortalContent'
 import { contentKinds } from '@/data/portal-contract'
 import { estimateReadingMinutes } from '@/utils/markdown'
+import { getProjects } from '@/api/project'
 
 const route = useRoute()
 const router = useRouter()
 
 const activeTab = ref('projects')
+const projectCount = ref(0)
 const activeKeyword = computed(() => {
   const keyword = route.query.keyword
   return typeof keyword === 'string' ? keyword.trim() : ''
@@ -176,10 +178,10 @@ const {
 } = usePortalContent(activeKeyword)
 
 const introStats = computed(() => [
-  { value: '项目', label: '保留原入口聚合能力' },
-  { value: `${portalResources.articles.length}`, label: '知识内容已纳入门户' },
-  { value: `${portalResources.aiAssets.length}`, label: 'AI 资产可继续扩展' },
-  { value: `${portalResources.lifeFeeds.length}`, label: '生活化内容增强温度' }
+  { value: `${projectCount.value} 个`, label: '项目资源' },
+  { value: `${portalResources.articles.length} 篇`, label: '知识内容' },
+  { value: `${portalResources.aiAssets.length} 个`, label: 'AI 资产' },
+  { value: `${portalResources.lifeFeeds.length} 条`, label: '生活灵感' }
 ])
 
 const statusLabelMap = {
@@ -193,6 +195,16 @@ const estimateArticleMinutes = (item) =>
 
 const openDetail = (mode, item) => {
   router.push(`/explore/${mode}/${item.id}`)
+}
+
+const loadProjectCount = async () => {
+  try {
+    const data = await getProjects()
+    projectCount.value = Array.isArray(data) ? data.length : 0
+  } catch (error) {
+    console.warn('读取项目统计失败', error)
+    projectCount.value = 0
+  }
 }
 
 watch(activeKeyword, (keyword) => {
@@ -213,6 +225,10 @@ watch(activeKeyword, (keyword) => {
   if (filteredLifeFeeds.value.length > 0) {
     activeTab.value = contentKinds.life
   }
+})
+
+onMounted(() => {
+  loadProjectCount()
 })
 </script>
 

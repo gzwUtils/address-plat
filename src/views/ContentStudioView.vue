@@ -90,12 +90,18 @@
             <span>作者</span>
             <strong>{{ selectedResource.author || '匿名作者' }}</strong>
           </div>
+          <div class="detail-item">
+            <span>上传人</span>
+            <strong>{{ selectedResource.ownerName || '历史共享资源' }}</strong>
+          </div>
         </div>
         <div class="tag-row large">
           <span v-for="tag in selectedResource.tags || []" :key="tag">{{ tag }}</span>
         </div>
         <div class="detail-actions">
-          <el-button plain :icon="EditPen" @click="openEditDialog(selectedResource)">编辑</el-button>
+          <el-button v-if="canEditSelected" plain :icon="EditPen" @click="openEditDialog(selectedResource)">编辑</el-button>
+          <el-button v-if="canEditSelected" plain type="danger" @click="handleDelete(selectedResource)">删除</el-button>
+          <span v-else class="permission-tip">仅上传人可修改或删除</span>
         </div>
       </aside>
     </section>
@@ -189,12 +195,15 @@
 
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { EditPen } from '@element-plus/icons-vue'
-import { getContentResourcesWithFallback, saveContentResource } from '@/api/content'
+import { deleteContentResource, getContentResourcesWithFallback, saveContentResource } from '@/api/content'
+import { useUserStore } from '@/store'
 import { clearContentDraft, loadContentDraft, saveContentDraft } from '@/utils/contentDraft'
 import { renderMarkdown } from '@/utils/markdown'
+import { isOwnedByUser, withOwnership } from '@/utils/ownership'
 
+const userStore = useUserStore()
 const resources = ref([])
 const selectedResource = ref(null)
 const activeKind = ref('all')
@@ -208,6 +217,7 @@ const draftSavedAtText = ref('')
 const imageUrl = ref('')
 const imageAltText = ref('')
 let draftTimer = null
+const canEditSelected = computed(() => isOwnedByUser(selectedResource.value, userStore.userId))
 
 const kindLabelMap = {
   article: '文章',
@@ -413,6 +423,10 @@ function openCreateDialog() {
 }
 
 function openEditDialog(item) {
+  if (!isOwnedByUser(item, userStore.userId)) {
+    ElMessage.warning('只能修改自己上传的资源')
+    return
+  }
   editingResource.value = normalizeResource(item)
   imageUrl.value = ''
   imageAltText.value = ''
@@ -428,7 +442,15 @@ async function submitForm() {
 
   submitting.value = true
   try {
-    const saved = await saveContentResource(editingResource.value)
+    const payload = withOwnership(editingResource.value, {
+      userId: userStore.userId,
+      userName: userStore.userName
+    })
+    if (payload.id && !isOwnedByUser(payload, userStore.userId)) {
+      ElMessage.warning('只能修改自己上传的资源')
+      return
+    }
+    const saved = await saveContentResource(payload)
     const normalized = normalizeResource(saved)
     const index = resources.value.findIndex((item) => item.id === normalized.id)
     if (index >= 0) {
@@ -452,6 +474,29 @@ async function submitForm() {
     ElMessage.error('保存失败，请确认后端接口已启动')
   } finally {
     submitting.value = false
+  }
+}
+
+async function handleDelete(resource) {
+  if (!isOwnedByUser(resource, userStore.userId)) {
+    ElMessage.warning('只能删除自己上传的资源')
+    return
+  }
+
+  try {
+    await ElMessageBox.confirm(`确认删除「${resource.name || resource.title}」吗？`, '删除确认', {
+      type: 'warning'
+    })
+    await deleteContentResource(resource.id)
+    resources.value = resources.value.filter((item) => !(item.id === resource.id && item.kind === resource.kind))
+    selectedResource.value = filteredResources.value[0] || null
+    ElMessage.success('资源已删除')
+  } catch (error) {
+    if (error === 'cancel') {
+      return
+    }
+    console.warn('删除统一资源失败', error)
+    ElMessage.error('删除失败，请确认后端接口已启动')
   }
 }
 
@@ -728,8 +773,16 @@ watch(
 
 .detail-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 12px;
   margin-top: 24px;
+}
+
+.permission-tip {
+  display: inline-flex;
+  align-items: center;
+  color: var(--portal-text-soft);
+  font-size: 13px;
 }
 
 .markdown-editor {

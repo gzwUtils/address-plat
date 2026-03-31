@@ -108,6 +108,10 @@
             <span>更新日期</span>
             <strong>{{ selectedAsset.updatedAt || '未设置' }}</strong>
           </div>
+          <div class="detail-item">
+            <span>上传人</span>
+            <strong>{{ selectedAsset.ownerName || '历史共享资产' }}</strong>
+          </div>
         </div>
 
         <div class="capability-block">
@@ -128,12 +132,16 @@
           <el-button type="primary" :icon="Link" @click="openEntry(selectedAsset)">
             打开入口
           </el-button>
-          <el-button plain :icon="EditPen" @click="openEditDialog(selectedAsset)">
+          <el-button v-if="canEditSelected" plain :icon="EditPen" @click="openEditDialog(selectedAsset)">
             编辑
+          </el-button>
+          <el-button v-if="canEditSelected" plain type="danger" @click="handleDelete(selectedAsset)">
+            删除
           </el-button>
           <el-button plain :icon="DocumentCopy" @click="copyEntry(selectedAsset.entryUrl)">
             复制地址
           </el-button>
+          <span v-if="!canEditSelected" class="permission-tip">仅上传人可修改或删除</span>
         </div>
       </aside>
     </section>
@@ -218,10 +226,13 @@
 
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { DocumentCopy, EditPen, Link } from '@element-plus/icons-vue'
-import { getAiAssetsWithFallback, saveAiAsset } from '@/api/content'
+import { deleteAiAsset, getAiAssetsWithFallback, saveAiAsset } from '@/api/content'
+import { useUserStore } from '@/store'
+import { isOwnedByUser, withOwnership } from '@/utils/ownership'
 
+const userStore = useUserStore()
 const aiAssets = ref([])
 const selectedAsset = ref(null)
 const activeType = ref('all')
@@ -230,6 +241,7 @@ const dialogVisible = ref(false)
 const submitting = ref(false)
 const formRef = ref(null)
 const editingAsset = ref(createEmptyAsset())
+const canEditSelected = computed(() => isOwnedByUser(selectedAsset.value, userStore.userId))
 
 const statusLabelMap = {
   online: '在线',
@@ -316,6 +328,10 @@ function openCreateDialog() {
 }
 
 function openEditDialog(asset) {
+  if (!isOwnedByUser(asset, userStore.userId)) {
+    ElMessage.warning('只能修改自己上传的 AI 资产')
+    return
+  }
   editingAsset.value = normalizeAsset(asset)
   dialogVisible.value = true
 }
@@ -324,7 +340,15 @@ async function submitForm() {
   await formRef.value?.validate()
   submitting.value = true
   try {
-    const saved = await saveAiAsset(editingAsset.value)
+    const payload = withOwnership(editingAsset.value, {
+      userId: userStore.userId,
+      userName: userStore.userName
+    })
+    if (payload.id && !isOwnedByUser(payload, userStore.userId)) {
+      ElMessage.warning('只能修改自己上传的 AI 资产')
+      return
+    }
+    const saved = await saveAiAsset(payload)
     const normalized = normalizeAsset(saved)
     const index = aiAssets.value.findIndex((item) => item.id === normalized.id)
 
@@ -342,6 +366,29 @@ async function submitForm() {
     ElMessage.error('保存失败，请确认后端接口已启动')
   } finally {
     submitting.value = false
+  }
+}
+
+async function handleDelete(asset) {
+  if (!isOwnedByUser(asset, userStore.userId)) {
+    ElMessage.warning('只能删除自己上传的 AI 资产')
+    return
+  }
+
+  try {
+    await ElMessageBox.confirm(`确认删除 AI 资产「${asset.name}」吗？`, '删除确认', {
+      type: 'warning'
+    })
+    await deleteAiAsset(asset.id)
+    aiAssets.value = aiAssets.value.filter((item) => item.id !== asset.id)
+    selectedAsset.value = filteredAssets.value[0] || null
+    ElMessage.success('AI 资产已删除')
+  } catch (error) {
+    if (error === 'cancel') {
+      return
+    }
+    console.warn('删除 AI 资产失败', error)
+    ElMessage.error('删除失败，请确认后端接口已启动')
   }
 }
 
@@ -596,6 +643,13 @@ onMounted(() => {
   flex-wrap: wrap;
   gap: 12px;
   margin-top: 24px;
+}
+
+.permission-tip {
+  display: inline-flex;
+  align-items: center;
+  color: var(--portal-text-soft);
+  font-size: 13px;
 }
 
 .form-grid {

@@ -17,10 +17,16 @@
       <div class="card-meta">
         <span>{{ project.shortName || 'Portal' }}</span>
         <span>{{ project.type || '项目' }}</span>
+        <span v-if="project.ownerName" class="owner-tag">
+          上传者: {{ project.ownerName }}
+        </span>
       </div>
     </div>
 
-    <div v-if="isEditor" class="card-actions-overlay">
+    <div v-if="canEdit" class="card-actions-overlay">
+      <el-button circle size="small" @click.stop="handleDelete" title="删除">
+        <el-icon><Delete /></el-icon>
+      </el-button>
       <el-button circle size="small" @click.stop="emit('edit', project)" title="编辑">
         <el-icon><EditPen /></el-icon>
       </el-button>
@@ -31,22 +37,25 @@
 <script setup>
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { useUserStore } from '@/store'
-import { EditPen } from '@element-plus/icons-vue'
+import { EditPen, Delete } from '@element-plus/icons-vue'
+import { ElMessageBox, ElMessage } from 'element-plus'
+import { deleteProject } from '@/api/project'
 
 const props = defineProps({
   project: {
     type: Object,
     required: true,
     default: () => ({})
+  },
+  canEdit: {
+    type: Boolean,
+    default: false
   }
 })
 
-const emit = defineEmits(['edit'])
+const emit = defineEmits(['edit', 'deleted'])
 
 const router = useRouter()
-const userStore = useUserStore()
-const isEditor = userStore.isEditor
 
 const computedBackgroundImage = computed(() => {
   if (props.project.backgroundImage) {
@@ -66,6 +75,23 @@ const handleCardClick = () => {
     return
   }
   router.push(`/project/${props.project.id}`)
+}
+
+const handleDelete = async () => {
+  try {
+    await ElMessageBox.confirm('确定要删除这个项目吗？', '确认删除', {
+      type: 'warning',
+      confirmButtonText: '删除',
+      cancelButtonText: '取消'
+    })
+    await deleteProject(props.project.id)
+    ElMessage.success('删除成功')
+    emit('deleted')
+  } catch {
+    if (error !== 'cancel') {
+      ElMessage.error('删除失败')
+    }
+  }
 }
 </script>
 
@@ -162,6 +188,11 @@ const handleCardClick = () => {
 .card-meta span {
   color: #d9e8ff;
   background: rgba(255, 255, 255, 0.06);
+}
+
+.card-meta .owner-tag {
+  color: var(--portal-accent);
+  background: rgba(89, 208, 255, 0.15);
 }
 
 .card-actions-overlay {

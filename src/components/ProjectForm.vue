@@ -67,6 +67,19 @@
           :rows="2"
         />
       </el-form-item>
+
+      <div class="owner-tip">
+        <el-alert
+          title="温馨提示"
+          type="info"
+          :closable="false"
+          show-icon
+        >
+          <template #default>
+            创建后，该项目将归属于您，只有您可以修改或删除此项目。其他用户仅可查看。
+          </template>
+        </el-alert>
+      </div>
     </el-form>
 
     <template #footer>
@@ -80,6 +93,8 @@
 import { ref, watch } from 'vue'
 import { saveProject } from '@/api/project'
 import { ElMessage } from 'element-plus'
+import { getPortalUserProfile } from '@/utils/userIdentity'
+import { isOwnedByUser, withOwnership } from '@/utils/ownership'
 
 const props = defineProps({
   modelValue: Boolean,
@@ -133,9 +148,14 @@ watch(
 
 const submitForm = async () => {
   await formRef.value?.validate()
+  const userProfile = getPortalUserProfile()
+  if (formData.value.id && !isOwnedByUser(formData.value, userProfile.userId)) {
+    ElMessage.warning('只能修改自己上传的项目')
+    return
+  }
   submitting.value = true
   try {
-    await saveProject(formData.value)
+    await saveProject(withOwnership(formData.value, userProfile))
     ElMessage.success('保存成功')
     emit('saved')
     visible.value = false
@@ -152,5 +172,22 @@ const submitForm = async () => {
   font-size: 12px;
   color: #999;
   margin-top: 4px;
+}
+
+.owner-tip {
+  margin-bottom: 16px;
+}
+
+.owner-tip :deep(.el-alert) {
+  background: rgba(89, 208, 255, 0.08);
+  border-color: rgba(89, 208, 255, 0.2);
+}
+
+.owner-tip :deep(.el-alert__title) {
+  color: var(--portal-accent);
+}
+
+.owner-tip :deep(.el-alert__description) {
+  color: #d9e8ff;
 }
 </style>

@@ -36,10 +36,28 @@
         </template>
       </el-input>
 
-      <div class="header-status">
-        <span class="status-dot" />
-        AI Workspace Online
-      </div>
+      <el-popover placement="bottom" :width="280" trigger="hover">
+        <template #reference>
+          <div class="header-status user-status">
+            <el-icon><User /></el-icon>
+            <span>{{ userDisplay.shortId }}</span>
+          </div>
+        </template>
+        <div class="user-info-popover">
+          <div class="user-info-row">
+            <span class="label">用户标识:</span>
+            <span class="value">{{ userDisplay.name }}</span>
+          </div>
+          <div class="user-info-row">
+            <span class="label">用户ID:</span>
+            <span class="value">{{ userDisplay.id }}</span>
+          </div>
+          <div class="user-tip">
+            <el-icon><InfoFilled /></el-icon>
+            您只能修改和删除自己上传的项目
+          </div>
+        </div>
+      </el-popover>
     </div>
   </header>
 </template>
@@ -47,11 +65,14 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Platform, Search } from '@element-plus/icons-vue'
+import { Platform, Search, User, InfoFilled } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import { getUserDisplayInfo } from '@/utils/userIdentity'
 
 const router = useRouter()
 const route = useRoute()
+
+const userDisplay = getUserDisplayInfo()
 
 const navItems = [
   { label: '总览', path: '/' },
@@ -188,6 +209,53 @@ const handleSearch = () => {
   border: 1px solid var(--portal-line);
   font-size: 12px;
   white-space: nowrap;
+}
+
+.user-status {
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.user-status:hover {
+  color: var(--portal-accent);
+  border-color: rgba(89, 208, 255, 0.3);
+  background: rgba(89, 208, 255, 0.08);
+}
+
+.user-info-popover {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.user-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.user-info-row .label {
+  color: var(--portal-text-soft);
+}
+
+.user-info-row .value {
+  color: var(--portal-text);
+  font-family: 'Monaco', 'Consolas', monospace;
+  font-size: 11px;
+}
+
+.user-tip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(89, 208, 255, 0.08);
+  color: var(--portal-accent);
+  font-size: 12px;
+  line-height: 1.6;
 }
 
 .status-dot {

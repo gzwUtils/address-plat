@@ -1,6 +1,7 @@
 <template>
   <div class="layout-container">
     <LayoutHeader />
+    <!-- 紧急推送已隐藏 -->
     <main class="layout-main">
       <router-view v-slot="{ Component }">
         <transition name="fade" mode="out-in">
@@ -13,6 +14,7 @@
 
 <script setup>
 import LayoutHeader from '@/components/LayoutHeader.vue'
+// import EmergencyPushCenter from '@/components/EmergencyPushCenter.vue'
 </script>
 
 <style scoped>
