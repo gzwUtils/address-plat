@@ -1,8 +1,7 @@
 <template>
   <header class="site-header">
     <div class="header-inner">
-      <router-link class="brand" to="/" aria-label="KD 门户首页">
-        <span class="brand-mark">KD</span>
+      <router-link class="brand" to="/" aria-label="团队门户首页">
         <span class="brand-copy"><strong>团队门户</strong><small>项目 / 讨论 / 资源</small></span>
       </router-link>
 
@@ -93,9 +92,8 @@ const handleSearch = () => {
 .site-header { position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid var(--portal-line); background: var(--portal-surface); }
 .header-inner { max-width: 1600px; margin: 0 auto; padding: 13px 28px; display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(155px, 220px) auto auto; align-items: center; gap: 15px; }
 .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.brand-mark { display: grid; place-items: center; flex: 0 0 39px; height: 39px; background: var(--portal-accent); color: var(--portal-accent-ink); font-size: 14px; font-weight: 900; letter-spacing: -.04em; }
 .brand-copy { display: grid; gap: 2px; white-space: nowrap; }
-.brand-copy strong { font-size: 17px; }
+.brand-copy strong { color: var(--portal-accent); font-family: 'Songti SC', 'Noto Serif CJK SC', 'SimSun', serif; font-size: 22px; letter-spacing: .02em; }
 .brand-copy small { color: var(--portal-text-soft); font-size: 10px; letter-spacing: .05em; }
 .navigation { display: flex; justify-content: center; align-items: center; gap: 4px; }
 .navigation > a, .management-menu summary { display: block; border-bottom: 2px solid transparent; padding: 11px 12px; color: var(--portal-text-soft); font-size: 14px; white-space: nowrap; cursor: pointer; }
