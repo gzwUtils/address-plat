@@ -1,101 +1,146 @@
 <template>
   <div class="community-page">
-    <section class="community-hero">
-      <div class="hero-copy">
-        <span class="eyebrow">团队门户 / 社区</span>
-        <h1>社区</h1>
-        <p>分享项目，也聊聊项目之外的事。</p>
-      </div>
-      <div class="hero-action">
-        <span>从这里开始</span>
-        <div class="hero-topics" aria-label="社区话题"><span>项目分享</span><span>技术交流</span><span>自由闲谈</span></div>
-        <el-button type="primary" @click="composerOpen = true">发布主题 ↗</el-button>
-      </div>
-    </section>
-
-    <div v-if="error" class="state-panel" role="alert">{{ error }} <el-button text @click="load">重试</el-button></div>
-    <template v-else>
-      <section class="community-section">
-        <h2>选择板块</h2>
-        <div class="board-grid">
-          <router-link v-for="(board, index) in boards" :key="board.code" :to="`/community/boards/${board.code}`" class="board-card">
-            <span class="board-symbol">{{ index + 1 }}</span>
-            <strong>{{ board.name }}</strong>
-            <p>{{ board.description }}</p>
-            <small>{{ board.topicCount || 0 }} 个主题 · 进入板块 ↗</small>
-          </router-link>
+    <header class="page-heading">
+      <div><h1>社区</h1><p>分享项目进展，讨论技术问题，也可以随便聊聊。</p></div>
+      <el-button type="primary" @click="composerOpen = true">发布主题</el-button>
+    </header>
+    <div class="community-layout">
+      <section class="feed-column" aria-label="讨论列表">
+        <div class="feed-toolbar">
+          <div class="feed-topline">
+            <div class="feed-title"><h2>全部讨论</h2><span v-if="!loading && !error">{{ total }} 个主题</span></div>
+            <div class="sort-tabs" role="group" aria-label="讨论排序">
+              <button type="button" :class="{ active: sort === 'recent' }" :aria-pressed="sort === 'recent'" @click="setSort('recent')">最近回复</button>
+              <button type="button" :class="{ active: sort === 'new' }" :aria-pressed="sort === 'new'" @click="setSort('new')">最新发布</button>
+            </div>
+          </div>
+          <form class="feed-search" role="search" @submit.prevent="applySearch"><input v-model="draftKeyword" type="search" aria-label="搜索讨论" placeholder="在讨论中搜索" /><button type="submit">搜索</button></form>
         </div>
-      </section>
-      <section class="community-section">
-        <div class="section-heading"><h2>最近讨论</h2><router-link to="/community/boards/project-share">去项目分享 ↗</router-link></div>
-        <div v-if="loading" class="state-panel">正在加载讨论…</div>
+        <div v-if="error" class="feed-state" role="alert">{{ error }} <button type="button" @click="load">重试</button></div>
+        <div v-else-if="loading" class="feed-state">正在加载讨论…</div>
         <div v-else-if="latest.length" class="topic-list"><TopicRow v-for="topic in latest" :key="topic.id" :topic="topic" /></div>
-        <div v-else class="state-panel">还没有讨论，来发布第一个主题。</div>
+        <div v-else class="feed-state empty-state"><strong>{{ keyword ? '没有找到相关讨论' : '这里还没有主题' }}</strong><span>{{ keyword ? '换个关键词再试试。' : '从项目经验、一个问题或随手想到的话题开始。' }}</span><button v-if="!keyword" type="button" @click="composerOpen = true">发布第一个主题 ↗</button></div>
+        <el-pagination v-if="total > 20" class="topic-pagination" background layout="prev, pager, next" :current-page="page" :page-size="20" :total="total" @current-change="changePage" />
       </section>
-    </template>
+      <aside class="community-sidebar" aria-label="社区导航">
+        <section class="sidebar-panel">
+          <h2>交流板块</h2>
+          <router-link v-for="board in displayBoards" :key="board.code" class="board-link" :to="`/community/boards/${board.code}`">
+            <span><strong>{{ board.name }}</strong><small>{{ board.description }}</small></span>
+            <span v-if="board.topicCount != null" class="board-count">{{ board.topicCount }}</span>
+          </router-link>
+        </section>
+        <section class="sidebar-panel sidebar-links">
+          <h2>继续浏览</h2>
+          <router-link to="/community/mine">我的讨论 <span aria-hidden="true">↗</span></router-link>
+          <router-link :to="{ path: '/explore', query: { type: 'project' } }">项目广场 <span aria-hidden="true">↗</span></router-link>
+        </section>
+      </aside>
+    </div>
     <CommunityComposer v-model="composerOpen" @saved="handleSaved" />
   </div>
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import CommunityComposer from '@/components/CommunityComposer.vue'
 import TopicRow from '@/components/TopicRow.vue'
 import { listBoards, listTopics } from '@/api/community'
+import { fallbackBoards } from '@/utils/communityBoards'
 
+const route = useRoute()
 const router = useRouter()
 const boards = ref([])
+const displayBoards = computed(() => boards.value.length ? boards.value : fallbackBoards)
 const latest = ref([])
+const total = ref(0)
 const loading = ref(true)
 const error = ref('')
 const composerOpen = ref(false)
+const draftKeyword = ref('')
+const keyword = computed(() => String(route.query.keyword || '').trim())
+const page = computed(() => {
+  const value = Number.parseInt(route.query.page, 10)
+  return Number.isFinite(value) && value > 0 ? value : 1
+})
+const sort = computed(() => route.query.sort === 'new' ? 'new' : 'recent')
+let loadVersion = 0
 
 async function load() {
+  const version = ++loadVersion
   loading.value = true
   error.value = ''
-  try {
-    const [boardData, topicData] = await Promise.all([listBoards(), listTopics({ page: 1, size: 6 })])
-    boards.value = boardData
-    latest.value = topicData.records || []
-  } catch {
-    error.value = '社区暂时无法加载。'
-  } finally { loading.value = false }
+  draftKeyword.value = keyword.value
+  const [boardResult, topicResult] = await Promise.allSettled([
+    listBoards(), listTopics({ keyword: keyword.value, page: page.value, size: 20, sort: sort.value })
+  ])
+  if (version !== loadVersion) return
+  if (boardResult.status === 'fulfilled') boards.value = Array.isArray(boardResult.value) ? boardResult.value : []
+  if (topicResult.status === 'fulfilled') {
+    latest.value = topicResult.value?.records || []
+    total.value = topicResult.value?.total || 0
+  } else {
+    latest.value = []
+    total.value = 0
+    error.value = '讨论暂时无法加载。'
+  }
+  loading.value = false
 }
 
-function handleSaved(topic) {
-  ElMessage.success('主题已发布')
-  router.push(`/community/topics/${topic.id}`)
+function setSort(value) {
+  if (value !== sort.value) router.push({ path: '/community', query: { ...(keyword.value ? { keyword: keyword.value } : {}), ...(value === 'new' ? { sort: 'new' } : {}) } })
 }
+function applySearch() { router.push({ path: '/community', query: { ...(draftKeyword.value.trim() ? { keyword: draftKeyword.value.trim() } : {}), ...(sort.value === 'new' ? { sort: 'new' } : {}) } }) }
+function changePage(next) { router.push({ path: '/community', query: { ...(keyword.value ? { keyword: keyword.value } : {}), ...(sort.value === 'new' ? { sort: 'new' } : {}), page: next } }) }
+function handleSaved(topic) { ElMessage.success('主题已发布'); router.push(`/community/topics/${topic.id}`) }
 
 onMounted(load)
+watch(() => route.fullPath, load)
 </script>
 
 <style scoped>
-.community-page { max-width: 1320px; margin: 0 auto; display: grid; gap: 42px; }
-.community-hero { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(260px, .6fr); border-top: 2px solid var(--portal-text); border-bottom: 1px solid var(--portal-line); background: var(--portal-surface); }
-.hero-copy { padding: 42px 46px; }
-.eyebrow { color: var(--portal-accent); font-size: 12px; font-weight: 700; letter-spacing: .08em; }
-h1 { margin: 22px 0 12px; font-size: clamp(56px, 7vw, 94px); line-height: 1.1; letter-spacing: -.04em; }
-.community-hero p, .board-card p { color: var(--portal-text-soft); line-height: 1.6; }
-.hero-action { display: flex; flex-direction: column; align-items: start; padding: 42px 36px; border-left: 1px solid var(--portal-line); background: var(--portal-surface-strong); }
-.hero-action > span { color: var(--portal-accent); font-size: 12px; font-weight: 700; }
-.hero-topics { display: grid; width: 100%; margin: 17px 0 26px; }
-.hero-topics span { border-top: 1px solid var(--portal-line); padding: 9px 0; color: var(--portal-text); font-size: 14px; }
-.hero-action .el-button { margin-top: auto; padding: 19px 24px; font-weight: 700; }
-.community-section { display: grid; gap: 18px; }
-.community-section h2 { margin: 0; font-size: 27px; }
-.section-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-top: 14px; border-top: 2px solid var(--portal-text); }
-.section-heading a { color: var(--portal-accent); }
-.board-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 14px; }
-.board-card { display: grid; align-content: start; gap: 10px; min-height: 210px; padding: 25px; border: 1px solid var(--portal-line); border-top: 2px solid var(--portal-accent-2); background: var(--portal-surface); }
-.board-card:hover { border-color: var(--portal-accent); border-top-color: var(--portal-accent); }
-.board-symbol { color: var(--portal-accent); font-size: 12px; font-weight: 700; }
-.board-card strong { font-family: 'Songti SC', 'Noto Serif CJK SC', 'SimSun', serif; font-size: 25px; }
-.board-card p { margin: 0; font-size: 13px; }
-.board-card small { align-self: end; margin-top: 14px; color: var(--portal-text-soft); }
-.topic-list { display: grid; border-top: 1px solid var(--portal-line); }
-.state-panel { padding: 26px; border: 1px solid var(--portal-line); color: var(--portal-text-soft); background: var(--portal-surface); }
-@media (max-width: 800px) { .board-grid { grid-template-columns: 1fr; } .community-hero { grid-template-columns: 1fr; } .hero-copy, .hero-action { padding: 27px; } .hero-action { border-top: 1px solid var(--portal-line); border-left: 0; } .hero-topics { grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; } }
+.community-page { max-width: 1240px; margin: 0 auto; display: grid; gap: 24px; }
+.page-heading { display: flex; align-items: end; justify-content: space-between; gap: 20px; padding: 6px 0 19px; border-bottom: 1px solid var(--portal-line); }
+.page-heading h1 { margin: 0 0 6px; font-family: inherit; font-size: 32px; font-weight: 750; letter-spacing: -.02em; }
+.page-heading p { margin: 0; color: var(--portal-text-soft); font-size: 14px; }
+.page-heading .el-button { min-height: 38px; padding: 0 18px; font-weight: 650; }
+.community-layout { display: grid; grid-template-columns: minmax(0, 1fr) 260px; align-items: start; gap: 24px; }
+.feed-column, .sidebar-panel { min-width: 0; border: 1px solid var(--portal-line); border-radius: 8px; background: var(--portal-surface); }
+.feed-column { overflow: hidden; }
+.feed-toolbar { display: grid; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--portal-line); }
+.feed-topline { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.feed-title { display: flex; align-items: baseline; gap: 10px; }
+.feed-title h2 { margin: 0; font-family: inherit; font-size: 17px; }
+.feed-title span { color: var(--portal-text-soft); font-size: 12px; }
+.sort-tabs { display: flex; gap: 4px; }
+.sort-tabs button { border: 0; border-radius: 5px; padding: 7px 11px; color: var(--portal-text-soft); background: transparent; font: inherit; font-size: 13px; cursor: pointer; }
+.sort-tabs button:hover { color: var(--portal-text); background: var(--portal-bg-soft); }
+.sort-tabs button.active { color: var(--portal-accent); background: var(--portal-bg-soft); font-weight: 650; }
+.feed-search { display: flex; gap: 8px; }
+.feed-search input { flex: 1; min-width: 0; border: 1px solid var(--portal-line); border-radius: 4px; padding: 9px 11px; color: var(--portal-text); background: var(--portal-surface); font: inherit; font-size: 13px; }
+.feed-search input:focus { border-color: var(--portal-accent); outline: none; }
+.feed-search button { min-width: 64px; border: 1px solid var(--portal-line); border-radius: 4px; color: var(--portal-text); background: var(--portal-surface); font: inherit; font-size: 13px; cursor: pointer; }
+.feed-search button:hover { border-color: var(--portal-accent); color: var(--portal-accent); }
+.topic-list { display: grid; }
+.feed-state { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; min-height: 104px; padding: 24px; color: var(--portal-text-soft); font-size: 14px; }
+.feed-state button { border: 0; padding: 0; color: var(--portal-accent); background: transparent; font: inherit; font-weight: 650; cursor: pointer; }
+.empty-state { align-content: center; flex-direction: column; align-items: start; gap: 8px; }
+.empty-state strong { color: var(--portal-text); font-size: 16px; }
+.topic-pagination { justify-content: center; padding: 18px; border-top: 1px solid var(--portal-line); }
+.community-sidebar { display: grid; gap: 14px; }
+.sidebar-panel { padding: 16px; }
+.sidebar-panel h2 { margin: 0 0 12px; font-family: inherit; font-size: 14px; font-weight: 700; }
+.board-link { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 11px 8px; border-radius: 5px; }
+.board-link:hover, .sidebar-links a:hover { background: var(--portal-bg-soft); }
+.board-link + .board-link { border-top: 1px solid var(--portal-line); border-radius: 0; }
+.board-link > span:first-child { display: grid; gap: 4px; min-width: 0; }
+.board-link strong { font-size: 14px; font-weight: 650; }
+.board-link small { overflow: hidden; color: var(--portal-text-soft); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.board-count { color: var(--portal-text-soft); font-size: 12px; }
+.sidebar-links a { display: flex; justify-content: space-between; gap: 8px; padding: 10px 8px; color: var(--portal-accent-2); font-size: 13px; }
+@media (max-width: 900px) { .community-layout { grid-template-columns: minmax(0, 1fr) 220px; gap: 14px; } }
+@media (max-width: 700px) { .community-layout { grid-template-columns: 1fr; } .community-sidebar { grid-row: 1; } .sidebar-panel:first-child { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; } .sidebar-panel:first-child h2 { grid-column: 1 / -1; } .board-link, .board-link + .board-link { border: 1px solid var(--portal-line); border-radius: 5px; } .board-link small, .board-count { display: none; } .sidebar-links { display: none; } }
+@media (max-width: 440px) { .page-heading { align-items: start; } .page-heading h1 { font-size: 27px; } .page-heading p { max-width: 215px; line-height: 1.5; } .feed-toolbar { padding: 14px; } .sidebar-panel { padding: 12px; } .board-link { padding: 10px 6px; justify-content: center; text-align: center; } .board-link strong { font-size: 12px; } }
 </style>

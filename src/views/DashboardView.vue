@@ -123,7 +123,7 @@ const recentPath = (item) => item.kind === 'project'
 async function loadGroup(kind) {
   groups[kind] = { ...emptyGroup(), loading: true }
   try {
-    const result = await fetchDiscoveryGroup(kind, { size: kind === 'project' ? 6 : 3 })
+    const result = await fetchDiscoveryGroup(kind, { size: kind === 'project' ? 6 : kind === 'topic' ? 5 : 3 })
     groups[kind] = { ...result, loading: false, error: null }
   } catch (error) {
     console.warn(`加载${kind}失败`, error)
@@ -153,11 +153,11 @@ onMounted(() => {
 
 <style scoped>
 .home-page { max-width: 1360px; margin: 0 auto; display: grid; gap: 20px; padding-bottom: 56px; }
-.page-intro { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 2px 0 9px; border-bottom: 2px solid var(--portal-accent); }
-.page-intro h1 { margin: 0; font-size: clamp(26px, 2.8vw, 34px); line-height: 1.25; }
+.page-intro { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 2px 0 13px; border-bottom: 1px solid var(--portal-line); }
+.page-intro h1 { margin: 0; font-family: inherit; font-size: clamp(25px, 2.8vw, 32px); font-weight: 750; line-height: 1.25; }
 .page-intro a { flex-shrink: 0; color: var(--portal-accent); font-size: 13px; }
 .section-index { color: var(--portal-accent); font-size: 12px; font-weight: 700; }
-.board-directory { display: grid; grid-template-columns: 110px repeat(3, minmax(0, 1fr)); align-items: stretch; border: 1px solid var(--portal-line); background: var(--portal-surface); }
+.board-directory { display: grid; grid-template-columns: 110px repeat(3, minmax(0, 1fr)); align-items: stretch; overflow: hidden; border: 1px solid var(--portal-line); border-radius: 8px; background: var(--portal-surface); }
 .directory-label { display: flex; align-items: center; padding: 14px 16px; color: var(--portal-accent); font-size: 13px; font-weight: 700; }
 .board-directory a { display: grid; align-content: center; gap: 4px; min-width: 0; padding: 13px 17px; border-left: 1px solid var(--portal-line); }
 .board-directory a:hover { background: var(--portal-bg-soft); }
@@ -166,7 +166,7 @@ onMounted(() => {
 .front-page { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(290px, .85fr); gap: 28px; }
 .home-section, .recent-section { min-width: 0; }
 .section-heading { display: flex; justify-content: space-between; align-items: end; gap: 15px; min-height: 52px; margin-bottom: 8px; padding-top: 7px; border-top: 1px solid var(--portal-line); }
-.section-heading h2 { margin: 3px 0 0; font-size: 23px; line-height: 1.2; }
+.section-heading h2 { margin: 3px 0 0; font-family: inherit; font-size: 21px; font-weight: 700; line-height: 1.2; }
 .section-heading > a { flex-shrink: 0; padding-bottom: 4px; color: var(--portal-accent); font-size: 13px; }
 .topic-stack { display: grid; border-top: 1px solid var(--portal-line); }
 .discussion-section .topic-stack :deep(.topic-row) { padding-left: 0; padding-right: 0; background: transparent; }
@@ -178,7 +178,7 @@ onMounted(() => {
 .project-actions a { padding: 10px 0; color: var(--portal-accent-2); font-size: 13px; }
 .resource-columns { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; }
 .resource-columns .section-heading { align-items: start; }
-.resource-columns .section-heading h2 { font-size: 23px; }
+.resource-columns .section-heading h2 { font-size: 19px; }
 .card-grid { display: grid; gap: 10px; }
 .row-skeleton { height: 52px; border-bottom: 1px solid var(--portal-line); background: var(--portal-surface-strong); }
 .card-skeleton { min-height: 180px; border: 1px solid var(--portal-line); background: var(--portal-surface-strong); }

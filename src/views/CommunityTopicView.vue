@@ -5,9 +5,9 @@
     <div v-else-if="error" class="state-panel" role="alert">{{ error }} <el-button text @click="load">重试</el-button></div>
     <template v-else-if="topic">
       <article class="floor opener">
-        <div class="floor-meta"><span class="floor-number">1 楼 · 楼主</span><span>{{ topic.authorNickname }}</span><time>{{ formatDate(topic.createTime) }}</time></div>
-        <h1>{{ topic.title }}</h1>
         <div class="labels"><router-link :to="`/community/boards/${topic.boardCode}`">{{ topic.boardName }}</router-link><router-link v-if="topic.projectId" :to="`/project/${topic.projectId}`">关联项目 · {{ topic.projectName || topic.projectId }}</router-link></div>
+        <h1>{{ topic.title }}</h1>
+        <div class="floor-meta"><span class="floor-number">楼主</span><span>{{ topic.authorNickname }}</span><time>{{ formatDate(topic.createTime) }}</time></div>
         <SafeText :text="topic.body" />
         <div class="floor-actions">
           <el-button v-if="topic.canEdit" text @click="composerOpen = true">编辑主题</el-button>
@@ -16,7 +16,7 @@
         </div>
       </article>
 
-      <div class="reply-heading"><h2>回复 · {{ topic.replyCount || 0 }}</h2><el-button @click="loadReplies">刷新</el-button></div>
+      <div class="reply-heading"><h2>全部回复 <span>{{ topic.replyCount || 0 }}</span></h2><el-button @click="loadReplies">刷新</el-button></div>
       <button v-if="newCount > 0" type="button" class="new-replies" @click="showNewReplies">有 {{ newCount }} 条新回复，点击查看</button>
       <div v-if="replies.length" class="reply-list">
         <article v-for="reply in replies" :key="reply.id" :id="`floor-${reply.floorNo}`" class="floor">
@@ -101,8 +101,8 @@ async function checkNew() {
 async function showNewReplies() {
   const fresh = await getTopic(route.params.id)
   topic.value = fresh
-    const latest = await listReplies(route.params.id, 1, 1)
-    replyPage.value = Math.max(1, Math.ceil((latest.total || 0) / 20))
+  const latest = await listReplies(route.params.id, 1, 1)
+  replyPage.value = Math.max(1, Math.ceil((latest.total || 0) / 20))
   await loadReplies()
   knownCount.value = fresh.replyCount || 0
   newCount.value = 0
@@ -171,24 +171,30 @@ watch(() => route.params.id, () => { replyPage.value = 1; replies.value = []; lo
 </script>
 
 <style scoped>
-.topic-page { max-width: 980px; margin: 0 auto; display: grid; gap: 18px; }
-.breadcrumbs { display: flex; gap: 10px; color: var(--portal-text-soft); font-size: 13px; }
-.breadcrumbs a, .labels a { color: var(--portal-accent); }
-.floor, .reply-box, .state-panel { padding: 28px; border: 1px solid var(--portal-line); background: var(--portal-surface); }
-.opener { padding: 36px; border-top: 2px solid var(--portal-text); }
-.floor h1 { margin: 14px 0; font-size: clamp(30px,3.5vw,44px); }
-.floor-meta { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; color: var(--portal-text-soft); font-size: 12px; }
+.topic-page { max-width: 900px; margin: 0 auto; display: grid; gap: 18px; }
+.breadcrumbs { display: flex; align-items: center; gap: 9px; color: var(--portal-text-soft); font-size: 12px; }
+.breadcrumbs a:hover { color: var(--portal-accent); }
+.floor, .reply-box, .state-panel { border: 1px solid var(--portal-line); border-radius: 8px; padding: 24px; background: var(--portal-surface); }
+.opener { padding: 32px; }
+.floor h1 { margin: 12px 0 15px; font-family: inherit; font-size: clamp(26px,3.2vw,35px); font-weight: 750; line-height: 1.4; }
+.floor-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 9px 12px; color: var(--portal-text-soft); font-size: 12px; }
+.opener .floor-meta { margin-bottom: 25px; }
 .floor-number { color: var(--portal-accent); font-weight: 700; }
-.labels { display: flex; gap: 12px; margin: 0 0 24px; font-size: 13px; }
-.floor-actions { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 18px; }
-.reply-heading { display: flex; align-items: center; justify-content: space-between; }
-.reply-heading h2, .reply-box h2 { margin: 0; }
-.reply-list { display: grid; }
+.labels { display: flex; flex-wrap: wrap; gap: 7px; font-size: 12px; }
+.labels a { border-radius: 3px; padding: 4px 8px; color: var(--portal-accent); background: var(--portal-bg-soft); }
+.labels a:hover { text-decoration: underline; }
+.floor-actions { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 21px; padding-top: 10px; border-top: 1px solid var(--portal-line); }
+.reply-heading { display: flex; align-items: center; justify-content: space-between; margin-top: 9px; }
+.reply-heading h2, .reply-box h2 { margin: 0; font-family: inherit; font-size: 18px; }
+.reply-heading h2 span { margin-left: 6px; color: var(--portal-text-soft); font-size: 14px; font-weight: 400; }
+.reply-list { display: grid; border-radius: 8px; overflow: hidden; }
+.reply-list .floor { border-radius: 0; }
 .reply-list .floor + .floor { border-top: 0; }
+.reply-list .floor-meta { margin-bottom: 16px; }
 .quote-ref, .reply-target { margin: 10px 0; color: var(--portal-text-soft); font-size: 13px; }
 .reply-box { display: grid; gap: 15px; }
 .reply-submit { display: flex; justify-content: end; }
-.new-replies { padding: 13px; border: 1px solid var(--portal-accent); background: var(--portal-bg-soft); color: var(--portal-accent); cursor: pointer; }
+.new-replies { border: 1px solid var(--portal-line); border-radius: 5px; padding: 13px; color: var(--portal-accent); background: var(--portal-bg-soft); font: inherit; cursor: pointer; }
 .state-panel { color: var(--portal-text-soft); }
 @media (max-width: 650px) { .floor, .reply-box, .state-panel, .opener { padding: 20px; } }
 </style>
