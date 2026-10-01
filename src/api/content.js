@@ -1,10 +1,5 @@
-import axios from 'axios'
+import { api } from './client'
 import { dashboardOverview, portalResources } from '@/data/portal'
-
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://101.42.236.45:8089/api',
-  timeout: 10000
-})
 
 const normalizeList = (payload) => {
   if (Array.isArray(payload)) {

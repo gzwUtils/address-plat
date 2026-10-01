@@ -17,7 +17,7 @@ export default defineConfig({
     proxy: {
       // 代理 /api 请求到后端 Spring Boot 服务（开发环境）
       '/api': {
-        target: 'http://localhost:7777',
+        target: 'http://localhost:8089',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, '/api')
       }

@@ -113,10 +113,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { EditPen, Link } from '@element-plus/icons-vue'
 import ProjectForm from '@/components/ProjectForm.vue'
 import { deleteProject, getCategories, getProjects } from '@/api/project'
-import { useUserStore } from '@/store'
-import { isOwnedByUser } from '@/utils/ownership'
 
-const userStore = useUserStore()
 const projects = ref([])
 const categories = ref([])
 const selectedProject = ref(null)
@@ -124,7 +121,7 @@ const activeCategory = ref('all')
 const keyword = ref('')
 const dialogVisible = ref(false)
 const editingProject = ref({})
-const canEditSelected = computed(() => isOwnedByUser(selectedProject.value, userStore.userId))
+const canEditSelected = computed(() => selectedProject.value?.canEdit === true)
 
 const filteredProjects = computed(() =>
   projects.value.filter((item) => {
@@ -163,7 +160,7 @@ function openCreateDialog() {
 }
 
 function openEditDialog(project) {
-  if (!isOwnedByUser(project, userStore.userId)) {
+  if (project.canEdit !== true) {
     ElMessage.warning('只能修改自己上传的项目')
     return
   }
@@ -172,7 +169,7 @@ function openEditDialog(project) {
 }
 
 async function handleDelete(project) {
-  if (!isOwnedByUser(project, userStore.userId)) {
+  if (project.canEdit !== true) {
     ElMessage.warning('只能删除自己上传的项目')
     return
   }

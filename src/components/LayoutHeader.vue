@@ -38,26 +38,33 @@
         <button type="submit" aria-label="搜索"><span aria-hidden="true">⌕</span></button>
       </form>
 
-      <div class="user-chip" :title="`用户标识：${userDisplay.name}`" :aria-label="`当前用户：${userDisplay.name}`">
-        {{ userDisplay.shortId }}
-      </div>
+      <button type="button" class="user-chip" :title="account.profile?.publicId || '我的账户'" @click="accountOpen = true">
+        {{ account.profile?.nickname || (account.needsRestore ? '找回账户' : '我的账户') }}
+      </button>
     </div>
+    <AccountPanel v-model="accountOpen" />
   </header>
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getUserDisplayInfo } from '@/utils/userIdentity'
+import AccountPanel from '@/components/AccountPanel.vue'
+import { useGuestAccount } from '@/store/guestAccount'
 
 const route = useRoute()
 const router = useRouter()
-const userDisplay = getUserDisplayInfo()
+const account = useGuestAccount()
+const accountOpen = ref(false)
 const mobileOpen = ref(false)
 const managementMenu = ref(null)
 const searchKeyword = ref(typeof route.query.keyword === 'string' ? route.query.keyword : '')
 const isExploreActive = computed(() => route.path.startsWith('/explore') || route.path.startsWith('/project/'))
 const isManagementActive = computed(() => ['/ops-workbench', '/project-studio', '/ai-workspace', '/content-studio'].includes(route.path))
+
+onMounted(() => account.initialize())
+watch(() => account.freshRecoveryCode, (value) => { if (value) accountOpen.value = true })
+watch(() => account.needsRestore, (value) => { if (value) accountOpen.value = true })
 
 watch(() => route.fullPath, () => {
   mobileOpen.value = false
@@ -94,19 +101,19 @@ const handleSearch = () => {
 .header-search input::placeholder { color: var(--portal-text-soft); }
 .header-search:focus-within { border-color: var(--portal-accent); box-shadow: 0 0 0 2px rgba(114, 217, 245, .18); }
 .header-search button { border: 0; padding: 0 12px; color: var(--portal-accent); background: transparent; font-size: 22px; cursor: pointer; }
-.user-chip { max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 10px; border: 1px solid var(--portal-line); border-radius: 10px; color: var(--portal-text-soft); font-size: 12px; }
+.user-chip { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 10px; border: 1px solid var(--portal-line); border-radius: 10px; color: var(--portal-text); background: var(--portal-surface); font: inherit; font-size: 12px; cursor: pointer; }
 .menu-toggle { display: none; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 @media (max-width: 1180px) {
-  .header-inner { grid-template-columns: 1fr auto; gap: 12px; }
-  .menu-toggle { display: flex; align-items: center; gap: 9px; border: 1px solid var(--portal-line); border-radius: 10px; padding: 10px 12px; color: var(--portal-text); background: var(--portal-surface); font: inherit; font-size: 13px; cursor: pointer; }
+  .header-inner { grid-template-columns: 1fr auto auto; gap: 12px; }
+  .menu-toggle { display: flex; grid-column: 3; grid-row: 1; align-items: center; gap: 9px; border: 1px solid var(--portal-line); border-radius: 10px; padding: 10px 12px; color: var(--portal-text); background: var(--portal-surface); font: inherit; font-size: 13px; cursor: pointer; }
   .menu-toggle span { font-size: 17px; line-height: 1; }
   .header-search { grid-column: 1 / -1; grid-row: 2; }
   .navigation { display: none; grid-column: 1 / -1; grid-row: 3; align-items: stretch; flex-direction: column; padding: 7px 0; }
   .navigation.open { display: flex; }
   .navigation > a, .management-menu summary { padding: 12px; }
   .management-links { position: static; margin: 4px 0 0 10px; box-shadow: none; }
-  .user-chip { display: none; }
+  .user-chip { grid-column: 2; grid-row: 1; max-width: 120px; }
 }
 @media (max-width: 640px) { .header-inner { padding: 11px 16px; } .brand-copy small { display: none; } }
 </style>

@@ -93,8 +93,6 @@
 import { ref, watch } from 'vue'
 import { saveProject } from '@/api/project'
 import { ElMessage } from 'element-plus'
-import { getPortalUserProfile } from '@/utils/userIdentity'
-import { isOwnedByUser, withOwnership } from '@/utils/ownership'
 
 const props = defineProps({
   modelValue: Boolean,
@@ -148,14 +146,13 @@ watch(
 
 const submitForm = async () => {
   await formRef.value?.validate()
-  const userProfile = getPortalUserProfile()
-  if (formData.value.id && !isOwnedByUser(formData.value, userProfile.userId)) {
+  if (formData.value.id && props.project.canEdit !== true) {
     ElMessage.warning('只能修改自己上传的项目')
     return
   }
   submitting.value = true
   try {
-    await saveProject(withOwnership(formData.value, userProfile))
+    await saveProject(formData.value)
     ElMessage.success('保存成功')
     emit('saved')
     visible.value = false
