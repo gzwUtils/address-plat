@@ -18,7 +18,10 @@ export const isAdmin = () => {
 export const isOwnedByUser = (item, userId) => {
   if (isAdmin()) return true
   const ownerId = getResourceOwnerId(item)
-  if (!ownerId || !userId) {
+  if (!ownerId) {
+    return true
+  }
+  if (!userId) {
     return false
   }
   return String(ownerId) === String(userId)

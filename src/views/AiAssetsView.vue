@@ -28,11 +28,11 @@
       <div class="control-row">
         <div class="control-left">
           <el-radio-group v-model="activeType" size="large">
-            <el-radio-button label="all">全部</el-radio-button>
+            <el-radio-button value="all">全部</el-radio-button>
             <el-radio-button
               v-for="item in typeOptions"
               :key="item"
-              :label="item"
+              :value="item"
             >
               {{ item }}
             </el-radio-button>
@@ -407,7 +407,18 @@ const copyEntry = async (entryUrl) => {
   }
 
   try {
-    await navigator.clipboard.writeText(entryUrl)
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(entryUrl)
+    } else {
+      const textarea = document.createElement('textarea')
+      textarea.value = entryUrl
+      textarea.style.position = 'fixed'
+      textarea.style.opacity = '0'
+      document.body.appendChild(textarea)
+      textarea.select()
+      document.execCommand('copy')
+      document.body.removeChild(textarea)
+    }
     ElMessage.success('入口地址已复制')
   } catch (error) {
     console.warn('复制失败', error)
