@@ -174,20 +174,21 @@ watch(() => route.params.id, () => { replyPage.value = 1; replies.value = []; lo
 .topic-page { max-width: 980px; margin: 0 auto; display: grid; gap: 18px; }
 .breadcrumbs { display: flex; gap: 10px; color: var(--portal-text-soft); font-size: 13px; }
 .breadcrumbs a, .labels a { color: var(--portal-accent); }
-.floor, .reply-box, .state-panel { padding: 28px; border: 1px solid var(--portal-line); border-radius: 18px; background: var(--portal-surface); }
-.opener { padding: 36px; }
-.floor h1 { margin: 14px 0; font-size: clamp(25px,3vw,38px); }
+.floor, .reply-box, .state-panel { padding: 28px; border: 1px solid var(--portal-line); background: var(--portal-surface); }
+.opener { padding: 36px; border-top: 2px solid var(--portal-text); }
+.floor h1 { margin: 14px 0; font-size: clamp(30px,3.5vw,44px); }
 .floor-meta { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; color: var(--portal-text-soft); font-size: 12px; }
 .floor-number { color: var(--portal-accent); font-weight: 700; }
 .labels { display: flex; gap: 12px; margin: 0 0 24px; font-size: 13px; }
 .floor-actions { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 18px; }
 .reply-heading { display: flex; align-items: center; justify-content: space-between; }
 .reply-heading h2, .reply-box h2 { margin: 0; }
-.reply-list { display: grid; gap: 10px; }
+.reply-list { display: grid; }
+.reply-list .floor + .floor { border-top: 0; }
 .quote-ref, .reply-target { margin: 10px 0; color: var(--portal-text-soft); font-size: 13px; }
 .reply-box { display: grid; gap: 15px; }
 .reply-submit { display: flex; justify-content: end; }
-.new-replies { padding: 13px; border: 1px solid var(--portal-accent); border-radius: 10px; background: var(--portal-bg-soft); color: var(--portal-accent); cursor: pointer; }
+.new-replies { padding: 13px; border: 1px solid var(--portal-accent); background: var(--portal-bg-soft); color: var(--portal-accent); cursor: pointer; }
 .state-panel { color: var(--portal-text-soft); }
 @media (max-width: 650px) { .floor, .reply-box, .state-panel, .opener { padding: 20px; } }
 </style>

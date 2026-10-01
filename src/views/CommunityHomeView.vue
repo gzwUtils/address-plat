@@ -2,12 +2,15 @@
   <div class="community-page">
     <section class="community-hero">
       <div class="hero-copy">
-        <span class="eyebrow">KD COMMUNITY</span>
-        <h1>有话可聊，<br /><em>有想法可分享。</em></h1>
-        <p>分享项目、提出问题，和大家把想法聊下去。</p>
-        <div class="hero-topics" aria-label="社区话题"><span>分享项目</span><span>交流经验</span><span>提出问题</span></div>
+        <span class="eyebrow">团队门户 / 社区</span>
+        <h1>社区</h1>
+        <p>分享项目，也聊聊项目之外的事。</p>
       </div>
-      <div class="hero-action"><span class="hero-seal" aria-hidden="true">谈</span><el-button type="primary" @click="composerOpen = true">发布主题 ↗</el-button></div>
+      <div class="hero-action">
+        <span>从这里开始</span>
+        <div class="hero-topics" aria-label="社区话题"><span>项目分享</span><span>技术交流</span><span>自由闲谈</span></div>
+        <el-button type="primary" @click="composerOpen = true">发布主题 ↗</el-button>
+      </div>
     </section>
 
     <div v-if="error" class="state-panel" role="alert">{{ error }} <el-button text @click="load">重试</el-button></div>
@@ -15,8 +18,8 @@
       <section class="community-section">
         <h2>选择板块</h2>
         <div class="board-grid">
-          <router-link v-for="board in boards" :key="board.code" :to="`/community/boards/${board.code}`" class="board-card">
-            <span class="board-symbol">{{ boardIcon(board.code) }}</span>
+          <router-link v-for="(board, index) in boards" :key="board.code" :to="`/community/boards/${board.code}`" class="board-card">
+            <span class="board-symbol">{{ index + 1 }}</span>
             <strong>{{ board.name }}</strong>
             <p>{{ board.description }}</p>
             <small>{{ board.topicCount || 0 }} 个主题 · 进入板块 ↗</small>
@@ -49,8 +52,6 @@ const loading = ref(true)
 const error = ref('')
 const composerOpen = ref(false)
 
-const boardIcon = (code) => ({ 'project-share': '↗', 'tech-talk': '⌘', lounge: '✦' })[code] || '·'
-
 async function load() {
   loading.value = true
   error.value = ''
@@ -72,31 +73,29 @@ onMounted(load)
 </script>
 
 <style scoped>
-.community-page { max-width: 1320px; margin: 0 auto; display: grid; gap: 34px; }
-.community-hero { position: relative; display: flex; align-items: end; justify-content: space-between; gap: 20px; overflow: hidden; padding: 46px; border: 1px solid var(--portal-line); border-left: 5px solid var(--portal-accent); border-radius: 24px; background: radial-gradient(circle at right top,var(--portal-glow),transparent 50%),linear-gradient(120deg,var(--portal-surface),var(--portal-hero-bottom)); box-shadow: var(--portal-shadow); }
-.community-hero::after { content: ''; position: absolute; width: 330px; aspect-ratio: 1; top: -180px; right: 10%; border: 1px solid color-mix(in srgb, var(--portal-accent-2) 20%, transparent); border-radius: 50%; pointer-events: none; }
-.hero-copy, .hero-action { position: relative; z-index: 1; }
-.eyebrow { color: var(--portal-accent); letter-spacing: .17em; font-size: 12px; }
-h1 { margin: 16px 0; font-size: clamp(37px,4.5vw,58px); line-height: 1.22; letter-spacing: -.03em; }
-h1 em { color: var(--portal-accent-2); font-style: normal; }
+.community-page { max-width: 1320px; margin: 0 auto; display: grid; gap: 42px; }
+.community-hero { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(260px, .6fr); border-top: 2px solid var(--portal-text); border-bottom: 1px solid var(--portal-line); background: var(--portal-surface); }
+.hero-copy { padding: 42px 46px; }
+.eyebrow { color: var(--portal-accent); font-size: 12px; font-weight: 700; letter-spacing: .08em; }
+h1 { margin: 22px 0 12px; font-size: clamp(56px, 7vw, 94px); line-height: 1.1; letter-spacing: -.04em; }
 .community-hero p, .board-card p { color: var(--portal-text-soft); line-height: 1.6; }
-.hero-topics { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 22px; }
-.hero-topics span { border: 1px solid var(--portal-line); border-radius: 999px; padding: 7px 12px; background: rgba(255, 255, 255, .58); color: var(--portal-text-soft); font-size: 12px; }
-.hero-action { display: grid; justify-items: end; gap: 38px; }
-.hero-seal { display: grid; place-items: center; width: 110px; height: 110px; border: 1px solid var(--portal-accent-2); border-radius: 50%; color: var(--portal-accent-2); font-family: 'Songti SC', 'Noto Serif CJK SC', 'SimSun', serif; font-size: 58px; transform: rotate(-10deg); }
-.hero-action .el-button { padding: 20px 24px; font-weight: 700; }
+.hero-action { display: flex; flex-direction: column; align-items: start; padding: 42px 36px; border-left: 1px solid var(--portal-line); background: var(--portal-surface-strong); }
+.hero-action > span { color: var(--portal-accent); font-size: 12px; font-weight: 700; }
+.hero-topics { display: grid; width: 100%; margin: 17px 0 26px; }
+.hero-topics span { border-top: 1px solid var(--portal-line); padding: 9px 0; color: var(--portal-text); font-size: 14px; }
+.hero-action .el-button { margin-top: auto; padding: 19px 24px; font-weight: 700; }
 .community-section { display: grid; gap: 18px; }
-.community-section h2 { margin: 0; font-size: 23px; }
-.section-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.community-section h2 { margin: 0; font-size: 27px; }
+.section-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-top: 14px; border-top: 2px solid var(--portal-text); }
 .section-heading a { color: var(--portal-accent); }
-.board-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px; }
-.board-card { display: grid; align-content: start; gap: 9px; min-height: 180px; padding: 25px; border: 1px solid var(--portal-line); border-radius: 18px; background: var(--portal-surface); }
-.board-card:hover { border-color: var(--portal-accent); }
-.board-symbol { color: var(--portal-accent); font-size: 25px; }
-.board-card strong { font-size: 20px; }
+.board-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 14px; }
+.board-card { display: grid; align-content: start; gap: 10px; min-height: 210px; padding: 25px; border: 1px solid var(--portal-line); border-top: 2px solid var(--portal-accent-2); background: var(--portal-surface); }
+.board-card:hover { border-color: var(--portal-accent); border-top-color: var(--portal-accent); }
+.board-symbol { color: var(--portal-accent); font-size: 12px; font-weight: 700; }
+.board-card strong { font-family: 'Songti SC', 'Noto Serif CJK SC', 'SimSun', serif; font-size: 25px; }
 .board-card p { margin: 0; font-size: 13px; }
 .board-card small { align-self: end; margin-top: 14px; color: var(--portal-text-soft); }
-.topic-list { display: grid; gap: 10px; }
-.state-panel { padding: 30px; border: 1px solid var(--portal-line); border-radius: 16px; color: var(--portal-text-soft); background: var(--portal-surface); }
-@media (max-width: 800px) { .board-grid { grid-template-columns: 1fr; } .community-hero { padding: 25px; align-items: start; flex-direction: column; } .hero-action { display: block; } .hero-seal { display: none; } }
+.topic-list { display: grid; border-top: 1px solid var(--portal-line); }
+.state-panel { padding: 26px; border: 1px solid var(--portal-line); color: var(--portal-text-soft); background: var(--portal-surface); }
+@media (max-width: 800px) { .board-grid { grid-template-columns: 1fr; } .community-hero { grid-template-columns: 1fr; } .hero-copy, .hero-action { padding: 27px; } .hero-action { border-top: 1px solid var(--portal-line); border-left: 0; } .hero-topics { grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; } }
 </style>

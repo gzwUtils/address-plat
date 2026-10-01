@@ -23,11 +23,11 @@ const formatDate = (value) => value ? new Date(value).toLocaleString('zh-CN') : 
 </script>
 
 <style scoped>
-.topic-row { display: flex; justify-content: space-between; gap: 20px; padding: 21px 23px; border: 1px solid var(--portal-line); border-radius: 16px; background: var(--portal-surface); }
+.topic-row { display: flex; justify-content: space-between; gap: 20px; padding: 22px 24px; border-bottom: 1px solid var(--portal-line); background: var(--portal-surface); }
 .topic-main { min-width: 0; }
 .topic-labels, .topic-meta { display: flex; flex-wrap: wrap; gap: 11px; color: var(--portal-text-soft); font-size: 12px; }
 .topic-labels span:first-child { color: var(--portal-accent); }
-.topic-title { display: inline-block; margin-top: 9px; color: var(--portal-text); font-size: 18px; font-weight: 750; }
+.topic-title { display: inline-block; margin-top: 9px; color: var(--portal-text); font-family: 'Songti SC', 'Noto Serif CJK SC', 'SimSun', serif; font-size: 22px; font-weight: 700; }
 .topic-title:hover { color: var(--portal-accent); }
 .topic-main p { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; margin: 8px 0 12px; color: var(--portal-text-soft); font-size: 13px; line-height: 1.6; white-space: pre-wrap; }
 .topic-arrow { align-self: center; color: var(--portal-accent); font-size: 20px; }

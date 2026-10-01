@@ -82,14 +82,14 @@ watch(() => route.fullPath, () => { composerOpen.value = route.query.compose ===
 .board-page { max-width: 1120px; margin: 0 auto; display: grid; gap: 20px; }
 .breadcrumbs { display: flex; gap: 10px; color: var(--portal-text-soft); font-size: 13px; }
 .breadcrumbs a, .project-filter a { color: var(--portal-accent); }
-.board-header { display: flex; align-items: end; justify-content: space-between; gap: 16px; padding: 30px; border: 1px solid var(--portal-line); border-radius: 20px; background: var(--portal-surface); }
-.eyebrow { color: var(--portal-accent); font-size: 11px; letter-spacing: .15em; }
-h1 { margin: 6px 0; font-size: clamp(28px,4vw,42px); }
+.board-header { display: flex; align-items: end; justify-content: space-between; gap: 16px; padding: 34px; border-top: 2px solid var(--portal-text); border-bottom: 1px solid var(--portal-line); background: var(--portal-surface); }
+.eyebrow { color: var(--portal-accent); font-size: 11px; letter-spacing: .08em; }
+h1 { margin: 10px 0; font-size: clamp(36px,4.5vw,52px); }
 .board-header p { margin: 0; color: var(--portal-text-soft); }
 .filters { display: flex; gap: 10px; }
 .filters .el-input { flex: 1; }
 .project-filter { margin: 0; color: var(--portal-text-soft); font-size: 13px; }
-.topic-list { display: grid; gap: 10px; }
-.state-panel { padding: 30px; border: 1px solid var(--portal-line); border-radius: 16px; color: var(--portal-text-soft); background: var(--portal-surface); }
+.topic-list { display: grid; border-top: 1px solid var(--portal-line); }
+.state-panel { padding: 30px; border: 1px solid var(--portal-line); color: var(--portal-text-soft); background: var(--portal-surface); }
 @media (max-width: 650px) { .board-header { flex-direction: column; align-items: start; padding: 22px; } .filters { flex-wrap: wrap; } .filters .el-input { flex-basis: 100%; } }
 </style>

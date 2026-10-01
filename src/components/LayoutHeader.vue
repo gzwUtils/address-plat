@@ -3,7 +3,7 @@
     <div class="header-inner">
       <router-link class="brand" to="/" aria-label="KD 门户首页">
         <span class="brand-mark">KD</span>
-        <span class="brand-copy"><strong>团队门户</strong><small>PROJECTS · COMMUNITY · IDEAS</small></span>
+        <span class="brand-copy"><strong>团队门户</strong><small>项目 / 讨论 / 资源</small></span>
       </router-link>
 
       <button
@@ -90,37 +90,36 @@ const handleSearch = () => {
 </script>
 
 <style scoped>
-.site-header { position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid var(--portal-line); background: color-mix(in srgb, var(--portal-surface) 94%, transparent); backdrop-filter: blur(18px); }
-.site-header::before { content: ''; position: absolute; inset: 0 0 auto; height: 3px; background: linear-gradient(90deg, var(--portal-accent) 0 34%, var(--portal-accent-2) 34% 68%, #d7b777 68%); }
+.site-header { position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid var(--portal-line); background: var(--portal-surface); }
 .header-inner { max-width: 1600px; margin: 0 auto; padding: 13px 28px; display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(155px, 220px) auto auto; align-items: center; gap: 15px; }
 .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.brand-mark { display: grid; place-items: center; flex: 0 0 42px; height: 42px; border-radius: 11px; background: var(--portal-accent); color: var(--portal-accent-ink); font-size: 14px; font-weight: 900; letter-spacing: -.04em; box-shadow: 0 5px 12px var(--portal-glow); }
+.brand-mark { display: grid; place-items: center; flex: 0 0 39px; height: 39px; background: var(--portal-accent); color: var(--portal-accent-ink); font-size: 14px; font-weight: 900; letter-spacing: -.04em; }
 .brand-copy { display: grid; gap: 2px; white-space: nowrap; }
 .brand-copy strong { font-size: 17px; }
-.brand-copy small { color: var(--portal-text-soft); font-size: 9px; letter-spacing: .12em; }
+.brand-copy small { color: var(--portal-text-soft); font-size: 10px; letter-spacing: .05em; }
 .navigation { display: flex; justify-content: center; align-items: center; gap: 4px; }
-.navigation > a, .management-menu summary { display: block; border-radius: 9px; padding: 11px 12px; color: var(--portal-text-soft); font-size: 14px; white-space: nowrap; cursor: pointer; }
-.navigation > a:hover, .navigation > a.active, .management-menu summary:hover, .management-menu summary.active { color: var(--portal-accent); background: var(--portal-bg-soft); }
+.navigation > a, .management-menu summary { display: block; border-bottom: 2px solid transparent; padding: 11px 12px; color: var(--portal-text-soft); font-size: 14px; white-space: nowrap; cursor: pointer; }
+.navigation > a:hover, .navigation > a.active, .management-menu summary:hover, .management-menu summary.active { color: var(--portal-text); border-bottom-color: var(--portal-accent); }
 .management-menu { position: relative; }
 .management-menu summary { list-style: none; }
 .management-menu summary::-webkit-details-marker { display: none; }
 .management-menu summary span { margin-left: 3px; }
-.management-links { position: absolute; top: calc(100% + 10px); left: 0; min-width: 180px; display: grid; padding: 8px; border: 1px solid var(--portal-line); border-radius: 14px; background: var(--portal-surface); box-shadow: var(--portal-shadow); }
+.management-links { position: absolute; top: calc(100% + 10px); left: 0; min-width: 180px; display: grid; padding: 8px; border: 1px solid var(--portal-line); background: var(--portal-surface); box-shadow: var(--portal-shadow); }
 .management-links a { border-radius: 8px; padding: 11px 12px; color: var(--portal-text-soft); white-space: nowrap; font-size: 14px; }
 .management-links a:hover, .management-links a.router-link-active { color: var(--portal-text); background: var(--portal-bg-soft); }
-.header-search { display: flex; min-width: 0; border: 1px solid var(--portal-line); border-radius: 10px; background: var(--portal-bg-soft); }
+.header-search { display: flex; min-width: 0; border-bottom: 1px solid var(--portal-line); background: var(--portal-surface); }
 .header-search input { flex: 1; min-width: 0; border: 0; outline: 0; padding: 10px 11px; background: transparent; color: var(--portal-text); font: inherit; font-size: 13px; }
 .header-search input::placeholder { color: var(--portal-text-soft); }
-.header-search:focus-within { border-color: var(--portal-accent); box-shadow: 0 0 0 3px var(--portal-glow); }
+.header-search:focus-within { border-color: var(--portal-accent); }
 .header-search button { border: 0; padding: 0 12px; color: var(--portal-accent); background: transparent; font-size: 22px; cursor: pointer; }
-.theme-switcher { display: flex; align-items: center; gap: 7px; padding: 6px 8px; border: 1px solid var(--portal-line); border-radius: 999px; background: var(--portal-surface); white-space: nowrap; }
+.theme-switcher { display: flex; align-items: center; gap: 8px; padding: 6px 0 6px 12px; border-left: 1px solid var(--portal-line); white-space: nowrap; }
 .theme-label { color: var(--portal-text-soft); font-size: 11px; margin-right: 1px; }
-.theme-swatch { width: 20px; height: 20px; border: 2px solid #fff; border-radius: 50%; padding: 0; cursor: pointer; box-shadow: 0 0 0 1px var(--portal-line); }
+.theme-swatch { width: 18px; height: 18px; border: 1px solid #fff; padding: 0; cursor: pointer; box-shadow: 0 0 0 1px var(--portal-line); }
 .theme-swatch.red { background: linear-gradient(135deg, #fffaf2 0 46%, #a63d38 47%); }
 .theme-swatch.blue { background: linear-gradient(135deg, #fffaf2 0 46%, #2b617c 47%); }
 .theme-swatch.green { background: linear-gradient(135deg, #fffaf2 0 46%, #456d55 47%); }
 .theme-swatch.selected { box-shadow: 0 0 0 2px var(--portal-accent); }
-.user-chip { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 10px; border: 1px solid var(--portal-line); border-radius: 10px; color: var(--portal-text); background: var(--portal-surface); font: inherit; font-size: 12px; cursor: pointer; }
+.user-chip { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 10px; border: 1px solid var(--portal-line); color: var(--portal-text); background: var(--portal-surface); font: inherit; font-size: 12px; cursor: pointer; }
 .menu-toggle { display: none; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 @media (max-width: 1180px) {

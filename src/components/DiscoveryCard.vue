@@ -44,22 +44,20 @@ const destination = computed(() => props.kind === 'project'
 .discovery-card {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 13px;
   min-width: 0;
-  min-height: 230px;
-  padding: 22px;
+  min-height: 215px;
+  padding: 22px 22px 20px;
   border: 1px solid var(--portal-line);
-  border-radius: 20px;
+  border-top: 2px solid var(--portal-accent-2);
   background: var(--portal-surface);
-  box-shadow: var(--portal-shadow);
-  transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease;
+  transition: border-color 0.2s ease, background 0.2s ease;
 }
 
 .discovery-card:hover,
 .discovery-card:focus-visible {
   border-color: var(--portal-accent);
   background: var(--portal-surface-strong);
-  transform: translateY(-3px);
 }
 
 .card-top,
@@ -72,9 +70,9 @@ const destination = computed(() => props.kind === 'project'
 
 .kind-label {
   color: var(--portal-accent);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
 }
 
 .secondary-label,
@@ -89,7 +87,8 @@ const destination = computed(() => props.kind === 'project'
 h3 {
   margin: 0;
   color: var(--portal-text);
-  font-size: 19px;
+  font-family: 'Songti SC', 'Noto Serif CJK SC', 'SimSun', serif;
+  font-size: 23px;
   line-height: 1.35;
   overflow-wrap: anywhere;
 }

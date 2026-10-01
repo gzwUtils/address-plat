@@ -480,19 +480,19 @@ onBeforeUnmount(() => {
 .section-card {
   border: 1px solid var(--portal-line);
   background: var(--portal-surface);
-  border-radius: 24px;
+  border-radius: 0;
   box-shadow: var(--portal-shadow);
-  backdrop-filter: blur(18px);
 }
 
 .detail-shell {
   padding: 28px;
+  border-top: 2px solid var(--portal-text);
 }
 
 .hero-cover {
   margin: -28px -28px 24px;
   overflow: hidden;
-  border-radius: 24px 24px 18px 18px;
+  border-radius: 0;
   aspect-ratio: 16 / 7;
 }
 
@@ -549,14 +549,12 @@ onBeforeUnmount(() => {
 .markdown-body :deep(blockquote) {
   padding: 12px 14px;
   border-left: 3px solid var(--portal-accent);
-  background: rgba(89, 208, 255, 0.08);
-  border-radius: 12px;
+  background: var(--portal-bg-soft);
 }
 
 .markdown-body :deep(pre) {
   padding: 14px;
-  border-radius: 14px;
-  background: rgba(0, 0, 0, 0.22);
+  background: var(--portal-bg-soft);
   overflow: auto;
 }
 
@@ -565,7 +563,7 @@ onBeforeUnmount(() => {
   width: 100%;
   max-width: 100%;
   margin: 18px 0;
-  border-radius: 18px;
+  border-radius: 0;
   border: 1px solid var(--portal-line);
 }
 
@@ -577,13 +575,12 @@ onBeforeUnmount(() => {
 .tag-row span {
   display: inline-flex;
   padding: 6px 12px;
-  border-radius: 999px;
   font-size: 12px;
 }
 
 .detail-badge {
   margin-top: 12px;
-  background: rgba(89, 208, 255, 0.12);
+  background: var(--portal-bg-soft);
   color: var(--portal-accent);
 }
 
@@ -617,7 +614,7 @@ onBeforeUnmount(() => {
 }
 
 .tag-row span {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--portal-bg-soft);
   color: var(--portal-text-soft);
 }
 
@@ -630,8 +627,7 @@ onBeforeUnmount(() => {
 .insight-block,
 .outline-block {
   border: 1px solid var(--portal-line);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--portal-surface-strong);
   padding: 18px;
 }
 
@@ -645,16 +641,16 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 16px;
   padding: 20px;
-  background: linear-gradient(135deg, rgba(89, 208, 255, 0.08), rgba(255, 184, 107, 0.08));
+  background: var(--portal-bg-soft);
 }
 
 .author-avatar {
   width: 52px;
   height: 52px;
-  border-radius: 16px;
+  border-radius: 0;
   display: grid;
   place-items: center;
-  background: rgba(89, 208, 255, 0.18);
+  background: var(--portal-surface);
   color: var(--portal-text);
   font-weight: 700;
 }
@@ -710,8 +706,7 @@ onBeforeUnmount(() => {
   border: 0;
   padding-top: 10px;
   padding-bottom: 10px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--portal-bg-soft);
   color: inherit;
   text-align: left;
   cursor: pointer;
@@ -719,9 +714,9 @@ onBeforeUnmount(() => {
 
 .outline-copy {
   border: 0;
-  border-radius: 12px;
+  border-radius: 0;
   padding: 0 12px;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--portal-bg-soft);
   color: var(--portal-text-soft);
   cursor: pointer;
 }

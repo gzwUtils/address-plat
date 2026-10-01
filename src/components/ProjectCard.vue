@@ -102,7 +102,7 @@ const handleDelete = async () => {
   display: flex;
   flex-direction: column;
   height: 100%;
-  border-radius: 22px;
+  border-radius: 0;
   border: 1px solid var(--portal-line);
   background: var(--portal-surface);
   box-shadow: var(--portal-shadow);
@@ -116,15 +116,7 @@ const handleDelete = async () => {
   box-shadow: 0 18px 46px rgba(38, 52, 66, .12);
 }
 
-.card-glow {
-  position: absolute;
-  inset: -40% auto auto 55%;
-  width: 180px;
-  height: 180px;
-  border-radius: 50%;
-  background: radial-gradient(circle, var(--portal-glow), transparent 65%);
-  pointer-events: none;
-}
+.card-glow { display: none; }
 
 .card-image {
   display: flex;
@@ -138,7 +130,7 @@ const handleDelete = async () => {
   width: 100%;
   height: 100px;
   object-fit: cover;
-  border-radius: 16px;
+  border-radius: 0;
 }
 
 .card-content {
@@ -156,7 +148,6 @@ const handleDelete = async () => {
   display: inline-flex;
   width: fit-content;
   padding: 6px 12px;
-  border-radius: 999px;
   font-size: 12px;
 }
 

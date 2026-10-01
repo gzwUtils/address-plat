@@ -7,21 +7,21 @@
 <style>
 :root {
   color-scheme: light;
-  --portal-bg: #f7f6f2;
-  --portal-bg-soft: #f3f0e9;
+  --portal-bg: #f4f2ec;
+  --portal-bg-soft: #efede6;
   --portal-surface: #fffefa;
-  --portal-surface-strong: #f8f3eb;
-  --portal-line: #e7e1d8;
-  --portal-text: #263442;
-  --portal-text-soft: #68727b;
-  --portal-accent: #a63d38;
-  --portal-accent-ink: #fffdfa;
-  --portal-accent-2: #2e607c;
-  --portal-warm: #a63d38;
-  --portal-glow: rgba(166, 61, 56, .1);
-  --portal-hero-top: #fffdf9;
-  --portal-hero-bottom: #f8eee9;
-  --portal-shadow: 0 18px 46px rgba(59, 63, 68, .07);
+  --portal-surface-strong: #f6f3ec;
+  --portal-line: #d9d5ca;
+  --portal-text: #202a2e;
+  --portal-text-soft: #666e6d;
+  --portal-accent: #a53732;
+  --portal-accent-ink: #fffefa;
+  --portal-accent-2: #2d5368;
+  --portal-warm: #a53732;
+  --portal-glow: rgba(165, 55, 50, .08);
+  --portal-hero-top: #fffefa;
+  --portal-hero-bottom: #f6f3ec;
+  --portal-shadow: 0 5px 18px rgba(32, 42, 46, .035);
   --el-color-primary: var(--portal-accent);
   --el-color-primary-light-3: color-mix(in srgb, var(--portal-accent) 70%, white);
   --el-color-primary-light-5: color-mix(in srgb, var(--portal-accent) 50%, white);
@@ -36,31 +36,33 @@
   --el-text-color-primary: var(--portal-text);
   --el-text-color-regular: var(--portal-text-soft);
   --el-border-color: var(--portal-line);
+  --el-border-radius-base: 4px;
+  --el-border-radius-small: 3px;
   font-family: 'Avenir Next', 'PingFang SC', 'Microsoft YaHei', sans-serif;
 }
 
 :root[data-theme='blue'] {
-  --portal-bg: #f5f8f9;
-  --portal-bg-soft: #eaf1f4;
-  --portal-surface-strong: #f0f6f8;
-  --portal-line: #dce6e9;
-  --portal-accent: #2b617c;
-  --portal-accent-2: #a63d38;
-  --portal-warm: #a63d38;
-  --portal-glow: rgba(43, 97, 124, .1);
-  --portal-hero-bottom: #eaf2f6;
+  --portal-bg: #f2f4f3;
+  --portal-bg-soft: #e9efef;
+  --portal-surface-strong: #f2f6f5;
+  --portal-line: #d4dddc;
+  --portal-accent: #2d5368;
+  --portal-accent-2: #a53732;
+  --portal-warm: #a53732;
+  --portal-glow: rgba(45, 83, 104, .08);
+  --portal-hero-bottom: #f2f6f5;
 }
 
 :root[data-theme='green'] {
-  --portal-bg: #f7f8f4;
-  --portal-bg-soft: #edf2e9;
-  --portal-surface-strong: #f2f6ef;
-  --portal-line: #e0e8dc;
-  --portal-accent: #456d55;
-  --portal-accent-2: #a63d38;
-  --portal-warm: #a63d38;
-  --portal-glow: rgba(69, 109, 85, .1);
-  --portal-hero-bottom: #edf4ec;
+  --portal-bg: #f3f4ed;
+  --portal-bg-soft: #e9eee5;
+  --portal-surface-strong: #f3f6ef;
+  --portal-line: #d7ded1;
+  --portal-accent: #456b56;
+  --portal-accent-2: #a53732;
+  --portal-warm: #a53732;
+  --portal-glow: rgba(69, 107, 86, .08);
+  --portal-hero-bottom: #f3f6ef;
 }
 
 * {
@@ -75,17 +77,14 @@ body,
 }
 
 body {
-  background:
-    radial-gradient(ellipse 820px 530px at 100% -160px, var(--portal-glow), transparent 76%),
-    radial-gradient(ellipse 760px 620px at -180px 64%, rgba(46, 96, 124, .045), transparent 75%),
-    var(--portal-bg);
-  background-attachment: fixed;
+  background: var(--portal-bg);
   color: var(--portal-text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 h1, h2 { font-family: 'Songti SC', 'Noto Serif CJK SC', 'SimSun', serif; }
+.el-button { border-radius: 3px !important; }
 .el-button--primary { background: var(--portal-accent) !important; border-color: var(--portal-accent) !important; color: var(--portal-accent-ink) !important; }
 .el-button--primary:hover { filter: brightness(.94); }
 .el-button.is-text { color: var(--portal-accent) !important; }

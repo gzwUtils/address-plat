@@ -234,13 +234,13 @@ watch(() => route.params.id, () => { loadProject(); loadTopics() })
 .section-card {
   border: 1px solid var(--portal-line);
   background: var(--portal-surface);
-  border-radius: 24px;
+  border-radius: 0;
   box-shadow: var(--portal-shadow);
-  backdrop-filter: blur(18px);
 }
 
 .detail-shell {
   padding: 28px;
+  border-top: 2px solid var(--portal-text);
 }
 
 .detail-top h1 {
@@ -259,8 +259,7 @@ watch(() => route.params.id, () => { loadProject(); loadTopics() })
   display: inline-flex;
   margin-top: 12px;
   padding: 6px 12px;
-  border-radius: 999px;
-  background: rgba(89, 208, 255, 0.12);
+  background: var(--portal-bg-soft);
   color: var(--portal-accent);
   font-size: 12px;
 }
@@ -319,8 +318,7 @@ watch(() => route.params.id, () => { loadProject(); loadTopics() })
   text-align: left;
   padding: 16px;
   border: 1px solid var(--portal-line);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--portal-surface);
   color: inherit;
   cursor: pointer;
 }
@@ -340,7 +338,7 @@ watch(() => route.params.id, () => { loadProject(); loadTopics() })
   .detail-shell,
   .detail-card,
   .section-card {
-    border-radius: 18px;
+    border-radius: 0;
   }
 
   .detail-shell {
