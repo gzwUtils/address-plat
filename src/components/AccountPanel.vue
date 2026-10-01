@@ -151,7 +151,7 @@ async function createNew() {
 .account-identity strong { font-size: 16px; }
 .form-row { display: flex; gap: 8px; }
 .mine-link { color: var(--portal-accent); }
-.recovery-card { display: grid; gap: 10px; padding: 16px; border: 1px solid var(--portal-accent); border-radius: 12px; background: rgba(89,208,255,.1); }
+.recovery-card { display: grid; gap: 10px; padding: 16px; border: 1px solid var(--portal-accent); border-radius: 12px; background: var(--portal-bg-soft); }
 .recovery-card p, .account-note { margin: 0; color: var(--portal-text-soft); font-size: 13px; line-height: 1.6; }
 .recovery-card code { overflow-wrap: anywhere; font-size: 14px; color: var(--portal-text); }
 .card-actions, .secondary-actions { display: flex; gap: 8px; flex-wrap: wrap; }

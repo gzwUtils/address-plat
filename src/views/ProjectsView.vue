@@ -246,22 +246,22 @@ watch(current, (value) => {
 .eyebrow, .section-index { color: var(--portal-accent); font-size: 12px; font-weight: 700; letter-spacing: .14em; }
 h1 { max-width: 800px; margin: 10px 0; font-size: clamp(36px, 4vw, 52px); line-height: 1.15; letter-spacing: -.035em; }
 .intro-copy p { color: var(--portal-text-soft); font-size: 16px; line-height: 1.7; margin: 0; }
-.search-bar { display: flex; max-width: 860px; padding: 6px; border: 1px solid var(--portal-line); border-radius: 16px; background: var(--portal-bg-soft); }
+.search-bar { display: flex; max-width: 860px; padding: 6px; border: 1px solid var(--portal-line); border-radius: 16px; background: var(--portal-surface); box-shadow: 0 8px 22px rgba(38, 52, 66, .05); }
 .search-bar input { min-width: 0; flex: 1; padding: 14px 17px; border: 0; outline: 0; background: transparent; color: var(--portal-text); font: inherit; }
 .search-bar input::placeholder { color: var(--portal-text-soft); }
-.search-bar:focus-within { border-color: var(--portal-accent); box-shadow: 0 0 0 2px rgba(114, 217, 245, .18); }
+.search-bar:focus-within { border-color: var(--portal-accent); box-shadow: 0 0 0 3px var(--portal-glow); }
 .search-bar button, .state-panel button { border: 0; border-radius: 11px; background: var(--portal-accent); color: var(--portal-accent-ink); padding: 12px 22px; font: inherit; font-weight: 700; cursor: pointer; }
 .browse-shell { padding: clamp(18px, 3vw, 34px); }
 .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 20px; border-bottom: 1px solid var(--portal-line); padding-bottom: 18px; }
 .type-tabs { display: flex; gap: 8px; overflow-x: auto; }
 .type-tabs button { flex-shrink: 0; border: 1px solid transparent; border-radius: 10px; padding: 10px 14px; color: var(--portal-text-soft); background: transparent; font: inherit; cursor: pointer; }
-.type-tabs button.active { color: var(--portal-text); border-color: var(--portal-accent); background: var(--portal-bg-soft); }
+.type-tabs button.active { color: var(--portal-accent); border-color: var(--portal-accent); background: var(--portal-bg-soft); }
 .type-tabs span { margin-left: 7px; font-size: 12px; }
 .category-control { display: flex; align-items: center; gap: 9px; white-space: nowrap; color: var(--portal-text-soft); font-size: 13px; }
 .category-control select { max-width: 180px; border: 1px solid var(--portal-line); border-radius: 9px; background: var(--portal-bg-soft); color: var(--portal-text); padding: 10px; font: inherit; }
 .query-summary { color: var(--portal-text-soft); }
 .query-summary button, .minor-error button { border: 0; background: transparent; color: var(--portal-accent); font: inherit; cursor: pointer; text-decoration: underline; }
-.minor-error { color: #ffcf97; }
+.minor-error { color: var(--portal-accent); }
 .result-section { padding-top: 28px; }
 .result-section + .result-section { margin-top: 28px; border-top: 1px solid var(--portal-line); }
 .section-heading, .section-heading > div { display: flex; align-items: baseline; gap: 12px; }
@@ -270,7 +270,7 @@ h1 { max-width: 800px; margin: 10px 0; font-size: clamp(36px, 4vw, 52px); line-h
 .result-count { color: var(--portal-text-soft); font-size: 13px; }
 .text-action { background: transparent; border: 0; color: var(--portal-accent); font: inherit; cursor: pointer; white-space: nowrap; }
 .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 16px; }
-.card-skeleton { min-height: 230px; border-radius: 20px; background: linear-gradient(100deg, rgba(255,255,255,.03) 25%, rgba(255,255,255,.09) 50%, rgba(255,255,255,.03) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
+.card-skeleton { min-height: 230px; border: 1px solid var(--portal-line); border-radius: 20px; background: linear-gradient(100deg, #f6f4ef 25%, #fffefa 50%, #f6f4ef 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
 .state-panel { display: grid; justify-items: start; gap: 12px; padding: 28px; border: 1px dashed var(--portal-line); border-radius: 17px; color: var(--portal-text-soft); }
 .state-panel p { margin: 0; }
 .pager { display: flex; justify-content: center; align-items: center; gap: 18px; margin-top: 28px; color: var(--portal-text-soft); }

@@ -176,8 +176,8 @@ const submitForm = async () => {
 }
 
 .owner-tip :deep(.el-alert) {
-  background: rgba(89, 208, 255, 0.08);
-  border-color: rgba(89, 208, 255, 0.2);
+  background: var(--portal-bg-soft);
+  border-color: var(--portal-line);
 }
 
 .owner-tip :deep(.el-alert__title) {
@@ -185,6 +185,6 @@ const submitForm = async () => {
 }
 
 .owner-tip :deep(.el-alert__description) {
-  color: #d9e8ff;
+  color: var(--portal-text-soft);
 }
 </style>

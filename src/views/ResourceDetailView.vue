@@ -820,7 +820,7 @@ onBeforeUnmount(() => {
   padding: 16px;
   border: 1px solid var(--portal-line);
   border-radius: 20px;
-  background: rgba(4, 12, 22, 0.82);
+  background: var(--portal-surface);
   box-shadow: var(--portal-shadow);
   backdrop-filter: blur(18px);
 }
@@ -837,25 +837,25 @@ onBeforeUnmount(() => {
   border-radius: 12px;
   padding-top: 9px;
   padding-bottom: 9px;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--portal-bg-soft);
   color: var(--portal-text-soft);
   text-align: left;
   cursor: pointer;
 }
 
 .floating-outline__item.active {
-  color: var(--portal-text);
-  background: rgba(89, 208, 255, 0.14);
+  color: var(--portal-accent);
+  background: var(--portal-bg-soft);
 }
 
 .back-top {
   position: fixed;
   right: 28px;
   bottom: 28px;
-  border: 1px solid rgba(89, 208, 255, 0.24);
+  border: 1px solid var(--portal-line);
   border-radius: 999px;
   padding: 12px 16px;
-  background: rgba(6, 17, 30, 0.86);
+  background: var(--portal-surface);
   color: var(--portal-text);
   box-shadow: var(--portal-shadow);
   cursor: pointer;

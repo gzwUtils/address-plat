@@ -3,7 +3,7 @@
     <section class="hero">
       <div class="hero-main">
         <span class="eyebrow">KD TEAM PORTAL</span>
-        <h1>分享项目，聊出新想法。</h1>
+        <h1>分享项目，<br /><em>聊出新想法。</em></h1>
         <p>找项目、读经验、参与社区讨论。你的项目和想法，都能在这里找到回应。</p>
         <form class="hero-search" role="search" @submit.prevent="submitSearch">
           <label class="sr-only" for="home-search">搜索门户资源</label>
@@ -24,6 +24,11 @@
         </template>
         <p v-else-if="groups.project.error" class="aside-state">项目入口暂时无法加载。</p>
         <p v-else-if="!groups.project.records.length" class="aside-state">暂无项目入口。</p>
+        <div v-if="groups.project.error || (!groups.project.loading && !groups.project.records.length)" class="aside-feature">
+          <span>在这里，分享与讨论同样重要</span>
+          <strong>从一个话题开始，<br />让好想法被看见。</strong>
+          <router-link to="/community">去社区看看 <span aria-hidden="true">↗</span></router-link>
+        </div>
         <router-link
           v-for="item in groups.project.records.slice(0, 3)"
           v-else
@@ -168,30 +173,36 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.home-page { max-width: 1440px; margin: 0 auto; display: grid; gap: clamp(42px, 6vw, 80px); padding-bottom: 48px; }
-.hero { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(270px, .7fr); gap: 20px; }
-.hero-main, .hero-aside { border: 1px solid var(--portal-line); border-radius: 28px; box-shadow: var(--portal-shadow); }
-.hero-main { position: relative; overflow: hidden; padding: clamp(28px, 4vw, 52px); background: radial-gradient(circle at 96% 12%, var(--portal-glow), transparent 45%), linear-gradient(130deg, var(--portal-hero-top), var(--portal-hero-bottom) 72%); }
-.hero-main::after { content: ''; position: absolute; width: 270px; aspect-ratio: 1; right: -105px; top: -120px; border: 1px solid rgba(249, 231, 199, .22); border-radius: 50%; box-shadow: 0 0 0 36px rgba(249,231,199,.025), 0 0 0 72px rgba(249,231,199,.02); pointer-events: none; }
+.home-page { max-width: 1440px; margin: 0 auto; display: grid; gap: clamp(42px, 6vw, 76px); padding-bottom: 48px; }
+.hero { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(270px, .7fr); gap: 20px; }
+.hero-main, .hero-aside { border: 1px solid var(--portal-line); border-radius: 25px; box-shadow: var(--portal-shadow); }
+.hero-main { position: relative; overflow: hidden; padding: clamp(30px, 4vw, 56px); background: radial-gradient(circle at 96% 7%, var(--portal-glow), transparent 47%), linear-gradient(135deg, var(--portal-hero-top), var(--portal-hero-bottom) 98%); }
+.hero-main::before { content: ''; position: absolute; inset: 0 auto 0 0; width: 5px; background: var(--portal-accent); }
+.hero-main::after { content: ''; position: absolute; width: 260px; aspect-ratio: 1; right: -100px; top: -100px; border: 1px solid color-mix(in srgb, var(--portal-accent-2) 24%, transparent); border-radius: 50%; box-shadow: 0 0 0 34px color-mix(in srgb, var(--portal-accent-2) 4%, transparent), 0 0 0 72px color-mix(in srgb, var(--portal-accent-2) 3%, transparent); pointer-events: none; }
 .eyebrow, .section-index, .aside-label { color: var(--portal-accent); font-size: 12px; font-weight: 700; letter-spacing: .14em; }
-h1 { max-width: 780px; margin: 16px 0; font-size: clamp(38px, 4.7vw, 62px); line-height: 1.16; letter-spacing: -.045em; }
+h1 { position: relative; max-width: 780px; margin: 18px 0; font-size: clamp(39px, 4.7vw, 62px); line-height: 1.2; letter-spacing: -.045em; }
+h1 em { color: var(--portal-accent-2); font-style: normal; }
 .hero-main > p { max-width: 580px; margin: 0; color: var(--portal-text-soft); font-size: clamp(16px, 1.7vw, 20px); line-height: 1.7; }
-.hero-search { display: flex; max-width: 780px; gap: 6px; margin-top: 27px; padding: 6px; border: 1px solid var(--portal-line); border-radius: 16px; background: rgba(5, 17, 20, .48); }
+.hero-search { display: flex; max-width: 780px; gap: 6px; margin-top: 30px; padding: 6px; border: 1px solid var(--portal-line); border-radius: 14px; background: var(--portal-surface); box-shadow: 0 8px 22px rgba(38, 52, 66, .06); }
 .hero-search input { flex: 1; min-width: 0; padding: 14px 16px; border: 0; outline: 0; color: var(--portal-text); background: transparent; font: inherit; }
 .hero-search input::placeholder { color: var(--portal-text-soft); }
-.hero-search:focus-within { border-color: var(--portal-accent); box-shadow: 0 0 0 2px rgba(114, 217, 245, .18); }
+.hero-search:focus-within { border-color: var(--portal-accent); box-shadow: 0 0 0 3px var(--portal-glow); }
 .hero-search button { border: 0; border-radius: 11px; padding: 12px 18px; background: var(--portal-accent); color: var(--portal-accent-ink); font: inherit; font-weight: 700; cursor: pointer; }
 .quick-links { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
 .quick-links > span { margin-right: 8px; color: var(--portal-text-soft); font-size: 13px; }
-.quick-links a { padding: 7px 12px; border: 1px solid var(--portal-line); border-radius: 999px; color: var(--portal-text); font-size: 13px; }
+.quick-links a { padding: 7px 12px; border: 1px solid var(--portal-line); border-radius: 999px; color: var(--portal-text); background: rgba(255, 255, 255, .55); font-size: 13px; }
 .quick-links a:hover { border-color: var(--portal-accent); color: var(--portal-accent); }
-.hero-aside { display: flex; flex-direction: column; padding: 32px; background: var(--portal-surface-strong); }
+.hero-aside { display: flex; flex-direction: column; padding: 32px; background: linear-gradient(155deg, #eff5f7, #fbfcfa 75%); border-top: 4px solid var(--portal-accent-2); }
 .aside-label { display: flex; justify-content: space-between; align-items: center; padding-bottom: 28px; }
 .aside-label span { color: var(--portal-text-soft); font-size: 10px; }
 .overview-row { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 23px 0; border-top: 1px solid var(--portal-line); color: var(--portal-text); font-size: 17px; font-weight: 600; }
 .overview-row:hover { color: var(--portal-accent); }
 .overview-row strong { color: var(--portal-accent); font-size: 19px; line-height: 1; }
 .aside-state { color: var(--portal-text-soft); line-height: 1.6; }
+.aside-feature { display: grid; gap: 14px; margin-top: 22px; padding: 24px; border: 1px solid #d8e5e9; border-radius: 16px; background: rgba(255, 255, 255, .68); }
+.aside-feature > span { color: var(--portal-accent-2); font-size: 12px; letter-spacing: .04em; }
+.aside-feature strong { color: var(--portal-text); font-family: 'Songti SC', 'Noto Serif CJK SC', 'SimSun', serif; font-size: 22px; line-height: 1.45; }
+.aside-feature a { color: var(--portal-accent); font-size: 13px; font-weight: 700; }
 .aside-link { display: flex; justify-content: space-between; margin-top: auto; padding-top: 24px; color: var(--portal-accent); font-weight: 700; }
 .home-section, .recent-section { min-width: 0; }
 .section-heading { display: flex; justify-content: space-between; align-items: end; gap: 18px; margin-bottom: 20px; }
@@ -200,7 +211,7 @@ h1 { max-width: 780px; margin: 16px 0; font-size: clamp(38px, 4.7vw, 62px); line
 .section-heading > a { color: var(--portal-accent); white-space: nowrap; font-weight: 700; }
 .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 270px), 1fr)); gap: 17px; }
 .topic-stack { display: grid; gap: 12px; }
-.card-skeleton { min-height: 230px; border-radius: 20px; background: linear-gradient(100deg, rgba(255,255,255,.03) 25%, rgba(255,255,255,.09) 50%, rgba(255,255,255,.03) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
+.card-skeleton { min-height: 230px; border: 1px solid var(--portal-line); border-radius: 20px; background: linear-gradient(100deg, #f6f4ef 25%, #fffefa 50%, #f6f4ef 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
 .state-panel { display: flex; align-items: center; gap: 16px; padding: 27px; border: 1px dashed var(--portal-line); border-radius: 18px; color: var(--portal-text-soft); }
 .state-panel p { margin: 0; }
 .state-panel button { border: 1px solid var(--portal-accent); border-radius: 9px; padding: 9px 12px; color: var(--portal-accent); background: transparent; font: inherit; cursor: pointer; }

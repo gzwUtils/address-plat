@@ -40,9 +40,9 @@
         <button type="submit" aria-label="搜索"><span aria-hidden="true">⌕</span></button>
       </form>
 
-      <div class="theme-switcher" role="group" aria-label="切换国色背景">
+      <div class="theme-switcher" role="group" aria-label="切换国色配色">
         <span class="theme-label">国色</span>
-        <button v-for="option in portalThemes" :key="option.id" type="button" class="theme-swatch" :class="[option.id, { selected: theme === option.id }]" :aria-label="`切换为${option.name}背景`" :aria-pressed="theme === option.id" :title="option.name" @click="setTheme(option.id)" />
+        <button v-for="option in portalThemes" :key="option.id" type="button" class="theme-swatch" :class="[option.id, { selected: theme === option.id }]" :aria-label="`切换为${option.name}配色`" :aria-pressed="theme === option.id" :title="option.name" @click="setTheme(option.id)" />
       </div>
 
       <button type="button" class="user-chip" :title="account.profile?.publicId || '我的账户'" @click="accountOpen = true">
@@ -90,34 +90,35 @@ const handleSearch = () => {
 </script>
 
 <style scoped>
-.site-header { position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid var(--portal-line); background: var(--portal-bg); backdrop-filter: blur(18px); }
+.site-header { position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid var(--portal-line); background: color-mix(in srgb, var(--portal-surface) 94%, transparent); backdrop-filter: blur(18px); }
+.site-header::before { content: ''; position: absolute; inset: 0 0 auto; height: 3px; background: linear-gradient(90deg, var(--portal-accent) 0 34%, var(--portal-accent-2) 34% 68%, #d7b777 68%); }
 .header-inner { max-width: 1600px; margin: 0 auto; padding: 13px 28px; display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(155px, 220px) auto auto; align-items: center; gap: 15px; }
 .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.brand-mark { display: grid; place-items: center; flex: 0 0 42px; height: 42px; border-radius: 12px; background: var(--portal-accent); color: var(--portal-accent-ink); font-size: 14px; font-weight: 900; letter-spacing: -.04em; }
+.brand-mark { display: grid; place-items: center; flex: 0 0 42px; height: 42px; border-radius: 11px; background: var(--portal-accent); color: var(--portal-accent-ink); font-size: 14px; font-weight: 900; letter-spacing: -.04em; box-shadow: 0 5px 12px var(--portal-glow); }
 .brand-copy { display: grid; gap: 2px; white-space: nowrap; }
 .brand-copy strong { font-size: 17px; }
 .brand-copy small { color: var(--portal-text-soft); font-size: 9px; letter-spacing: .12em; }
 .navigation { display: flex; justify-content: center; align-items: center; gap: 4px; }
 .navigation > a, .management-menu summary { display: block; border-radius: 9px; padding: 11px 12px; color: var(--portal-text-soft); font-size: 14px; white-space: nowrap; cursor: pointer; }
-.navigation > a:hover, .navigation > a.active, .management-menu summary:hover, .management-menu summary.active { color: var(--portal-text); background: var(--portal-bg-soft); }
+.navigation > a:hover, .navigation > a.active, .management-menu summary:hover, .management-menu summary.active { color: var(--portal-accent); background: var(--portal-bg-soft); }
 .management-menu { position: relative; }
 .management-menu summary { list-style: none; }
 .management-menu summary::-webkit-details-marker { display: none; }
 .management-menu summary span { margin-left: 3px; }
-.management-links { position: absolute; top: calc(100% + 10px); left: 0; min-width: 180px; display: grid; padding: 8px; border: 1px solid var(--portal-line); border-radius: 14px; background: var(--portal-surface-strong); box-shadow: var(--portal-shadow); }
+.management-links { position: absolute; top: calc(100% + 10px); left: 0; min-width: 180px; display: grid; padding: 8px; border: 1px solid var(--portal-line); border-radius: 14px; background: var(--portal-surface); box-shadow: var(--portal-shadow); }
 .management-links a { border-radius: 8px; padding: 11px 12px; color: var(--portal-text-soft); white-space: nowrap; font-size: 14px; }
 .management-links a:hover, .management-links a.router-link-active { color: var(--portal-text); background: var(--portal-bg-soft); }
-.header-search { display: flex; min-width: 0; border: 1px solid var(--portal-line); border-radius: 10px; background: rgba(255, 255, 255, .045); }
+.header-search { display: flex; min-width: 0; border: 1px solid var(--portal-line); border-radius: 10px; background: var(--portal-bg-soft); }
 .header-search input { flex: 1; min-width: 0; border: 0; outline: 0; padding: 10px 11px; background: transparent; color: var(--portal-text); font: inherit; font-size: 13px; }
 .header-search input::placeholder { color: var(--portal-text-soft); }
-.header-search:focus-within { border-color: var(--portal-accent); box-shadow: 0 0 0 2px rgba(114, 217, 245, .18); }
+.header-search:focus-within { border-color: var(--portal-accent); box-shadow: 0 0 0 3px var(--portal-glow); }
 .header-search button { border: 0; padding: 0 12px; color: var(--portal-accent); background: transparent; font-size: 22px; cursor: pointer; }
 .theme-switcher { display: flex; align-items: center; gap: 7px; padding: 6px 8px; border: 1px solid var(--portal-line); border-radius: 999px; background: var(--portal-surface); white-space: nowrap; }
 .theme-label { color: var(--portal-text-soft); font-size: 11px; margin-right: 1px; }
-.theme-swatch { width: 20px; height: 20px; border: 2px solid rgba(255,255,255,.42); border-radius: 50%; padding: 0; cursor: pointer; box-shadow: 0 0 0 2px transparent; }
-.theme-swatch.blue { background: #638da4; }
-.theme-swatch.red { background: #bb625c; }
-.theme-swatch.green { background: #5f9b72; }
+.theme-swatch { width: 20px; height: 20px; border: 2px solid #fff; border-radius: 50%; padding: 0; cursor: pointer; box-shadow: 0 0 0 1px var(--portal-line); }
+.theme-swatch.red { background: linear-gradient(135deg, #fffaf2 0 46%, #a63d38 47%); }
+.theme-swatch.blue { background: linear-gradient(135deg, #fffaf2 0 46%, #2b617c 47%); }
+.theme-swatch.green { background: linear-gradient(135deg, #fffaf2 0 46%, #456d55 47%); }
 .theme-swatch.selected { box-shadow: 0 0 0 2px var(--portal-accent); }
 .user-chip { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 10px; border: 1px solid var(--portal-line); border-radius: 10px; color: var(--portal-text); background: var(--portal-surface); font: inherit; font-size: 12px; cursor: pointer; }
 .menu-toggle { display: none; }

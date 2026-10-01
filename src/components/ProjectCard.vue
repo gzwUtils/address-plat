@@ -104,17 +104,16 @@ const handleDelete = async () => {
   height: 100%;
   border-radius: 22px;
   border: 1px solid var(--portal-line);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02)),
-    rgba(7, 20, 37, 0.9);
+  background: var(--portal-surface);
+  box-shadow: var(--portal-shadow);
   cursor: pointer;
   transition: transform 0.26s ease, border-color 0.26s ease, box-shadow 0.26s ease;
 }
 
 .project-card:hover {
   transform: translateY(-6px);
-  border-color: rgba(89, 208, 255, 0.4);
-  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.22);
+  border-color: var(--portal-accent);
+  box-shadow: 0 18px 46px rgba(38, 52, 66, .12);
 }
 
 .card-glow {
@@ -123,7 +122,7 @@ const handleDelete = async () => {
   width: 180px;
   height: 180px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(89, 208, 255, 0.24), transparent 65%);
+  background: radial-gradient(circle, var(--portal-glow), transparent 65%);
   pointer-events: none;
 }
 
@@ -163,7 +162,7 @@ const handleDelete = async () => {
 
 .card-badge {
   color: var(--portal-accent);
-  background: rgba(89, 208, 255, 0.12);
+  background: var(--portal-bg-soft);
 }
 
 .card-title {
@@ -186,13 +185,13 @@ const handleDelete = async () => {
 }
 
 .card-meta span {
-  color: #d9e8ff;
-  background: rgba(255, 255, 255, 0.06);
+  color: var(--portal-text-soft);
+  background: var(--portal-bg-soft);
 }
 
 .card-meta .owner-tag {
   color: var(--portal-accent);
-  background: rgba(89, 208, 255, 0.15);
+  background: var(--portal-bg-soft);
 }
 
 .card-actions-overlay {

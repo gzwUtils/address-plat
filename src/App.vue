@@ -6,23 +6,29 @@
 
 <style>
 :root {
-  color-scheme: dark;
-  --portal-bg: #0d2230;
-  --portal-bg-soft: #163344;
-  --portal-surface: #173343;
-  --portal-surface-strong: #204353;
-  --portal-line: rgba(226, 220, 199, .22);
-  --portal-text: #f7f0e3;
-  --portal-text-soft: #c9c9be;
-  --portal-accent: #a8d5dc;
-  --portal-accent-ink: #102b37;
-  --portal-accent-2: #d8b683;
-  --portal-warm: #efc78e;
-  --portal-glow: rgba(85, 147, 166, .38);
-  --portal-hero-top: #28576b;
-  --portal-hero-bottom: #173447;
-  --portal-shadow: 0 20px 54px rgba(2, 13, 19, .21);
+  color-scheme: light;
+  --portal-bg: #f7f6f2;
+  --portal-bg-soft: #f3f0e9;
+  --portal-surface: #fffefa;
+  --portal-surface-strong: #f8f3eb;
+  --portal-line: #e7e1d8;
+  --portal-text: #263442;
+  --portal-text-soft: #68727b;
+  --portal-accent: #a63d38;
+  --portal-accent-ink: #fffdfa;
+  --portal-accent-2: #2e607c;
+  --portal-warm: #a63d38;
+  --portal-glow: rgba(166, 61, 56, .1);
+  --portal-hero-top: #fffdf9;
+  --portal-hero-bottom: #f8eee9;
+  --portal-shadow: 0 18px 46px rgba(59, 63, 68, .07);
   --el-color-primary: var(--portal-accent);
+  --el-color-primary-light-3: color-mix(in srgb, var(--portal-accent) 70%, white);
+  --el-color-primary-light-5: color-mix(in srgb, var(--portal-accent) 50%, white);
+  --el-color-primary-light-7: color-mix(in srgb, var(--portal-accent) 30%, white);
+  --el-color-primary-light-8: color-mix(in srgb, var(--portal-accent) 20%, white);
+  --el-color-primary-light-9: color-mix(in srgb, var(--portal-accent) 10%, white);
+  --el-color-primary-dark-2: color-mix(in srgb, var(--portal-accent) 80%, black);
   --el-bg-color: var(--portal-surface);
   --el-bg-color-overlay: var(--portal-surface-strong);
   --el-fill-color-blank: var(--portal-surface);
@@ -33,32 +39,28 @@
   font-family: 'Avenir Next', 'PingFang SC', 'Microsoft YaHei', sans-serif;
 }
 
-:root[data-theme='red'] {
-  --portal-bg: #2c1b20;
-  --portal-bg-soft: #3c252b;
-  --portal-surface: #43292f;
-  --portal-surface-strong: #55343a;
-  --portal-line: rgba(243, 219, 202, .22);
-  --portal-accent: #f0b1a0;
-  --portal-accent-ink: #442329;
-  --portal-accent-2: #ebcf9f;
-  --portal-glow: rgba(167, 72, 66, .4);
-  --portal-hero-top: #753b42;
-  --portal-hero-bottom: #46262e;
+:root[data-theme='blue'] {
+  --portal-bg: #f5f8f9;
+  --portal-bg-soft: #eaf1f4;
+  --portal-surface-strong: #f0f6f8;
+  --portal-line: #dce6e9;
+  --portal-accent: #2b617c;
+  --portal-accent-2: #a63d38;
+  --portal-warm: #a63d38;
+  --portal-glow: rgba(43, 97, 124, .1);
+  --portal-hero-bottom: #eaf2f6;
 }
 
 :root[data-theme='green'] {
-  --portal-bg: #14271f;
-  --portal-bg-soft: #1f382c;
-  --portal-surface: #234033;
-  --portal-surface-strong: #2b4d3c;
-  --portal-line: rgba(226, 227, 198, .22);
-  --portal-accent: #b7d9b6;
-  --portal-accent-ink: #1a3528;
-  --portal-accent-2: #e4c392;
-  --portal-glow: rgba(82, 144, 100, .38);
-  --portal-hero-top: #3c6c52;
-  --portal-hero-bottom: #234333;
+  --portal-bg: #f7f8f4;
+  --portal-bg-soft: #edf2e9;
+  --portal-surface-strong: #f2f6ef;
+  --portal-line: #e0e8dc;
+  --portal-accent: #456d55;
+  --portal-accent-2: #a63d38;
+  --portal-warm: #a63d38;
+  --portal-glow: rgba(69, 109, 85, .1);
+  --portal-hero-bottom: #edf4ec;
 }
 
 * {
@@ -74,9 +76,8 @@ body,
 
 body {
   background:
-    radial-gradient(ellipse 900px 620px at 6% 0%, var(--portal-glow), transparent 70%),
-    radial-gradient(ellipse 740px 900px at 100% 52%, var(--portal-glow), transparent 78%),
-    repeating-linear-gradient(115deg, transparent 0 90px, rgba(246, 236, 213, .025) 91px, transparent 92px),
+    radial-gradient(ellipse 820px 530px at 100% -160px, var(--portal-glow), transparent 76%),
+    radial-gradient(ellipse 760px 620px at -180px 64%, rgba(46, 96, 124, .045), transparent 75%),
     var(--portal-bg);
   background-attachment: fixed;
   color: var(--portal-text);
@@ -86,9 +87,10 @@ body {
 
 h1, h2 { font-family: 'Songti SC', 'Noto Serif CJK SC', 'SimSun', serif; }
 .el-button--primary { background: var(--portal-accent) !important; border-color: var(--portal-accent) !important; color: var(--portal-accent-ink) !important; }
+.el-button--primary:hover { filter: brightness(.94); }
 .el-button.is-text { color: var(--portal-accent) !important; }
-.el-button:not(.el-button--primary):not(.el-button--danger):not(.is-text) { background: var(--portal-surface-strong); border-color: var(--portal-line); color: var(--portal-text); }
-.el-input__wrapper, .el-textarea__inner, .el-select__wrapper { background-color: var(--portal-bg-soft) !important; color: var(--portal-text); box-shadow: 0 0 0 1px var(--portal-line) inset !important; }
+.el-button:not(.el-button--primary):not(.el-button--danger):not(.is-text) { background: var(--portal-surface); border-color: var(--portal-line); color: var(--portal-text); }
+.el-input__wrapper, .el-textarea__inner, .el-select__wrapper { background-color: var(--portal-surface) !important; color: var(--portal-text); box-shadow: 0 0 0 1px var(--portal-line) inset !important; }
 .el-input__inner, .el-textarea__inner { color: var(--portal-text); }
 
 a {
