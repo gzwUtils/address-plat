@@ -29,6 +29,15 @@
         <p>{{ project.description || '该项目尚未补充更详细的门户说明。' }}</p>
       </section>
 
+      <section class="section-card discussion-card">
+        <div class="discussion-heading"><div><span class="section-kicker">PROJECT CONVERSATION</span><h2>围绕这个项目聊聊</h2></div><router-link :to="{ path: '/community/boards/project-share', query: { projectId: project.id, compose: '1' } }">发起讨论 ↗</router-link></div>
+        <div v-if="topicsLoading" class="discussion-state">正在加载讨论…</div>
+        <div v-else-if="topicsError" class="discussion-state" role="alert">讨论暂时无法加载。<el-button text @click="loadTopics">重试</el-button></div>
+        <div v-else-if="projectTopics.length" class="topic-list"><TopicRow v-for="topic in projectTopics" :key="topic.id" :topic="topic" /></div>
+        <div v-else class="discussion-state">还没有相关讨论，欢迎分享你的使用经验。</div>
+        <router-link class="view-all" :to="{ path: '/community/boards/project-share', query: { projectId: project.id } }">查看全部项目讨论 ↗</router-link>
+      </section>
+
       <section v-if="relatedProjects.length > 0" class="section-card">
         <h2>相关推荐</h2>
         <div class="recommend-grid">
@@ -73,11 +82,13 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { addGrowthCapsuleItem, getRecentViews, saveRecentView } from '@/api/content'
 import { getCategories, getProjects } from '@/api/project'
+import { listTopics } from '@/api/community'
+import TopicRow from '@/components/TopicRow.vue'
 import { getClientId } from '@/utils/clientId'
 import { getRecentHistory, pushRecentHistory } from '@/utils/recentHistory'
 import { getPortalUserId } from '@/utils/userIdentity'
@@ -87,6 +98,19 @@ const router = useRouter()
 const project = ref(null)
 const projectPool = ref([])
 const recentItems = ref([])
+const projectTopics = ref([])
+const topicsLoading = ref(true)
+const topicsError = ref(false)
+
+async function loadTopics() {
+  topicsLoading.value = true
+  topicsError.value = false
+  try {
+    const result = await listTopics({ projectId: Number(route.params.id), page: 1, size: 4 })
+    projectTopics.value = result.records || []
+  } catch { topicsError.value = true }
+  finally { topicsLoading.value = false }
+}
 
 const normalizeRecentItem = (item) => ({
   id: item.id ?? item.targetId,
@@ -188,7 +212,9 @@ onMounted(async () => {
     console.warn('读取项目最近浏览失败，沿用本地记录', error)
   }
   await loadProject()
+  await loadTopics()
 })
+watch(() => route.params.id, () => { loadProject(); loadTopics() })
 </script>
 
 <style scoped>
@@ -196,6 +222,12 @@ onMounted(async () => {
   max-width: 1100px;
   margin: 0 auto;
 }
+.discussion-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.discussion-heading a, .view-all { color: var(--portal-accent); font-weight: 700; }
+.section-kicker { color: var(--portal-accent); font-size: 11px; letter-spacing: .13em; }
+.topic-list { display: grid; gap: 10px; margin-top: 18px; }
+.discussion-state { padding: 20px 0; color: var(--portal-text-soft); }
+.view-all { display: inline-block; margin-top: 14px; }
 
 .detail-shell,
 .detail-card,

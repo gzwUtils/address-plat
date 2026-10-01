@@ -21,22 +21,23 @@ const props = defineProps({
   item: { type: Object, required: true }
 })
 
-const labels = { project: '项目', article: '文章', ai: 'AI 资产', life: '生活内容' }
-const actions = { project: '查看项目', article: '阅读文章', ai: '查看资产', life: '查看内容' }
+const labels = { project: '项目', topic: '社区讨论', article: '文章', ai: 'AI 资产', life: '生活内容' }
+const actions = { project: '查看项目', topic: '参与讨论', article: '阅读文章', ai: '查看资产', life: '查看内容' }
 
 const kindLabel = computed(() => labels[props.kind] || '资源')
 const actionLabel = computed(() => actions[props.kind] || '查看详情')
 const title = computed(() => props.item.projectName || props.item.title || props.item.name || '未命名资源')
-const description = computed(() => props.item.description || props.item.excerpt || props.item.desc || '暂无简介')
-const secondaryLabel = computed(() => props.item.category || props.item.type || '')
+const description = computed(() => props.item.description || props.item.excerpt || props.item.body || props.item.desc || '暂无简介')
+const secondaryLabel = computed(() => props.item.boardName || props.item.category || props.item.type || '')
 const meta = computed(() => {
   if (props.kind === 'project') return props.item.shortName || props.item.ownerName || '项目入口'
+  if (props.kind === 'topic') return `${props.item.authorNickname || '社区成员'} · ${props.item.replyCount || 0} 条回复`
   if (props.kind === 'ai') return [props.item.owner, props.item.status].filter(Boolean).join(' · ') || 'AI 能力'
   return props.item.date || props.item.author || props.item.meta || kindLabel.value
 })
 const destination = computed(() => props.kind === 'project'
   ? `/project/${props.item.id}`
-  : `/explore/${props.kind}/${props.item.id}`)
+  : props.kind === 'topic' ? `/community/topics/${props.item.id}` : `/explore/${props.kind}/${props.item.id}`)
 </script>
 
 <style scoped>

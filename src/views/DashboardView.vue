@@ -3,8 +3,8 @@
     <section class="hero">
       <div class="hero-main">
         <span class="eyebrow">KD TEAM PORTAL</span>
-        <h1>项目、知识与 AI，打开即用。</h1>
-        <p>找项目、读经验、使用 AI 能力。从这里开始，少绕几步。</p>
+        <h1>分享项目，聊出新想法。</h1>
+        <p>找项目、读经验、参与社区讨论。你的项目和想法，都能在这里找到回应。</p>
         <form class="hero-search" role="search" @submit.prevent="submitSearch">
           <label class="sr-only" for="home-search">搜索门户资源</label>
           <input id="home-search" v-model="keyword" type="search" placeholder="搜索项目、文章、AI 能力…" />
@@ -36,6 +36,17 @@
         </router-link>
         <router-link class="aside-link" :to="{ path: '/explore', query: { type: 'project' } }">浏览全部项目 <span aria-hidden="true">↗</span></router-link>
       </aside>
+    </section>
+
+    <section class="home-section discussion-section">
+      <header class="section-heading">
+        <div><span class="section-index">01 / COMMUNITY</span><h2>正在讨论</h2><p>看看大家最近分享了什么，也可以开一个新话题。</p></div>
+        <router-link to="/community">进入社区 <span aria-hidden="true">↗</span></router-link>
+      </header>
+      <div v-if="groups.topic.loading" class="topic-stack"><div v-for="index in 3" :key="index" class="card-skeleton" /></div>
+      <div v-else-if="groups.topic.error" class="state-panel" role="alert"><p>讨论暂时无法加载。</p><button type="button" @click="loadGroup('topic')">重新加载</button></div>
+      <div v-else-if="groups.topic.records.length" class="topic-stack"><TopicRow v-for="item in groups.topic.records" :key="item.id" :topic="item" /></div>
+      <div v-else class="state-panel">还没有讨论。<router-link to="/community">发起第一个话题 ↗</router-link></div>
     </section>
 
     <section v-for="section in sections" :key="section.kind" class="home-section">
@@ -70,7 +81,7 @@
     <section v-if="recentItems.length" class="recent-section">
       <div class="section-heading">
         <div>
-          <span class="section-index">05 / PICK UP WHERE YOU LEFT OFF</span>
+          <span class="section-index">06 / PICK UP WHERE YOU LEFT OFF</span>
           <h2>继续浏览</h2>
           <p>回到你最近看过的内容。</p>
         </div>
@@ -90,6 +101,7 @@
 import { onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import DiscoveryCard from '@/components/DiscoveryCard.vue'
+import TopicRow from '@/components/TopicRow.vue'
 import { getRecentViews } from '@/api/content'
 import { fetchDiscoveryGroup } from '@/composables/useResourceDiscovery'
 import { getClientId } from '@/utils/clientId'
@@ -98,19 +110,20 @@ const router = useRouter()
 const keyword = ref('')
 const quickLinks = [
   { type: 'project', label: '项目' },
+  { type: 'topic', label: '讨论' },
   { type: 'article', label: '文章' },
   { type: 'ai', label: 'AI 资产' },
   { type: 'life', label: '团队内容' }
 ]
 const sections = [
-  { kind: 'project', index: '01', kicker: 'PROJECTS', title: '项目入口', description: '直接进入团队常用的系统与工具。' },
-  { kind: 'article', index: '02', kicker: 'KNOWLEDGE', title: '推荐文章', description: '把实践和经验沉淀下来，随时接着读。' },
-  { kind: 'ai', index: '03', kicker: 'AI CAPABILITIES', title: 'AI 能力', description: '找到可用的助手、技能和工作流。' },
-  { kind: 'life', index: '04', kicker: 'TEAM LIFE', title: '团队内容', description: '公告、活动与日常灵感。' }
+  { kind: 'project', index: '02', kicker: 'PROJECTS', title: '项目入口', description: '直接进入团队常用的系统与工具。' },
+  { kind: 'article', index: '03', kicker: 'KNOWLEDGE', title: '推荐文章', description: '把实践和经验沉淀下来，随时接着读。' },
+  { kind: 'ai', index: '04', kicker: 'AI CAPABILITIES', title: 'AI 能力', description: '找到可用的助手、技能和工作流。' },
+  { kind: 'life', index: '05', kicker: 'TEAM LIFE', title: '团队内容', description: '公告、活动与日常灵感。' }
 ]
 const emptyGroup = () => ({ records: [], total: 0, loading: true, error: null })
 const groups = reactive({
-  project: emptyGroup(), article: emptyGroup(), ai: emptyGroup(), life: emptyGroup()
+  project: emptyGroup(), topic: emptyGroup(), article: emptyGroup(), ai: emptyGroup(), life: emptyGroup()
 })
 const recentItems = ref([])
 
@@ -149,6 +162,7 @@ async function loadRecent() {
 
 onMounted(() => {
   sections.forEach((section) => loadGroup(section.kind))
+  loadGroup('topic')
   loadRecent()
 })
 </script>
@@ -157,18 +171,19 @@ onMounted(() => {
 .home-page { max-width: 1440px; margin: 0 auto; display: grid; gap: clamp(42px, 6vw, 80px); padding-bottom: 48px; }
 .hero { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(270px, .7fr); gap: 20px; }
 .hero-main, .hero-aside { border: 1px solid var(--portal-line); border-radius: 28px; box-shadow: var(--portal-shadow); }
-.hero-main { padding: clamp(28px, 4vw, 52px); background: radial-gradient(circle at 96% 12%, rgba(89, 208, 255, .16), transparent 37%), linear-gradient(130deg, #142d42, #0d1d30 66%); }
+.hero-main { position: relative; overflow: hidden; padding: clamp(28px, 4vw, 52px); background: radial-gradient(circle at 96% 12%, var(--portal-glow), transparent 45%), linear-gradient(130deg, var(--portal-hero-top), var(--portal-hero-bottom) 72%); }
+.hero-main::after { content: ''; position: absolute; width: 270px; aspect-ratio: 1; right: -105px; top: -120px; border: 1px solid rgba(249, 231, 199, .22); border-radius: 50%; box-shadow: 0 0 0 36px rgba(249,231,199,.025), 0 0 0 72px rgba(249,231,199,.02); pointer-events: none; }
 .eyebrow, .section-index, .aside-label { color: var(--portal-accent); font-size: 12px; font-weight: 700; letter-spacing: .14em; }
 h1 { max-width: 780px; margin: 16px 0; font-size: clamp(38px, 4.7vw, 62px); line-height: 1.16; letter-spacing: -.045em; }
-.hero-main > p { max-width: 580px; margin: 0; color: #bfd0e4; font-size: clamp(16px, 1.7vw, 20px); line-height: 1.7; }
-.hero-search { display: flex; max-width: 780px; gap: 6px; margin-top: 27px; padding: 6px; border: 1px solid rgba(170, 199, 217, .37); border-radius: 16px; background: rgba(2, 12, 25, .75); }
+.hero-main > p { max-width: 580px; margin: 0; color: var(--portal-text-soft); font-size: clamp(16px, 1.7vw, 20px); line-height: 1.7; }
+.hero-search { display: flex; max-width: 780px; gap: 6px; margin-top: 27px; padding: 6px; border: 1px solid var(--portal-line); border-radius: 16px; background: rgba(5, 17, 20, .48); }
 .hero-search input { flex: 1; min-width: 0; padding: 14px 16px; border: 0; outline: 0; color: var(--portal-text); background: transparent; font: inherit; }
 .hero-search input::placeholder { color: var(--portal-text-soft); }
 .hero-search:focus-within { border-color: var(--portal-accent); box-shadow: 0 0 0 2px rgba(114, 217, 245, .18); }
-.hero-search button { border: 0; border-radius: 11px; padding: 12px 18px; background: var(--portal-accent); color: #041523; font: inherit; font-weight: 700; cursor: pointer; }
+.hero-search button { border: 0; border-radius: 11px; padding: 12px 18px; background: var(--portal-accent); color: var(--portal-accent-ink); font: inherit; font-weight: 700; cursor: pointer; }
 .quick-links { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
 .quick-links > span { margin-right: 8px; color: var(--portal-text-soft); font-size: 13px; }
-.quick-links a { padding: 7px 12px; border: 1px solid rgba(180, 202, 220, .24); border-radius: 999px; color: #dcecf9; font-size: 13px; }
+.quick-links a { padding: 7px 12px; border: 1px solid var(--portal-line); border-radius: 999px; color: var(--portal-text); font-size: 13px; }
 .quick-links a:hover { border-color: var(--portal-accent); color: var(--portal-accent); }
 .hero-aside { display: flex; flex-direction: column; padding: 32px; background: var(--portal-surface-strong); }
 .aside-label { display: flex; justify-content: space-between; align-items: center; padding-bottom: 28px; }
@@ -184,6 +199,7 @@ h1 { max-width: 780px; margin: 16px 0; font-size: clamp(38px, 4.7vw, 62px); line
 .section-heading p { margin: 0; color: var(--portal-text-soft); }
 .section-heading > a { color: var(--portal-accent); white-space: nowrap; font-weight: 700; }
 .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 270px), 1fr)); gap: 17px; }
+.topic-stack { display: grid; gap: 12px; }
 .card-skeleton { min-height: 230px; border-radius: 20px; background: linear-gradient(100deg, rgba(255,255,255,.03) 25%, rgba(255,255,255,.09) 50%, rgba(255,255,255,.03) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
 .state-panel { display: flex; align-items: center; gap: 16px; padding: 27px; border: 1px dashed var(--portal-line); border-radius: 18px; color: var(--portal-text-soft); }
 .state-panel p { margin: 0; }

@@ -29,6 +29,17 @@ api.interceptors.request.use(async (config) => {
 })
 
 api.interceptors.response.use(undefined, async (error) => {
+  const path = error.config?.url || ''
+  const method = (error.config?.method || 'get').toLowerCase()
+  const adminWrite = !['get', 'head', 'options'].includes(method) &&
+    (path.startsWith('/content/resources') || path.startsWith('/ai-assets') ||
+      (path.startsWith('/admin/') && path !== '/admin/session'))
+  if (error.response?.status === 401 && adminWrite) {
+    const { default: router } = await import('@/router')
+    if (router.currentRoute.value.path !== '/admin/sign-in') {
+      router.push({ path: '/admin/sign-in', query: { next: router.currentRoute.value.fullPath } })
+    }
+  }
   if (error.response?.status === 403 && error.response?.data?.code !== 403 && !error.config?._csrfRetried) {
     csrfToken = ''
     const config = { ...error.config, _csrfRetried: true }

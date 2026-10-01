@@ -1,7 +1,8 @@
 import { getContentResourcePage } from '@/api/content'
 import { getProjects } from '@/api/project'
+import { listTopics } from '@/api/community'
 
-export const discoveryKinds = ['project', 'article', 'ai', 'life']
+export const discoveryKinds = ['project', 'topic', 'article', 'ai', 'life']
 
 const positiveInt = (value, fallback = 1) => {
   const parsed = Number.parseInt(value, 10)
@@ -50,6 +51,11 @@ export const fetchDiscoveryGroup = async (kind, options = {}) => {
     const filtered = projects.filter((project) => matchesProjectKeyword(project, keyword))
     const start = (page - 1) * size
     return { records: filtered.slice(start, start + size), total: filtered.length, page, size }
+  }
+
+  if (kind === 'topic') {
+    const result = await listTopics({ keyword, page, size })
+    return normalizePage(result, page, size)
   }
 
   if (!discoveryKinds.includes(kind)) {

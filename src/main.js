@@ -4,6 +4,9 @@ import App from './App.vue'
 import router from './router'
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
+import { applyPortalTheme, readPortalTheme } from './utils/portalTheme'
+
+applyPortalTheme(readPortalTheme())
 
 const app = createApp(App)
 app.use(createPinia())

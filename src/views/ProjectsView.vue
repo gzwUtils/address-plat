@@ -4,7 +4,7 @@
       <div class="intro-copy">
         <span class="eyebrow">RESOURCE LIBRARY</span>
         <h1>资源广场</h1>
-        <p>搜索项目地址、实践文章、AI 能力和团队内容。结果来自门户实时数据。</p>
+        <p>搜索项目、社区讨论、实践文章、AI 能力和团队内容。结果来自门户实时数据。</p>
       </div>
       <form class="search-bar" role="search" @submit.prevent="submitSearch">
         <label class="sr-only" for="discovery-search">搜索门户资源</label>
@@ -77,7 +77,7 @@
         <div class="section-heading">
           <div>
             <span class="section-index">RESULTS</span>
-            <h2>{{ labelFor(current.type) }}</h2>
+          <h2>{{ labelFor(current.type) }}</h2>
             <span v-if="selectedData" class="result-count">{{ selectedData.total }} 条结果</span>
           </div>
         </div>
@@ -125,6 +125,7 @@ const router = useRouter()
 const tabs = [
   { type: 'all', label: '全部' },
   { type: 'project', label: '项目' },
+  { type: 'topic', label: '讨论' },
   { type: 'article', label: '文章' },
   { type: 'ai', label: 'AI 资产' },
   { type: 'life', label: '生活内容' }
@@ -241,20 +242,20 @@ watch(current, (value) => {
 <style scoped>
 .discovery-page { max-width: 1440px; margin: 0 auto; display: grid; gap: 24px; }
 .page-intro, .browse-shell { border: 1px solid var(--portal-line); border-radius: 28px; background: var(--portal-surface); box-shadow: var(--portal-shadow); }
-.page-intro { padding: clamp(27px, 3.5vw, 45px); display: grid; gap: 20px; background: linear-gradient(125deg, rgba(42, 83, 113, .35), transparent 55%), var(--portal-surface); }
+.page-intro { padding: clamp(27px, 3.5vw, 45px); display: grid; gap: 20px; background: linear-gradient(125deg, var(--portal-glow), transparent 65%), var(--portal-surface); }
 .eyebrow, .section-index { color: var(--portal-accent); font-size: 12px; font-weight: 700; letter-spacing: .14em; }
 h1 { max-width: 800px; margin: 10px 0; font-size: clamp(36px, 4vw, 52px); line-height: 1.15; letter-spacing: -.035em; }
 .intro-copy p { color: var(--portal-text-soft); font-size: 16px; line-height: 1.7; margin: 0; }
-.search-bar { display: flex; max-width: 860px; padding: 6px; border: 1px solid rgba(157, 187, 211, .36); border-radius: 16px; background: rgba(2, 11, 24, .7); }
+.search-bar { display: flex; max-width: 860px; padding: 6px; border: 1px solid var(--portal-line); border-radius: 16px; background: var(--portal-bg-soft); }
 .search-bar input { min-width: 0; flex: 1; padding: 14px 17px; border: 0; outline: 0; background: transparent; color: var(--portal-text); font: inherit; }
 .search-bar input::placeholder { color: var(--portal-text-soft); }
 .search-bar:focus-within { border-color: var(--portal-accent); box-shadow: 0 0 0 2px rgba(114, 217, 245, .18); }
-.search-bar button, .state-panel button { border: 0; border-radius: 11px; background: var(--portal-accent); color: #061522; padding: 12px 22px; font: inherit; font-weight: 700; cursor: pointer; }
+.search-bar button, .state-panel button { border: 0; border-radius: 11px; background: var(--portal-accent); color: var(--portal-accent-ink); padding: 12px 22px; font: inherit; font-weight: 700; cursor: pointer; }
 .browse-shell { padding: clamp(18px, 3vw, 34px); }
 .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 20px; border-bottom: 1px solid var(--portal-line); padding-bottom: 18px; }
 .type-tabs { display: flex; gap: 8px; overflow-x: auto; }
 .type-tabs button { flex-shrink: 0; border: 1px solid transparent; border-radius: 10px; padding: 10px 14px; color: var(--portal-text-soft); background: transparent; font: inherit; cursor: pointer; }
-.type-tabs button.active { color: var(--portal-text); border-color: rgba(89, 208, 255, .3); background: rgba(89, 208, 255, .12); }
+.type-tabs button.active { color: var(--portal-text); border-color: var(--portal-accent); background: var(--portal-bg-soft); }
 .type-tabs span { margin-left: 7px; font-size: 12px; }
 .category-control { display: flex; align-items: center; gap: 9px; white-space: nowrap; color: var(--portal-text-soft); font-size: 13px; }
 .category-control select { max-width: 180px; border: 1px solid var(--portal-line); border-radius: 9px; background: var(--portal-bg-soft); color: var(--portal-text); padding: 10px; font: inherit; }

@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { adminMe } from '@/api/community'
 
 const LayoutView = () => import('../views/LayoutView.vue')
 const DashboardView = () => import('../views/DashboardView.vue')
@@ -10,6 +11,12 @@ const OpsWorkbenchView = () => import('../views/OpsWorkbenchView.vue')
 const ResourceDetailView = () => import('../views/ResourceDetailView.vue')
 const ProjectDetailView = () => import('../views/ProjectDetailView.vue')
 const GrowthCapsuleView = () => import('../views/GrowthCapsuleView.vue')
+const CommunityHomeView = () => import('../views/CommunityHomeView.vue')
+const CommunityBoardView = () => import('../views/CommunityBoardView.vue')
+const CommunityTopicView = () => import('../views/CommunityTopicView.vue')
+const MyDiscussionsView = () => import('../views/MyDiscussionsView.vue')
+const AdminSignInView = () => import('../views/AdminSignInView.vue')
+const CommunityReportsView = () => import('../views/CommunityReportsView.vue')
 
 const routes = [
   {
@@ -39,11 +46,13 @@ const routes = [
       {
         path: 'ai-workspace',
         name: 'ai-workspace',
+        meta: { admin: true },
         component: AiAssetsView
       },
       {
         path: 'content-studio',
         name: 'content-studio',
+        meta: { admin: true },
         component: ContentStudioView
       },
       {
@@ -54,12 +63,44 @@ const routes = [
       {
         path: 'ops-workbench',
         name: 'ops-workbench',
+        meta: { admin: true },
         component: OpsWorkbenchView
       },
       {
         path: 'growth-capsule',
         name: 'growth-capsule',
         component: GrowthCapsuleView
+      },
+      {
+        path: 'community',
+        name: 'community',
+        component: CommunityHomeView
+      },
+      {
+        path: 'community/boards/:code',
+        name: 'community-board',
+        component: CommunityBoardView
+      },
+      {
+        path: 'community/topics/:id',
+        name: 'community-topic',
+        component: CommunityTopicView
+      },
+      {
+        path: 'community/mine',
+        name: 'my-discussions',
+        component: MyDiscussionsView
+      },
+      {
+        path: 'admin/sign-in',
+        name: 'admin-sign-in',
+        component: AdminSignInView
+      },
+      {
+        path: 'admin/community/reports',
+        name: 'admin-community-reports',
+        meta: { admin: true },
+        component: CommunityReportsView
       }
     ]
   }
@@ -68,6 +109,16 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes
+})
+
+router.beforeEach(async (to) => {
+  if (!to.meta.admin) return true
+  try {
+    await adminMe()
+    return true
+  } catch {
+    return { path: '/admin/sign-in', query: { next: to.fullPath } }
+  }
 })
 
 export default router

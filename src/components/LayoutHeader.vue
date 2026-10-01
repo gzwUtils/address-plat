@@ -3,7 +3,7 @@
     <div class="header-inner">
       <router-link class="brand" to="/" aria-label="KD 门户首页">
         <span class="brand-mark">KD</span>
-        <span class="brand-copy"><strong>团队门户</strong><small>PROJECTS · KNOWLEDGE · AI</small></span>
+        <span class="brand-copy"><strong>团队门户</strong><small>PROJECTS · COMMUNITY · IDEAS</small></span>
       </router-link>
 
       <button
@@ -20,6 +20,7 @@
       <nav id="portal-navigation" class="navigation" :class="{ open: mobileOpen }" aria-label="主导航">
         <router-link to="/" :class="{ active: route.path === '/' }" :aria-current="route.path === '/' ? 'page' : undefined">首页</router-link>
         <router-link to="/explore" :class="{ active: isExploreActive }" :aria-current="isExploreActive ? 'page' : undefined">资源广场</router-link>
+        <router-link to="/community" :class="{ active: isCommunityActive }" :aria-current="isCommunityActive ? 'page' : undefined">社区</router-link>
         <router-link to="/growth-capsule" :class="{ active: route.path === '/growth-capsule' }" :aria-current="route.path === '/growth-capsule' ? 'page' : undefined">我的落地舱</router-link>
         <details ref="managementMenu" class="management-menu">
           <summary :class="{ active: isManagementActive }">管理 <span aria-hidden="true">⌄</span></summary>
@@ -28,6 +29,7 @@
             <router-link to="/project-studio">项目管理</router-link>
             <router-link to="/ai-workspace">AI 资产中心</router-link>
             <router-link to="/content-studio">资源管理</router-link>
+            <router-link to="/admin/community/reports">社区举报</router-link>
           </div>
         </details>
       </nav>
@@ -37,6 +39,11 @@
         <input id="header-search-input" v-model="searchKeyword" type="search" placeholder="搜索项目、文章、AI…" />
         <button type="submit" aria-label="搜索"><span aria-hidden="true">⌕</span></button>
       </form>
+
+      <div class="theme-switcher" role="group" aria-label="切换国色背景">
+        <span class="theme-label">国色</span>
+        <button v-for="option in portalThemes" :key="option.id" type="button" class="theme-swatch" :class="[option.id, { selected: theme === option.id }]" :aria-label="`切换为${option.name}背景`" :aria-pressed="theme === option.id" :title="option.name" @click="setTheme(option.id)" />
+      </div>
 
       <button type="button" class="user-chip" :title="account.profile?.publicId || '我的账户'" @click="accountOpen = true">
         {{ account.profile?.nickname || (account.needsRestore ? '找回账户' : '我的账户') }}
@@ -51,6 +58,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AccountPanel from '@/components/AccountPanel.vue'
 import { useGuestAccount } from '@/store/guestAccount'
+import { applyPortalTheme, portalThemes, readPortalTheme } from '@/utils/portalTheme'
 
 const route = useRoute()
 const router = useRouter()
@@ -59,8 +67,11 @@ const accountOpen = ref(false)
 const mobileOpen = ref(false)
 const managementMenu = ref(null)
 const searchKeyword = ref(typeof route.query.keyword === 'string' ? route.query.keyword : '')
+const theme = ref(readPortalTheme())
+const setTheme = (value) => { theme.value = applyPortalTheme(value) }
 const isExploreActive = computed(() => route.path.startsWith('/explore') || route.path.startsWith('/project/'))
-const isManagementActive = computed(() => ['/ops-workbench', '/project-studio', '/ai-workspace', '/content-studio'].includes(route.path))
+const isCommunityActive = computed(() => route.path.startsWith('/community'))
+const isManagementActive = computed(() => ['/ops-workbench', '/project-studio', '/ai-workspace', '/content-studio'].includes(route.path) || route.path.startsWith('/admin/'))
 
 onMounted(() => account.initialize())
 watch(() => account.freshRecoveryCode, (value) => { if (value) accountOpen.value = true })
@@ -79,41 +90,49 @@ const handleSearch = () => {
 </script>
 
 <style scoped>
-.site-header { position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid var(--portal-line); background: rgba(5, 17, 31, .94); backdrop-filter: blur(18px); }
-.header-inner { max-width: 1600px; margin: 0 auto; padding: 13px 28px; display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(180px, 260px) auto; align-items: center; gap: 25px; }
+.site-header { position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid var(--portal-line); background: var(--portal-bg); backdrop-filter: blur(18px); }
+.header-inner { max-width: 1600px; margin: 0 auto; padding: 13px 28px; display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(155px, 220px) auto auto; align-items: center; gap: 15px; }
 .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.brand-mark { display: grid; place-items: center; flex: 0 0 42px; height: 42px; border-radius: 12px; background: var(--portal-accent); color: #071724; font-size: 14px; font-weight: 900; letter-spacing: -.04em; }
+.brand-mark { display: grid; place-items: center; flex: 0 0 42px; height: 42px; border-radius: 12px; background: var(--portal-accent); color: var(--portal-accent-ink); font-size: 14px; font-weight: 900; letter-spacing: -.04em; }
 .brand-copy { display: grid; gap: 2px; white-space: nowrap; }
 .brand-copy strong { font-size: 17px; }
 .brand-copy small { color: var(--portal-text-soft); font-size: 9px; letter-spacing: .12em; }
 .navigation { display: flex; justify-content: center; align-items: center; gap: 4px; }
 .navigation > a, .management-menu summary { display: block; border-radius: 9px; padding: 11px 12px; color: var(--portal-text-soft); font-size: 14px; white-space: nowrap; cursor: pointer; }
-.navigation > a:hover, .navigation > a.active, .management-menu summary:hover, .management-menu summary.active { color: var(--portal-text); background: rgba(89, 208, 255, .12); }
+.navigation > a:hover, .navigation > a.active, .management-menu summary:hover, .management-menu summary.active { color: var(--portal-text); background: var(--portal-bg-soft); }
 .management-menu { position: relative; }
 .management-menu summary { list-style: none; }
 .management-menu summary::-webkit-details-marker { display: none; }
 .management-menu summary span { margin-left: 3px; }
 .management-links { position: absolute; top: calc(100% + 10px); left: 0; min-width: 180px; display: grid; padding: 8px; border: 1px solid var(--portal-line); border-radius: 14px; background: var(--portal-surface-strong); box-shadow: var(--portal-shadow); }
 .management-links a { border-radius: 8px; padding: 11px 12px; color: var(--portal-text-soft); white-space: nowrap; font-size: 14px; }
-.management-links a:hover, .management-links a.router-link-active { color: var(--portal-text); background: rgba(89, 208, 255, .12); }
+.management-links a:hover, .management-links a.router-link-active { color: var(--portal-text); background: var(--portal-bg-soft); }
 .header-search { display: flex; min-width: 0; border: 1px solid var(--portal-line); border-radius: 10px; background: rgba(255, 255, 255, .045); }
 .header-search input { flex: 1; min-width: 0; border: 0; outline: 0; padding: 10px 11px; background: transparent; color: var(--portal-text); font: inherit; font-size: 13px; }
 .header-search input::placeholder { color: var(--portal-text-soft); }
 .header-search:focus-within { border-color: var(--portal-accent); box-shadow: 0 0 0 2px rgba(114, 217, 245, .18); }
 .header-search button { border: 0; padding: 0 12px; color: var(--portal-accent); background: transparent; font-size: 22px; cursor: pointer; }
+.theme-switcher { display: flex; align-items: center; gap: 7px; padding: 6px 8px; border: 1px solid var(--portal-line); border-radius: 999px; background: var(--portal-surface); white-space: nowrap; }
+.theme-label { color: var(--portal-text-soft); font-size: 11px; margin-right: 1px; }
+.theme-swatch { width: 20px; height: 20px; border: 2px solid rgba(255,255,255,.42); border-radius: 50%; padding: 0; cursor: pointer; box-shadow: 0 0 0 2px transparent; }
+.theme-swatch.blue { background: #638da4; }
+.theme-swatch.red { background: #bb625c; }
+.theme-swatch.green { background: #5f9b72; }
+.theme-swatch.selected { box-shadow: 0 0 0 2px var(--portal-accent); }
 .user-chip { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 10px; border: 1px solid var(--portal-line); border-radius: 10px; color: var(--portal-text); background: var(--portal-surface); font: inherit; font-size: 12px; cursor: pointer; }
 .menu-toggle { display: none; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 @media (max-width: 1180px) {
-  .header-inner { grid-template-columns: 1fr auto auto; gap: 12px; }
-  .menu-toggle { display: flex; grid-column: 3; grid-row: 1; align-items: center; gap: 9px; border: 1px solid var(--portal-line); border-radius: 10px; padding: 10px 12px; color: var(--portal-text); background: var(--portal-surface); font: inherit; font-size: 13px; cursor: pointer; }
+  .header-inner { grid-template-columns: minmax(0, 1fr) auto auto; gap: 12px; }
+  .menu-toggle { display: flex; grid-column: 3; grid-row: 2; align-items: center; gap: 9px; border: 1px solid var(--portal-line); border-radius: 10px; padding: 10px 12px; color: var(--portal-text); background: var(--portal-surface); font: inherit; font-size: 13px; cursor: pointer; }
   .menu-toggle span { font-size: 17px; line-height: 1; }
-  .header-search { grid-column: 1 / -1; grid-row: 2; }
+  .header-search { grid-column: 1 / 3; grid-row: 2; }
   .navigation { display: none; grid-column: 1 / -1; grid-row: 3; align-items: stretch; flex-direction: column; padding: 7px 0; }
   .navigation.open { display: flex; }
   .navigation > a, .management-menu summary { padding: 12px; }
   .management-links { position: static; margin: 4px 0 0 10px; box-shadow: none; }
   .user-chip { grid-column: 2; grid-row: 1; max-width: 120px; }
+  .theme-switcher { grid-column: 3; grid-row: 1; }
 }
-@media (max-width: 640px) { .header-inner { padding: 11px 16px; } .brand-copy small { display: none; } }
+@media (max-width: 640px) { .header-inner { padding: 11px 16px; } .brand-copy small { display: none; } .theme-label { display: none; } .theme-switcher { gap: 6px; padding: 6px; } .theme-swatch { width: 18px; height: 18px; } }
 </style>
