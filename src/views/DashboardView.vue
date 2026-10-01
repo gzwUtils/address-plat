@@ -1,729 +1,202 @@
 <template>
-  <div class="dashboard">
-    <section class="hero-panel">
-      <div class="hero-copy">
-        <span class="eyebrow">Portal 2.0</span>
-        <h1 class="hero-title">把项目入口、知识资产与 AI 生产力集中到一个生活化门户里。</h1>
-        <p class="hero-desc">
-          首页现在优先展示真实内容数据、最近动态和可直接进入的内容入口，不再只是静态演示海报。
-        </p>
-        <div class="hero-actions">
-          <el-button type="primary" size="large" @click="router.push('/explore')">
-            进入资源广场
-          </el-button>
-          <el-button size="large" plain @click="scrollToAi">
-            查看 AI 能力
-          </el-button>
-        </div>
-        <div class="hero-meta">
-          <div v-for="item in metrics" :key="item.label" class="metric-card">
-            <div class="metric-value">{{ item.value }}</div>
-            <div class="metric-label">{{ item.label }}</div>
-          </div>
+  <div class="home-page">
+    <section class="hero">
+      <div class="hero-main">
+        <span class="eyebrow">KD TEAM PORTAL</span>
+        <h1>项目、知识与 AI，打开即用。</h1>
+        <p>找项目、读经验、使用 AI 能力。从这里开始，少绕几步。</p>
+        <form class="hero-search" role="search" @submit.prevent="submitSearch">
+          <label class="sr-only" for="home-search">搜索门户资源</label>
+          <input id="home-search" v-model="keyword" type="search" placeholder="搜索项目、文章、AI 能力…" />
+          <button type="submit">搜索全部资源 <span aria-hidden="true">↗</span></button>
+        </form>
+        <div class="quick-links" aria-label="按类型浏览">
+          <span>快速浏览</span>
+          <router-link v-for="link in quickLinks" :key="link.type" :to="{ path: '/explore', query: { type: link.type } }">
+            {{ link.label }} <span aria-hidden="true">↗</span>
+          </router-link>
         </div>
       </div>
-
-      <div class="hero-visual">
-        <div class="signal-card mission-card">
-          <div class="signal-title">今日焦点</div>
-          <ul>
-            <li v-for="item in todayFocus" :key="item">{{ item }}</li>
-          </ul>
-        </div>
-        <div class="signal-grid">
-          <button
-            v-for="item in signalCards"
-            :key="item.title"
-            type="button"
-            class="signal-card interactive-card"
-            @click="openPath(item.path)"
-          >
-            <div class="signal-kicker">{{ item.kicker }}</div>
-            <div class="signal-name">{{ item.title }}</div>
-            <div class="signal-desc">{{ item.desc }}</div>
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <section class="section-grid">
-      <article class="section-card">
-        <div class="section-head">
-          <h2>多内容门户</h2>
-          <span>{{ usingFallback ? '当前展示本地兜底数据' : '当前展示后端实时数据' }}</span>
-        </div>
-        <div class="capability-list">
-          <button
-            v-for="item in contentScopes"
-            :key="item.title"
-            type="button"
-            class="capability-item interactive-card"
-            @click="openPath(item.path)"
-          >
-            <div class="capability-icon">{{ item.icon }}</div>
-            <div>
-              <div class="capability-title">{{ item.title }}</div>
-              <div class="capability-desc">{{ item.desc }}</div>
-            </div>
-          </button>
-        </div>
-      </article>
-
-      <article ref="aiSectionRef" class="section-card ai-card">
-        <div class="section-head">
-          <h2>AI 工作台建议</h2>
-          <span>结合现有资源与运行状态动态展示</span>
-        </div>
-        <div class="ai-grid">
-          <button
-            v-for="item in aiCapabilities"
-            :key="item.title"
-            type="button"
-            class="ai-item interactive-card"
-            @click="openPath(item.path)"
-          >
-            <div class="ai-topline">{{ item.type }}</div>
-            <div class="ai-title">{{ item.title }}</div>
-            <div class="ai-desc">{{ item.desc }}</div>
-            <div class="ai-tags">
-              <span v-for="tag in item.tags" :key="tag">{{ tag }}</span>
-            </div>
-          </button>
-        </div>
-      </article>
-    </section>
-
-    <section class="showcase-grid">
-      <article class="showcase-card">
-        <div class="section-head">
-          <h2>场景推荐</h2>
-          <span>直接跳到对应资源或工作台</span>
-        </div>
-        <div class="scene-list">
-          <button
-            v-for="scene in aiScenes"
-            :key="scene.name"
-            type="button"
-            class="scene-item interactive-card"
-            @click="openPath(scene.path)"
-          >
-            <div class="scene-name">{{ scene.name }}</div>
-            <div class="scene-desc">{{ scene.desc }}</div>
-          </button>
-        </div>
-      </article>
-
-      <article class="showcase-card warm-card">
-        <div class="section-head">
-          <h2>最近动态</h2>
-          <span>来自后台操作日志与内容更新</span>
-        </div>
-        <div class="warm-content">
-          <blockquote>
-            {{ recentHeadline }}
-          </blockquote>
-          <div class="warm-pills">
-            <span v-for="item in warmPills" :key="item">{{ item }}</span>
-          </div>
-        </div>
-      </article>
-    </section>
-
-    <section class="section-card updates-card">
-      <div class="section-head">
-        <h2>最近更新文章</h2>
-        <span>优先展示最新沉淀的内容</span>
-      </div>
-      <div class="updates-grid">
-        <button
-          v-for="item in recentArticles"
+      <aside class="hero-aside" aria-label="快速打开项目">
+        <div class="aside-label">快速打开 <span>PROJECT SHORTCUTS</span></div>
+        <template v-if="groups.project.loading">
+          <div v-for="index in 3" :key="index" class="overview-row" aria-hidden="true"><span>正在加载…</span></div>
+        </template>
+        <p v-else-if="groups.project.error" class="aside-state">项目入口暂时无法加载。</p>
+        <p v-else-if="!groups.project.records.length" class="aside-state">暂无项目入口。</p>
+        <router-link
+          v-for="item in groups.project.records.slice(0, 3)"
+          v-else
           :key="item.id"
-          type="button"
-          class="update-card interactive-card"
-          @click="openPath(`/explore/article/${item.id}`)"
+          class="overview-row"
+          :to="`/project/${item.id}`"
         >
-          <div v-if="item.coverImage" class="update-cover">
-            <img :src="item.coverImage" :alt="item.title">
-          </div>
-          <div class="update-body">
-            <div class="update-meta">
-              <span>{{ item.category || '文章' }}</span>
-              <span>{{ item.date || '未设置日期' }}</span>
-            </div>
-            <strong>{{ item.title }}</strong>
-            <p>{{ item.excerpt || '暂无摘要' }}</p>
-          </div>
-        </button>
+          <span>{{ item.projectName }}</span>
+          <strong aria-hidden="true">↗</strong>
+        </router-link>
+        <router-link class="aside-link" :to="{ path: '/explore', query: { type: 'project' } }">浏览全部项目 <span aria-hidden="true">↗</span></router-link>
+      </aside>
+    </section>
+
+    <section v-for="section in sections" :key="section.kind" class="home-section">
+      <header class="section-heading">
+        <div>
+          <span class="section-index">{{ section.index }} / {{ section.kicker }}</span>
+          <h2>{{ section.title }}</h2>
+          <p>{{ section.description }}</p>
+        </div>
+        <router-link :to="{ path: '/explore', query: { type: section.kind } }">查看全部 <span aria-hidden="true">↗</span></router-link>
+      </header>
+
+      <div v-if="groups[section.kind].loading" class="card-grid" aria-live="polite">
+        <div v-for="index in section.kind === 'project' ? 3 : 2" :key="index" class="card-skeleton" aria-hidden="true" />
+        <span class="sr-only">正在加载{{ section.title }}</span>
+      </div>
+      <div v-else-if="groups[section.kind].error" class="state-panel" role="alert">
+        <p>{{ section.title }}暂时无法加载。</p>
+        <button type="button" @click="loadGroup(section.kind)">重新加载</button>
+      </div>
+      <div v-else-if="groups[section.kind].records.length" class="card-grid">
+        <DiscoveryCard
+          v-for="item in groups[section.kind].records"
+          :key="`${section.kind}-${item.id}`"
+          :kind="section.kind"
+          :item="item"
+        />
+      </div>
+      <div v-else class="state-panel">暂无{{ section.title }}。</div>
+    </section>
+
+    <section v-if="recentItems.length" class="recent-section">
+      <div class="section-heading">
+        <div>
+          <span class="section-index">05 / PICK UP WHERE YOU LEFT OFF</span>
+          <h2>继续浏览</h2>
+          <p>回到你最近看过的内容。</p>
+        </div>
+      </div>
+      <div class="recent-grid">
+        <router-link v-for="item in recentItems" :key="`${item.kind}-${item.targetId}`" :to="recentPath(item)">
+          <span>{{ kindLabel(item.kind) }}</span>
+          <strong>{{ item.title }}</strong>
+          <small>{{ item.subtitle || '查看详情' }} <span aria-hidden="true">↗</span></small>
+        </router-link>
       </div>
     </section>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { getContentResourcesWithFallback, getOpsWorkbench, getPortalOverview } from '@/api/content'
+import DiscoveryCard from '@/components/DiscoveryCard.vue'
+import { getRecentViews } from '@/api/content'
+import { fetchDiscoveryGroup } from '@/composables/useResourceDiscovery'
+import { getClientId } from '@/utils/clientId'
 
 const router = useRouter()
-const aiSectionRef = ref(null)
-const usingFallback = ref(false)
-const resources = ref([])
-const recentLogs = ref([])
-const baseOverview = ref({
-  aiCapabilities: [],
-  warmPills: []
+const keyword = ref('')
+const quickLinks = [
+  { type: 'project', label: '项目' },
+  { type: 'article', label: '文章' },
+  { type: 'ai', label: 'AI 资产' },
+  { type: 'life', label: '团队内容' }
+]
+const sections = [
+  { kind: 'project', index: '01', kicker: 'PROJECTS', title: '项目入口', description: '直接进入团队常用的系统与工具。' },
+  { kind: 'article', index: '02', kicker: 'KNOWLEDGE', title: '推荐文章', description: '把实践和经验沉淀下来，随时接着读。' },
+  { kind: 'ai', index: '03', kicker: 'AI CAPABILITIES', title: 'AI 能力', description: '找到可用的助手、技能和工作流。' },
+  { kind: 'life', index: '04', kicker: 'TEAM LIFE', title: '团队内容', description: '公告、活动与日常灵感。' }
+]
+const emptyGroup = () => ({ records: [], total: 0, loading: true, error: null })
+const groups = reactive({
+  project: emptyGroup(), article: emptyGroup(), ai: emptyGroup(), life: emptyGroup()
+})
+const recentItems = ref([])
+
+const submitSearch = () => router.push({
+  path: '/explore',
+  query: keyword.value.trim() ? { keyword: keyword.value.trim() } : {}
 })
 
-const articles = computed(() => resources.value.filter((item) => item.kind === 'article'))
-const aiAssets = computed(() => resources.value.filter((item) => item.kind === 'ai'))
-const lifeFeeds = computed(() => resources.value.filter((item) => item.kind === 'life'))
+const kindLabel = (kind) => quickLinks.find((item) => item.type === kind)?.label || '资源'
+const recentPath = (item) => item.kind === 'project'
+  ? `/project/${item.targetId}`
+  : `/explore/${item.kind}/${item.targetId}`
 
-const latestArticle = computed(() => articles.value[0] || null)
-const latestAiAsset = computed(() => aiAssets.value[0] || null)
-const latestLifeFeed = computed(() => lifeFeeds.value[0] || null)
-
-const metrics = computed(() => [
-  { value: `${resources.value.length}`, label: '已接入资源' },
-  { value: `${aiAssets.value.length}`, label: 'AI 资产' },
-  { value: `${recentLogs.value.length}`, label: '最近动态' }
-])
-
-const todayFocus = computed(() => {
-  const items = []
-  if (latestArticle.value) {
-    items.push(`最新文章：${latestArticle.value.title}`)
-  }
-  if (latestAiAsset.value) {
-    items.push(`重点 AI 资产：${latestAiAsset.value.name}`)
-  }
-  if (recentLogs.value[0]?.targetName) {
-    items.push(`最近操作：${recentLogs.value[0].targetName}`)
-  }
-  return items.length ? items : ['内容接口已接入后，这里会显示真实焦点']
-})
-
-const signalCards = computed(() => [
-  {
-    kicker: 'Projects',
-    title: '服务入口聚合',
-    desc: `统一入口持续可用，当前资源总数 ${resources.value.length}。`,
-    path: '/explore'
-  },
-  {
-    kicker: 'Knowledge',
-    title: latestArticle.value?.title || '笔记文章标签化',
-    desc: latestArticle.value?.excerpt || '最近文章会出现在这里，并支持直接点进详情。',
-    path: latestArticle.value ? `/explore/article/${latestArticle.value.id}` : '/explore'
-  },
-  {
-    kicker: 'AI Hub',
-    title: latestAiAsset.value?.name || 'AI 资产中心',
-    desc: latestAiAsset.value?.desc || 'AI 资产、Skill、MCP 与工作流入口统一聚合。',
-    path: latestAiAsset.value ? `/explore/ai/${latestAiAsset.value.id}` : '/ai-workspace'
-  },
-  {
-    kicker: 'Life',
-    title: latestLifeFeed.value?.title || '团队生活流',
-    desc: latestLifeFeed.value?.desc || '公告、灵感和轻内容增强门户的人味。',
-    path: latestLifeFeed.value ? `/explore/life/${latestLifeFeed.value.id}` : '/explore'
-  }
-])
-
-const contentScopes = computed(() => [
-  {
-    icon: `${resources.value.length || 0}`.padStart(2, '0'),
-    title: '统一资源广场',
-    desc: `项目、文章、AI 和生活内容共 ${resources.value.length} 条，可统一浏览。`,
-    path: '/explore'
-  },
-  {
-    icon: `${articles.value.length || 0}`.padStart(2, '0'),
-    title: '笔记文章',
-    desc: latestArticle.value?.title ? `最近更新：${latestArticle.value.title}` : '技术分享、复盘、故障记录统一管理。',
-    path: latestArticle.value ? `/explore/article/${latestArticle.value.id}` : '/content-studio'
-  },
-  {
-    icon: `${aiAssets.value.length || 0}`.padStart(2, '0'),
-    title: 'AI 资产',
-    desc: latestAiAsset.value?.name ? `最近资产：${latestAiAsset.value.name}` : 'Agent、Skill、MCP、工作流模板。',
-    path: latestAiAsset.value ? `/explore/ai/${latestAiAsset.value.id}` : '/ai-workspace'
-  },
-  {
-    icon: `${lifeFeeds.value.length || 0}`.padStart(2, '0'),
-    title: '生活空间',
-    desc: latestLifeFeed.value?.title ? `最新动态：${latestLifeFeed.value.title}` : '公告、提醒、活动与灵感内容。',
-    path: latestLifeFeed.value ? `/explore/life/${latestLifeFeed.value.id}` : '/explore'
-  }
-])
-
-const aiCapabilities = computed(() => {
-  const onlineAiCount = aiAssets.value.filter((item) => item.status === 'online').length
-  const latestAiPath = latestAiAsset.value ? `/explore/ai/${latestAiAsset.value.id}` : '/ai-workspace'
-  const defaults = [
-    {
-      type: 'Agent',
-      title: '智能助手目录',
-      desc: `当前已收录 ${aiAssets.value.length} 个 AI 资产，其中在线 ${onlineAiCount} 个。`,
-      tags: ['真实计数', '统一入口', '资源卡片'],
-      path: '/ai-workspace'
-    },
-    {
-      type: latestAiAsset.value?.type || 'Skill',
-      title: latestAiAsset.value?.name || 'Skill 能力市场',
-      desc: latestAiAsset.value?.desc || '把常用技能包做成标签化资源，支持场景和维护人展示。',
-      tags: latestAiAsset.value?.tags || ['可检索', '版本提示', '团队共享'],
-      path: latestAiPath
-    },
-    {
-      type: 'Workflow',
-      title: '灵感落地舱',
-      desc: '把浏览内容直接转成行动卡、状态和打卡记录。',
-      tags: ['行动卡', '连续打卡', '原文跳转'],
-      path: '/growth-capsule'
-    }
-  ]
-
-  if (baseOverview.value.aiCapabilities?.length) {
-    return baseOverview.value.aiCapabilities.map((item, index) => ({
-      ...item,
-      path: defaults[index]?.path || '/ai-workspace'
-    }))
-  }
-  return defaults
-})
-
-const aiScenes = computed(() => [
-  {
-    name: '故障应急',
-    desc: latestAiAsset.value ? `优先查看「${latestAiAsset.value.name}」的可用能力与接入方式。` : '通过 Agent + MCP 快速读取监控、日志和知识库建议。',
-    path: latestAiAsset.value ? `/explore/ai/${latestAiAsset.value.id}` : '/ai-workspace'
-  },
-  {
-    name: '新人 onboarding',
-    desc: latestArticle.value ? `从文章「${latestArticle.value.title}」开始补齐上下文。` : '入口导航、岗位知识、常用 Skill、流程模板集中推荐。',
-    path: latestArticle.value ? `/explore/article/${latestArticle.value.id}` : '/explore'
-  },
-  {
-    name: '内容沉淀',
-    desc: '直接进入内容工作台写文章，支持 Markdown 在线编辑与草稿恢复。',
-    path: '/content-studio'
-  },
-  {
-    name: '持续推进',
-    desc: '将有价值的内容加入灵感落地舱，形成行动卡和连续打卡轨迹。',
-    path: '/growth-capsule'
-  }
-])
-
-const warmPills = computed(() => {
-  if (recentLogs.value.length) {
-    return recentLogs.value.slice(0, 6).map((item) => item.targetName || item.detail || item.module || '门户动态')
-  }
-  return baseOverview.value.warmPills?.length ? baseOverview.value.warmPills : ['内容更新', '最近浏览', '文章新增']
-})
-
-const recentHeadline = computed(() => {
-  const latest = recentLogs.value[0]
-  if (!latest) {
-    return '首页已切到真实数据驱动，后续这里会持续展示后台最近操作和内容更新。'
-  }
-  return `最近一次后台动作：${latest.operatorName || 'system'} 在 ${latest.createTime || '刚刚'} ${latest.detail || '更新了内容'}。`
-})
-
-const recentArticles = computed(() => articles.value.slice(0, 3))
-
-const scrollToAi = () => {
-  aiSectionRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-}
-
-const openPath = (path) => {
-  if (!path) {
-    return
-  }
-  router.push(path)
-}
-
-async function loadDashboard() {
-  const [overviewData, contentResult, opsWorkbench] = await Promise.allSettled([
-    getPortalOverview(),
-    getContentResourcesWithFallback({ size: 200 }),
-    getOpsWorkbench()
-  ])
-
-  if (overviewData.status === 'fulfilled') {
-    baseOverview.value = overviewData.value || {}
-  }
-
-  if (contentResult.status === 'fulfilled') {
-    resources.value = Array.isArray(contentResult.value.data) ? contentResult.value.data : []
-    usingFallback.value = !!contentResult.value.fallback
-  }
-
-  if (opsWorkbench.status === 'fulfilled') {
-    recentLogs.value = Array.isArray(opsWorkbench.value?.recentLogs) ? opsWorkbench.value.recentLogs : []
+async function loadGroup(kind) {
+  groups[kind] = { ...emptyGroup(), loading: true }
+  try {
+    const result = await fetchDiscoveryGroup(kind, { size: kind === 'project' ? 6 : 3 })
+    groups[kind] = { ...result, loading: false, error: null }
+  } catch (error) {
+    console.warn(`加载${kind}失败`, error)
+    groups[kind] = { records: [], total: 0, loading: false, error }
   }
 }
 
-onMounted(loadDashboard)
+async function loadRecent() {
+  try {
+    const result = await getRecentViews(getClientId())
+    recentItems.value = Array.isArray(result)
+      ? result.filter((item) => ['project', 'article', 'ai', 'life'].includes(item.kind) && item.targetId && item.title).slice(0, 6)
+      : []
+  } catch (error) {
+    console.warn('加载最近浏览失败', error)
+    recentItems.value = []
+  }
+}
+
+onMounted(() => {
+  sections.forEach((section) => loadGroup(section.kind))
+  loadRecent()
+})
 </script>
 
 <style scoped>
-.dashboard {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  max-width: 1440px;
-  margin: 0 auto;
-}
-
-.hero-panel,
-.section-card,
-.showcase-card {
-  border: 1px solid var(--portal-line);
-  background: var(--portal-surface);
-  box-shadow: var(--portal-shadow);
-  backdrop-filter: blur(18px);
-}
-
-.hero-panel {
-  display: grid;
-  grid-template-columns: 1.2fr 0.9fr;
-  gap: 28px;
-  padding: 32px;
-  border-radius: 28px;
-}
-
-.eyebrow {
-  display: inline-flex;
-  padding: 8px 14px;
-  border-radius: 999px;
-  background: rgba(89, 208, 255, 0.12);
-  color: var(--portal-accent);
-  font-size: 12px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.hero-title {
-  margin: 18px 0 14px;
-  font-size: clamp(30px, 4vw, 56px);
-  line-height: 1.1;
-}
-
-.hero-desc {
-  max-width: 760px;
-  color: var(--portal-text-soft);
-  font-size: 16px;
-  line-height: 1.8;
-}
-
-.hero-actions {
-  display: flex;
-  gap: 14px;
-  margin-top: 26px;
-}
-
-.hero-meta {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-  margin-top: 28px;
-}
-
-.metric-card,
-.signal-card,
-.ai-item,
-.scene-item {
-  border: 1px solid var(--portal-line);
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 20px;
-}
-
-.interactive-card {
-  width: 100%;
-  padding: 0;
-  color: inherit;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.interactive-card:hover {
-  transform: translateY(-3px);
-  border-color: rgba(89, 208, 255, 0.38);
-  box-shadow: 0 18px 36px rgba(4, 14, 28, 0.2);
-}
-
-.metric-card {
-  padding: 18px;
-}
-
-.metric-value {
-  font-size: 28px;
-  font-weight: 700;
-}
-
-.metric-label {
-  margin-top: 6px;
-  color: var(--portal-text-soft);
-}
-
-.hero-visual {
-  display: grid;
-  gap: 16px;
-}
-
-.mission-card {
-  padding: 22px;
-}
-
-.mission-card ul {
-  margin: 14px 0 0;
-  padding-left: 18px;
-  color: var(--portal-text-soft);
-  line-height: 1.8;
-}
-
-.signal-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-}
-
-.signal-card {
-  padding: 18px;
-}
-
-.signal-title,
-.signal-kicker {
-  color: var(--portal-accent);
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.signal-name {
-  margin-top: 8px;
-  font-size: 18px;
-  font-weight: 600;
-}
-
-.signal-desc {
-  margin-top: 8px;
-  color: var(--portal-text-soft);
-  line-height: 1.6;
-}
-
-.section-grid,
-.showcase-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 24px;
-}
-
-.section-card,
-.showcase-card {
-  border-radius: 24px;
-  padding: 28px;
-}
-
-.section-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.section-head h2 {
-  margin: 0;
-  font-size: 24px;
-}
-
-.section-head span {
-  color: var(--portal-text-soft);
-  font-size: 13px;
-}
-
-.capability-list,
-.scene-list {
-  display: grid;
-  gap: 14px;
-}
-
-.capability-item {
-  display: grid;
-  grid-template-columns: 54px 1fr;
-  gap: 14px;
-  align-items: start;
-  padding: 16px;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.03);
-}
-
-.capability-icon {
-  width: 54px;
-  height: 54px;
-  border-radius: 18px;
-  display: grid;
-  place-items: center;
-  color: #06111e;
-  background: linear-gradient(135deg, var(--portal-accent), #8fffe4);
-  font-weight: 700;
-}
-
-.capability-title,
-.ai-title,
-.scene-name {
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.capability-desc,
-.ai-desc,
-.scene-desc {
-  margin-top: 8px;
-  color: var(--portal-text-soft);
-  line-height: 1.7;
-}
-
-.ai-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.ai-item {
-  padding: 18px;
-}
-
-.ai-topline {
-  color: var(--portal-warm);
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.ai-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 14px;
-}
-
-.ai-tags span,
-.warm-pills span {
-  padding: 6px 12px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--portal-text-soft);
-  font-size: 12px;
-}
-
-.scene-item {
-  padding: 18px;
-}
-
-.warm-card {
-  background:
-    radial-gradient(circle at top right, rgba(255, 196, 107, 0.16), transparent 30%),
-    rgba(10, 29, 55, 0.9);
-}
-
-.warm-content blockquote {
-  margin: 0;
-  color: #fff2d4;
-  font-size: 20px;
-  line-height: 1.7;
-}
-
-.warm-pills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 20px;
-}
-
-.updates-card {
-  padding: 28px;
-}
-
-.updates-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-}
-
-.update-card {
-  overflow: hidden;
-  border: 1px solid var(--portal-line);
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.03);
-}
-
-.update-cover {
-  aspect-ratio: 16 / 8;
-  overflow: hidden;
-}
-
-.update-cover img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.update-body {
-  padding: 18px;
-}
-
-.update-meta {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  color: var(--portal-text-soft);
-  font-size: 12px;
-}
-
-.update-body strong {
-  display: block;
-  margin-top: 12px;
-  font-size: 18px;
-}
-
-.update-body p {
-  margin: 10px 0 0;
-  color: var(--portal-text-soft);
-  line-height: 1.7;
-}
-
-@media (max-width: 1080px) {
-  .hero-panel,
-  .section-grid,
-  .showcase-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 720px) {
-  .hero-panel,
-  .section-card,
-  .showcase-card {
-    padding: 20px;
-    border-radius: 20px;
-  }
-
-  .hero-meta,
-  .signal-grid,
-  .ai-grid,
-  .updates-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .hero-actions,
-  .section-head {
-    flex-direction: column;
-  }
-}
+.home-page { max-width: 1440px; margin: 0 auto; display: grid; gap: clamp(42px, 6vw, 80px); padding-bottom: 48px; }
+.hero { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(270px, .7fr); gap: 20px; }
+.hero-main, .hero-aside { border: 1px solid var(--portal-line); border-radius: 28px; box-shadow: var(--portal-shadow); }
+.hero-main { padding: clamp(28px, 4vw, 52px); background: radial-gradient(circle at 96% 12%, rgba(89, 208, 255, .16), transparent 37%), linear-gradient(130deg, #142d42, #0d1d30 66%); }
+.eyebrow, .section-index, .aside-label { color: var(--portal-accent); font-size: 12px; font-weight: 700; letter-spacing: .14em; }
+h1 { max-width: 780px; margin: 16px 0; font-size: clamp(38px, 4.7vw, 62px); line-height: 1.16; letter-spacing: -.045em; }
+.hero-main > p { max-width: 580px; margin: 0; color: #bfd0e4; font-size: clamp(16px, 1.7vw, 20px); line-height: 1.7; }
+.hero-search { display: flex; max-width: 780px; gap: 6px; margin-top: 27px; padding: 6px; border: 1px solid rgba(170, 199, 217, .37); border-radius: 16px; background: rgba(2, 12, 25, .75); }
+.hero-search input { flex: 1; min-width: 0; padding: 14px 16px; border: 0; outline: 0; color: var(--portal-text); background: transparent; font: inherit; }
+.hero-search input::placeholder { color: var(--portal-text-soft); }
+.hero-search:focus-within { border-color: var(--portal-accent); box-shadow: 0 0 0 2px rgba(114, 217, 245, .18); }
+.hero-search button { border: 0; border-radius: 11px; padding: 12px 18px; background: var(--portal-accent); color: #041523; font: inherit; font-weight: 700; cursor: pointer; }
+.quick-links { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
+.quick-links > span { margin-right: 8px; color: var(--portal-text-soft); font-size: 13px; }
+.quick-links a { padding: 7px 12px; border: 1px solid rgba(180, 202, 220, .24); border-radius: 999px; color: #dcecf9; font-size: 13px; }
+.quick-links a:hover { border-color: var(--portal-accent); color: var(--portal-accent); }
+.hero-aside { display: flex; flex-direction: column; padding: 32px; background: var(--portal-surface-strong); }
+.aside-label { display: flex; justify-content: space-between; align-items: center; padding-bottom: 28px; }
+.aside-label span { color: var(--portal-text-soft); font-size: 10px; }
+.overview-row { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 23px 0; border-top: 1px solid var(--portal-line); color: var(--portal-text); font-size: 17px; font-weight: 600; }
+.overview-row:hover { color: var(--portal-accent); }
+.overview-row strong { color: var(--portal-accent); font-size: 19px; line-height: 1; }
+.aside-state { color: var(--portal-text-soft); line-height: 1.6; }
+.aside-link { display: flex; justify-content: space-between; margin-top: auto; padding-top: 24px; color: var(--portal-accent); font-weight: 700; }
+.home-section, .recent-section { min-width: 0; }
+.section-heading { display: flex; justify-content: space-between; align-items: end; gap: 18px; margin-bottom: 20px; }
+.section-heading h2 { margin: 9px 0 5px; font-size: clamp(28px, 3vw, 40px); letter-spacing: -.025em; }
+.section-heading p { margin: 0; color: var(--portal-text-soft); }
+.section-heading > a { color: var(--portal-accent); white-space: nowrap; font-weight: 700; }
+.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 270px), 1fr)); gap: 17px; }
+.card-skeleton { min-height: 230px; border-radius: 20px; background: linear-gradient(100deg, rgba(255,255,255,.03) 25%, rgba(255,255,255,.09) 50%, rgba(255,255,255,.03) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
+.state-panel { display: flex; align-items: center; gap: 16px; padding: 27px; border: 1px dashed var(--portal-line); border-radius: 18px; color: var(--portal-text-soft); }
+.state-panel p { margin: 0; }
+.state-panel button { border: 1px solid var(--portal-accent); border-radius: 9px; padding: 9px 12px; color: var(--portal-accent); background: transparent; font: inherit; cursor: pointer; }
+.recent-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); gap: 12px; }
+.recent-grid a { display: grid; gap: 9px; padding: 20px; border: 1px solid var(--portal-line); border-radius: 16px; background: var(--portal-surface); }
+.recent-grid a:hover { border-color: var(--portal-accent); }
+.recent-grid span, .recent-grid small { color: var(--portal-text-soft); }
+.recent-grid strong { font-size: 16px; }
+.recent-grid small { display: flex; justify-content: space-between; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+@media (max-width: 1000px) { .hero { grid-template-columns: 1fr; } }
+@media (max-width: 640px) { .hero-main, .hero-aside { padding: 25px; border-radius: 21px; } .hero-search { flex-direction: column; margin-top: 28px; } .hero-search button { width: 100%; } .section-heading { align-items: start; flex-direction: column; } .state-panel { align-items: start; flex-direction: column; } }
+@media (prefers-reduced-motion: reduce) { .card-skeleton { animation: none; } }
 </style>

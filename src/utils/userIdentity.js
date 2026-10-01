@@ -1,16 +1,5 @@
 const USER_ID_KEY = 'portal_growth_user_id'
 const USER_NAME_KEY = 'portal_growth_user_name'
-const USER_IP_KEY = 'portal_growth_user_ip'
-
-const buildUserId = () => {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return `u-${crypto.randomUUID()}`
-  }
-  return `u-${Date.now()}-${Math.random().toString(16).slice(2, 10)}`
-}
-
-const buildUserName = (userId) => `用户${String(userId).slice(-6).toUpperCase()}`
-
 const getSimpleFingerprint = () => {
   try {
     const fingerprint = [

@@ -77,6 +77,10 @@ export const getContentResources = (params = {}) =>
     }
   )
 
+// Public discovery pages use the real API response and surface failures to users.
+export const getContentResourcePage = (params = {}) =>
+  api.get('/content/resources', { params }).then((res) => res.data?.data ?? res.data)
+
 export const getContentResourcesWithFallback = async (params = {}) => {
   try {
     const data = await api.get('/content/resources', { params }).then((res) => normalizeList(res.data?.data || res.data))

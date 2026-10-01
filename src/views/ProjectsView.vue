@@ -1,501 +1,282 @@
 <template>
-  <div class="explore-page">
-    <section class="intro-panel">
-      <div>
-        <span class="eyebrow">Explore</span>
+  <div class="discovery-page">
+    <section class="page-intro">
+      <div class="intro-copy">
+        <span class="eyebrow">RESOURCE LIBRARY</span>
         <h1>资源广场</h1>
-        <p>
-          统一浏览项目入口、笔记文章、AI 资产和生活化内容。搜索会从顶部头部栏透传到这里，
-          先满足门户展示与筛选，再为后续接真实接口预留结构。
-        </p>
+        <p>搜索项目地址、实践文章、AI 能力和团队内容。结果来自门户实时数据。</p>
       </div>
-      <div class="intro-stats">
-        <div v-for="item in introStats" :key="item.label" class="stat-card">
-          <div class="stat-value">{{ item.value }}</div>
-          <div class="stat-label">{{ item.label }}</div>
-        </div>
-      </div>
+      <form class="search-bar" role="search" @submit.prevent="submitSearch">
+        <label class="sr-only" for="discovery-search">搜索门户资源</label>
+        <input id="discovery-search" v-model="searchDraft" type="search" placeholder="试试搜索项目名、关键词或负责人" />
+        <button type="submit">搜索资源</button>
+      </form>
     </section>
 
-    <section class="filter-panel">
-      <div class="filter-title">统一筛选</div>
-      <div class="filter-meta">
-        <el-tag type="info" effect="plain">关键词：{{ activeKeyword || '全部' }}</el-tag>
-        <el-tag type="success" effect="plain">支持多内容域扩展</el-tag>
-        <el-button type="primary" plain @click="$router.push('/project-studio')">
-          管理项目导航
-        </el-button>
-        <el-button type="primary" plain @click="$router.push('/content-studio')">
-          进入资源管理
-        </el-button>
-        <el-tag
-          v-for="item in searchSummary"
-          :key="item.key"
-          type="warning"
-          effect="plain"
-        >
-          {{ item.label }} {{ item.value }}
-        </el-tag>
+    <section class="browse-shell" aria-label="资源浏览">
+      <div class="toolbar">
+        <div class="type-tabs" role="tablist" aria-label="资源类型">
+          <button
+            v-for="tab in tabs"
+            :key="tab.type"
+            type="button"
+            role="tab"
+            :aria-selected="current.type === tab.type"
+            :class="{ active: current.type === tab.type }"
+            @click="openType(tab.type)"
+          >
+            {{ tab.label }}
+            <span v-if="tabCount(tab.type) !== null">{{ tabCount(tab.type) }}</span>
+          </button>
+        </div>
+        <div v-if="current.type === 'project'" class="category-control">
+          <label for="project-category">项目分类</label>
+          <select id="project-category" v-model="categoryDraft" @change="changeCategory">
+            <option value="">全部分类</option>
+            <option v-for="category in categories" :key="category" :value="category">{{ category }}</option>
+          </select>
+        </div>
       </div>
+
+      <p v-if="current.keyword" class="query-summary">
+        正在搜索「{{ current.keyword }}」
+        <button type="button" @click="clearSearch">清除关键词</button>
+      </p>
+
+      <p v-if="categoryError && current.type === 'project'" class="minor-error">
+        分类加载失败。<button type="button" @click="loadCategories">重试</button>
+      </p>
+
+      <template v-if="current.type === 'all'">
+        <section v-for="kind in discoveryKinds" :key="kind" class="result-section">
+          <div class="section-heading">
+            <div>
+              <span class="section-index">{{ sectionIndex(kind) }}</span>
+              <h2>{{ labelFor(kind) }}</h2>
+              <span v-if="allGroups[kind]?.data" class="result-count">{{ allGroups[kind].data.total }} 条结果</span>
+            </div>
+            <button type="button" class="text-action" @click="openType(kind)">查看全部 <span aria-hidden="true">↗</span></button>
+          </div>
+
+          <div v-if="allLoading || retrying[kind]" class="card-grid" aria-live="polite">
+            <div v-for="index in 4" :key="index" class="card-skeleton" aria-hidden="true" />
+            <span class="sr-only">正在加载{{ labelFor(kind) }}</span>
+          </div>
+          <div v-else-if="allGroups[kind]?.error" class="state-panel" role="alert">
+            <p>{{ labelFor(kind) }}暂时无法加载。</p>
+            <button type="button" @click="retryGroup(kind)">重试此分类</button>
+          </div>
+          <div v-else-if="allGroups[kind]?.data?.records.length" class="card-grid">
+            <DiscoveryCard v-for="item in allGroups[kind].data.records" :key="`${kind}-${item.id}`" :kind="kind" :item="item" />
+          </div>
+          <div v-else class="state-panel">{{ current.keyword ? '这个关键词暂无匹配结果。' : '暂无内容。' }}</div>
+        </section>
+      </template>
+
+      <section v-else class="result-section">
+        <div class="section-heading">
+          <div>
+            <span class="section-index">RESULTS</span>
+            <h2>{{ labelFor(current.type) }}</h2>
+            <span v-if="selectedData" class="result-count">{{ selectedData.total }} 条结果</span>
+          </div>
+        </div>
+
+        <div v-if="selectedLoading" class="card-grid" aria-live="polite">
+          <div v-for="index in 6" :key="index" class="card-skeleton" aria-hidden="true" />
+          <span class="sr-only">正在加载资源</span>
+        </div>
+        <div v-else-if="selectedError" class="state-panel" role="alert">
+          <p>资源暂时无法加载，请检查连接后重试。</p>
+          <button type="button" @click="loadDiscovery">重新加载</button>
+        </div>
+        <div v-else-if="selectedData?.records.length" class="card-grid">
+          <DiscoveryCard v-for="item in selectedData.records" :key="`${current.type}-${item.id}`" :kind="current.type" :item="item" />
+        </div>
+        <div v-else class="state-panel">
+          <p>没有找到匹配的{{ labelFor(current.type) }}。</p>
+          <button v-if="current.keyword || current.category" type="button" @click="clearFilters">清除筛选</button>
+        </div>
+
+        <nav v-if="!selectedLoading && selectedData && totalPages > 1" class="pager" aria-label="结果分页">
+          <button type="button" :disabled="current.page <= 1" @click="setPage(current.page - 1)">上一页</button>
+          <span>第 {{ current.page }} / {{ totalPages }} 页</span>
+          <button type="button" :disabled="current.page >= totalPages" @click="setPage(current.page + 1)">下一页</button>
+        </nav>
+      </section>
     </section>
-
-    <el-tabs v-model="activeTab" class="content-tabs">
-      <el-tab-pane label="项目导航" name="projects">
-        <div class="content-card">
-          <ProjectList />
-        </div>
-      </el-tab-pane>
-
-      <el-tab-pane :label="`笔记文章 (${filteredArticles.length})`" name="articles">
-        <div class="content-card">
-          <div class="card-header">
-            <div>
-              <h2>笔记文章</h2>
-              <p>技术分享、项目复盘、故障记录、实践沉淀都可以在门户中归档。</p>
-            </div>
-          </div>
-          <div class="article-grid">
-            <article
-              v-for="item in filteredArticles"
-              :key="item.id"
-              class="article-card clickable-card"
-              @click="openDetail('article', item)"
-            >
-              <div v-if="item.coverImage" class="article-cover">
-                <img :src="item.coverImage" :alt="item.title">
-              </div>
-              <div class="article-top">
-                <el-tag effect="dark">{{ item.category }}</el-tag>
-                <span>{{ item.date }}</span>
-              </div>
-              <h3>{{ item.title }}</h3>
-              <p>{{ item.excerpt }}</p>
-              <div class="article-meta">
-                <span>{{ item.author || '匿名作者' }}</span>
-                <span>{{ estimateArticleMinutes(item) }} 分钟阅读</span>
-                <span>{{ (item.tags || []).length }} 个标签</span>
-              </div>
-              <div class="card-tags">
-                <span v-for="tag in item.tags" :key="tag">{{ tag }}</span>
-              </div>
-            </article>
-          </div>
-          <el-empty v-if="filteredArticles.length === 0" description="没有匹配到文章" />
-        </div>
-      </el-tab-pane>
-
-      <el-tab-pane :label="`AI 资产 (${filteredAiAssets.length})`" name="ai">
-        <div class="content-card">
-          <div class="card-header">
-            <div>
-              <h2>AI 资产中心</h2>
-              <p>先把入口、描述、负责人和适用场景展示出来，后续再逐步打通接口和调用链路。</p>
-            </div>
-            <el-button type="primary" plain @click="$router.push('/ai-workspace')">
-              进入管理视图
-            </el-button>
-          </div>
-          <div class="asset-grid">
-            <article
-              v-for="item in filteredAiAssets"
-              :key="item.id"
-              class="asset-card clickable-card"
-              @click="openDetail('ai', item)"
-            >
-              <div class="asset-head">
-                <span class="asset-type">{{ item.type }}</span>
-                <span class="asset-owner">{{ item.owner }}</span>
-              </div>
-              <h3>{{ item.name }}</h3>
-              <p>{{ item.desc }}</p>
-              <div class="asset-subline">
-                <span>状态 {{ statusLabelMap[item.status] }}</span>
-                <span>{{ item.version }}</span>
-              </div>
-              <div class="card-tags">
-                <span v-for="tag in item.tags" :key="tag">{{ tag }}</span>
-              </div>
-            </article>
-          </div>
-          <el-empty v-if="filteredAiAssets.length === 0" description="没有匹配到 AI 资产" />
-        </div>
-      </el-tab-pane>
-
-      <el-tab-pane :label="`生活灵感 (${filteredLifeFeeds.length})`" name="life">
-        <div class="content-card">
-          <div class="card-header">
-            <div>
-              <h2>生活灵感</h2>
-              <p>门户不是纯工具面板，也可以承载团队公告、活动、值班提醒和轻内容。</p>
-            </div>
-          </div>
-          <div class="life-grid">
-            <article
-              v-for="item in filteredLifeFeeds"
-              :key="item.id"
-              class="life-card clickable-card"
-              @click="openDetail('life', item)"
-            >
-              <div class="life-badge">{{ item.type }}</div>
-              <h3>{{ item.title }}</h3>
-              <p>{{ item.desc }}</p>
-              <div class="life-footer">{{ item.meta }}</div>
-            </article>
-          </div>
-          <el-empty v-if="filteredLifeFeeds.length === 0" description="没有匹配到生活内容" />
-        </div>
-      </el-tab-pane>
-    </el-tabs>
-
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import ProjectList from '@/components/ProjectList.vue'
-import { usePortalContent } from '@/composables/usePortalContent'
-import { contentKinds } from '@/data/portal-contract'
-import { estimateReadingMinutes } from '@/utils/markdown'
-import { getProjects } from '@/api/project'
+import DiscoveryCard from '@/components/DiscoveryCard.vue'
+import { getCategories } from '@/api/project'
+import {
+  discoveryKinds,
+  fetchAllDiscoveryGroups,
+  fetchDiscoveryGroup,
+  readDiscoveryQuery
+} from '@/composables/useResourceDiscovery'
 
 const route = useRoute()
 const router = useRouter()
+const tabs = [
+  { type: 'all', label: '全部' },
+  { type: 'project', label: '项目' },
+  { type: 'article', label: '文章' },
+  { type: 'ai', label: 'AI 资产' },
+  { type: 'life', label: '生活内容' }
+]
+const current = computed(() => readDiscoveryQuery(route.query))
+const searchDraft = ref(current.value.keyword)
+const categoryDraft = ref(current.value.category)
+const categories = ref([])
+const categoryError = ref(false)
+const allGroups = ref(Object.fromEntries(discoveryKinds.map((kind) => [kind, { data: null, error: null }])))
+const allLoading = ref(false)
+const retrying = reactive(Object.fromEntries(discoveryKinds.map((kind) => [kind, false])))
+const selectedData = ref(null)
+const selectedError = ref(null)
+const selectedLoading = ref(false)
+let requestId = 0
 
-const activeTab = ref('projects')
-const projectCount = ref(0)
-const activeKeyword = computed(() => {
-  const keyword = route.query.keyword
-  return typeof keyword === 'string' ? keyword.trim() : ''
-})
+const totalPages = computed(() => selectedData.value
+  ? Math.max(1, Math.ceil(selectedData.value.total / selectedData.value.size))
+  : 1)
 
-const {
-  portalResources,
-  filteredArticles,
-  filteredAiAssets,
-  filteredLifeFeeds,
-  searchSummary
-} = usePortalContent(activeKeyword)
-
-const introStats = computed(() => [
-  { value: `${projectCount.value} 个`, label: '项目资源' },
-  { value: `${portalResources.articles.length} 篇`, label: '知识内容' },
-  { value: `${portalResources.aiAssets.length} 个`, label: 'AI 资产' },
-  { value: `${portalResources.lifeFeeds.length} 条`, label: '生活灵感' }
-])
-
-const statusLabelMap = {
-  online: '在线',
-  trial: '试运行',
-  draft: '草稿'
+const labelFor = (kind) => tabs.find((tab) => tab.type === kind)?.label || '资源'
+const sectionIndex = (kind) => String(discoveryKinds.indexOf(kind) + 1).padStart(2, '0')
+const tabCount = (type) => {
+  if (type === 'all') return null
+  if (current.value.type === 'all') return allGroups.value[type]?.data?.total ?? null
+  return current.value.type === type ? selectedData.value?.total ?? null : null
 }
 
-const estimateArticleMinutes = (item) =>
-  estimateReadingMinutes(item.contentBody || item.excerpt || item.title || '')
-
-const openDetail = (mode, item) => {
-  router.push(`/explore/${mode}/${item.id}`)
+const navigate = (updates) => {
+  const next = { ...current.value, ...updates }
+  router.push({
+    path: '/explore',
+    query: {
+      keyword: next.keyword || undefined,
+      type: next.type === 'all' ? undefined : next.type,
+      page: next.page > 1 ? String(next.page) : undefined,
+      category: next.type === 'project' && next.category ? next.category : undefined
+    }
+  })
 }
 
-const loadProjectCount = async () => {
+const submitSearch = () => navigate({ keyword: searchDraft.value.trim(), type: 'all', category: '', page: 1 })
+const clearSearch = () => navigate({ keyword: '', page: 1 })
+const clearFilters = () => navigate({ keyword: '', category: '', page: 1 })
+const openType = (type) => navigate({ type, category: type === 'project' ? current.value.category : '', page: 1 })
+const changeCategory = () => navigate({ category: categoryDraft.value, page: 1 })
+const setPage = (page) => navigate({ page })
+
+async function loadCategories() {
+  categoryError.value = false
   try {
-    const data = await getProjects()
-    projectCount.value = Array.isArray(data) ? data.length : 0
+    const result = await getCategories()
+    categories.value = Array.isArray(result) ? result : []
   } catch (error) {
-    console.warn('读取项目统计失败', error)
-    projectCount.value = 0
+    console.warn('加载项目分类失败', error)
+    categoryError.value = true
   }
 }
 
-watch(activeKeyword, (keyword) => {
-  if (!keyword) {
+async function loadDiscovery() {
+  const id = ++requestId
+  const query = current.value
+  if (query.type === 'all') {
+    allLoading.value = true
+    const groups = await fetchAllDiscoveryGroups(query.keyword)
+    if (id === requestId) {
+      allGroups.value = groups
+      allLoading.value = false
+    }
     return
   }
 
-  if (filteredArticles.value.length > 0) {
-    activeTab.value = 'articles'
-    return
+  selectedLoading.value = true
+  selectedError.value = null
+  selectedData.value = null
+  try {
+    const result = await fetchDiscoveryGroup(query.type, query)
+    if (id === requestId) {
+      const lastPage = Math.max(1, Math.ceil(result.total / result.size))
+      if (query.page > lastPage) {
+        navigate({ page: lastPage })
+        return
+      }
+      selectedData.value = result
+    }
+  } catch (error) {
+    if (id === requestId) selectedError.value = error
+  } finally {
+    if (id === requestId) selectedLoading.value = false
   }
+}
 
-  if (filteredAiAssets.value.length > 0) {
-    activeTab.value = contentKinds.ai
-    return
+async function retryGroup(kind) {
+  retrying[kind] = true
+  try {
+    const data = await fetchDiscoveryGroup(kind, { keyword: current.value.keyword, size: 4 })
+    allGroups.value = { ...allGroups.value, [kind]: { data, error: null } }
+  } catch (error) {
+    allGroups.value = { ...allGroups.value, [kind]: { data: null, error } }
+  } finally {
+    retrying[kind] = false
   }
+}
 
-  if (filteredLifeFeeds.value.length > 0) {
-    activeTab.value = contentKinds.life
-  }
-})
-
-onMounted(() => {
-  loadProjectCount()
-})
+watch(current, (value) => {
+  searchDraft.value = value.keyword
+  categoryDraft.value = value.category
+  if (value.type === 'project' && !categories.value.length) loadCategories()
+  loadDiscovery()
+}, { immediate: true })
 </script>
 
 <style scoped>
-.explore-page {
-  max-width: 1440px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.intro-panel,
-.filter-panel,
-.content-card {
-  border: 1px solid var(--portal-line);
-  border-radius: 24px;
-  background: var(--portal-surface);
-  box-shadow: var(--portal-shadow);
-  backdrop-filter: blur(18px);
-}
-
-.intro-panel {
-  display: grid;
-  grid-template-columns: 1.2fr 0.9fr;
-  gap: 24px;
-  padding: 28px;
-}
-
-.eyebrow {
-  display: inline-flex;
-  padding: 8px 14px;
-  border-radius: 999px;
-  background: rgba(89, 208, 255, 0.12);
-  color: var(--portal-accent);
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.intro-panel h1 {
-  margin: 16px 0 10px;
-  font-size: clamp(30px, 4vw, 48px);
-}
-
-.intro-panel p {
-  margin: 0;
-  color: var(--portal-text-soft);
-  line-height: 1.8;
-}
-
-.intro-stats {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.stat-card,
-.article-card,
-.asset-card,
-.life-card {
-  border: 1px solid var(--portal-line);
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.03);
-}
-
-.stat-card {
-  padding: 20px;
-}
-
-.stat-value {
-  color: var(--portal-accent-2);
-  font-size: 24px;
-  font-weight: 700;
-}
-
-.stat-label {
-  margin-top: 8px;
-  color: var(--portal-text-soft);
-}
-
-.filter-panel {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 18px 24px;
-}
-
-.filter-title {
-  font-size: 18px;
-  font-weight: 600;
-}
-
-.filter-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.content-tabs :deep(.el-tabs__nav-wrap::after) {
-  background-color: transparent;
-}
-
-.content-tabs :deep(.el-tabs__item) {
-  color: var(--portal-text-soft);
-}
-
-.content-tabs :deep(.el-tabs__item.is-active) {
-  color: var(--portal-accent);
-}
-
-.content-card {
-  padding: 26px;
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.card-header h2 {
-  margin: 0 0 8px;
-  font-size: 24px;
-}
-
-.card-header p {
-  margin: 0;
-  color: var(--portal-text-soft);
-}
-
-.article-grid,
-.asset-grid,
-.life-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
-}
-
-.article-card,
-.asset-card,
-.life-card {
-  padding: 20px;
-}
-
-.article-cover {
-  margin: -20px -20px 16px;
-  overflow: hidden;
-  border-radius: 20px 20px 16px 16px;
-  aspect-ratio: 16 / 8;
-}
-
-.article-cover img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.clickable-card {
-  cursor: pointer;
-  transition: transform 0.24s ease, border-color 0.24s ease, box-shadow 0.24s ease;
-}
-
-.clickable-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(89, 208, 255, 0.36);
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.16);
-}
-
-.article-top,
-.asset-head {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  align-items: center;
-  color: var(--portal-text-soft);
-  font-size: 12px;
-}
-
-.asset-subline {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 14px;
-  color: var(--portal-text-soft);
-  font-size: 13px;
-}
-
-.article-card h3,
-.asset-card h3,
-.life-card h3 {
-  margin: 14px 0 10px;
-  font-size: 18px;
-}
-
-.article-card p,
-.asset-card p,
-.life-card p {
-  margin: 0;
-  color: var(--portal-text-soft);
-  line-height: 1.7;
-}
-
-.article-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 12px;
-  color: var(--portal-text-soft);
-  font-size: 12px;
-}
-
-.card-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 16px;
-}
-
-.card-tags span,
-.life-badge {
-  display: inline-flex;
-  align-items: center;
-  width: fit-content;
-  padding: 6px 12px;
-  border-radius: 999px;
-  background: rgba(89, 208, 255, 0.12);
-  color: var(--portal-accent);
-  font-size: 12px;
-}
-
-.asset-type {
-  color: var(--portal-warm);
-  font-weight: 600;
-}
-
-.life-footer {
-  margin-top: 18px;
-  color: #fff2d4;
-  font-size: 13px;
-}
-
-@media (max-width: 980px) {
-  .intro-panel {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 640px) {
-  .intro-panel,
-  .filter-panel,
-  .content-card {
-    padding: 18px;
-    border-radius: 18px;
-  }
-
-  .filter-panel {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .intro-stats {
-    grid-template-columns: 1fr;
-  }
-}
+.discovery-page { max-width: 1440px; margin: 0 auto; display: grid; gap: 24px; }
+.page-intro, .browse-shell { border: 1px solid var(--portal-line); border-radius: 28px; background: var(--portal-surface); box-shadow: var(--portal-shadow); }
+.page-intro { padding: clamp(27px, 3.5vw, 45px); display: grid; gap: 20px; background: linear-gradient(125deg, rgba(42, 83, 113, .35), transparent 55%), var(--portal-surface); }
+.eyebrow, .section-index { color: var(--portal-accent); font-size: 12px; font-weight: 700; letter-spacing: .14em; }
+h1 { max-width: 800px; margin: 10px 0; font-size: clamp(36px, 4vw, 52px); line-height: 1.15; letter-spacing: -.035em; }
+.intro-copy p { color: var(--portal-text-soft); font-size: 16px; line-height: 1.7; margin: 0; }
+.search-bar { display: flex; max-width: 860px; padding: 6px; border: 1px solid rgba(157, 187, 211, .36); border-radius: 16px; background: rgba(2, 11, 24, .7); }
+.search-bar input { min-width: 0; flex: 1; padding: 14px 17px; border: 0; outline: 0; background: transparent; color: var(--portal-text); font: inherit; }
+.search-bar input::placeholder { color: var(--portal-text-soft); }
+.search-bar:focus-within { border-color: var(--portal-accent); box-shadow: 0 0 0 2px rgba(114, 217, 245, .18); }
+.search-bar button, .state-panel button { border: 0; border-radius: 11px; background: var(--portal-accent); color: #061522; padding: 12px 22px; font: inherit; font-weight: 700; cursor: pointer; }
+.browse-shell { padding: clamp(18px, 3vw, 34px); }
+.toolbar { display: flex; justify-content: space-between; align-items: center; gap: 20px; border-bottom: 1px solid var(--portal-line); padding-bottom: 18px; }
+.type-tabs { display: flex; gap: 8px; overflow-x: auto; }
+.type-tabs button { flex-shrink: 0; border: 1px solid transparent; border-radius: 10px; padding: 10px 14px; color: var(--portal-text-soft); background: transparent; font: inherit; cursor: pointer; }
+.type-tabs button.active { color: var(--portal-text); border-color: rgba(89, 208, 255, .3); background: rgba(89, 208, 255, .12); }
+.type-tabs span { margin-left: 7px; font-size: 12px; }
+.category-control { display: flex; align-items: center; gap: 9px; white-space: nowrap; color: var(--portal-text-soft); font-size: 13px; }
+.category-control select { max-width: 180px; border: 1px solid var(--portal-line); border-radius: 9px; background: var(--portal-bg-soft); color: var(--portal-text); padding: 10px; font: inherit; }
+.query-summary { color: var(--portal-text-soft); }
+.query-summary button, .minor-error button { border: 0; background: transparent; color: var(--portal-accent); font: inherit; cursor: pointer; text-decoration: underline; }
+.minor-error { color: #ffcf97; }
+.result-section { padding-top: 28px; }
+.result-section + .result-section { margin-top: 28px; border-top: 1px solid var(--portal-line); }
+.section-heading, .section-heading > div { display: flex; align-items: baseline; gap: 12px; }
+.section-heading { justify-content: space-between; margin-bottom: 19px; }
+.section-heading h2 { margin: 0; font-size: 24px; }
+.result-count { color: var(--portal-text-soft); font-size: 13px; }
+.text-action { background: transparent; border: 0; color: var(--portal-accent); font: inherit; cursor: pointer; white-space: nowrap; }
+.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 16px; }
+.card-skeleton { min-height: 230px; border-radius: 20px; background: linear-gradient(100deg, rgba(255,255,255,.03) 25%, rgba(255,255,255,.09) 50%, rgba(255,255,255,.03) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
+.state-panel { display: grid; justify-items: start; gap: 12px; padding: 28px; border: 1px dashed var(--portal-line); border-radius: 17px; color: var(--portal-text-soft); }
+.state-panel p { margin: 0; }
+.pager { display: flex; justify-content: center; align-items: center; gap: 18px; margin-top: 28px; color: var(--portal-text-soft); }
+.pager button { border: 1px solid var(--portal-line); border-radius: 9px; padding: 9px 14px; background: var(--portal-bg-soft); color: var(--portal-text); font: inherit; cursor: pointer; }
+.pager button:disabled { opacity: .4; cursor: not-allowed; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+@media (max-width: 720px) { .toolbar { align-items: stretch; flex-direction: column; } .type-tabs { width: 100%; } .section-heading > div { flex-wrap: wrap; } .search-bar { flex-direction: column; } .search-bar button { width: 100%; } .section-heading h2 { font-size: 21px; } }
+@media (prefers-reduced-motion: reduce) { .card-skeleton { animation: none; } }
 </style>

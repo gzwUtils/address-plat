@@ -87,7 +87,7 @@ const handleDelete = async () => {
     await deleteProject(props.project.id)
     ElMessage.success('删除成功')
     emit('deleted')
-  } catch {
+  } catch (error) {
     if (error !== 'cancel') {
       ElMessage.error('删除失败')
     }

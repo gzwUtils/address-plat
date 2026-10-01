@@ -1,63 +1,46 @@
 <template>
-  <header class="layout-header">
-    <div class="header-brand" @click="router.push('/')">
-      <div class="brand-mark">
-        <el-icon :size="22"><Platform /></el-icon>
-      </div>
-      <div>
-        <div class="brand-title">KD Portal Nexus</div>
-        <div class="brand-subtitle">项目、知识、AI 能力统一入口</div>
-      </div>
-    </div>
+  <header class="site-header">
+    <div class="header-inner">
+      <router-link class="brand" to="/" aria-label="KD 门户首页">
+        <span class="brand-mark">KD</span>
+        <span class="brand-copy"><strong>团队门户</strong><small>PROJECTS · KNOWLEDGE · AI</small></span>
+      </router-link>
 
-    <nav class="header-nav">
       <button
-        v-for="item in navItems"
-        :key="item.path"
         type="button"
-        class="nav-item"
-        :class="{ active: route.path === item.path }"
-        @click="router.push(item.path)"
+        class="menu-toggle"
+        :aria-expanded="mobileOpen"
+        aria-controls="portal-navigation"
+        @click="mobileOpen = !mobileOpen"
       >
-        {{ item.label }}
+        {{ mobileOpen ? '收起菜单' : '打开菜单' }}
+        <span aria-hidden="true">{{ mobileOpen ? '×' : '☰' }}</span>
       </button>
-    </nav>
 
-    <div class="header-actions">
-      <el-input
-        v-model="searchKeyword"
-        placeholder="搜索项目、文章、AI 资产"
-        class="search-input"
-        clearable
-        @keyup.enter="handleSearch"
-      >
-        <template #prefix>
-          <el-icon><Search /></el-icon>
-        </template>
-      </el-input>
+      <nav id="portal-navigation" class="navigation" :class="{ open: mobileOpen }" aria-label="主导航">
+        <router-link to="/" :class="{ active: route.path === '/' }" :aria-current="route.path === '/' ? 'page' : undefined">首页</router-link>
+        <router-link to="/explore" :class="{ active: isExploreActive }" :aria-current="isExploreActive ? 'page' : undefined">资源广场</router-link>
+        <router-link to="/growth-capsule" :class="{ active: route.path === '/growth-capsule' }" :aria-current="route.path === '/growth-capsule' ? 'page' : undefined">我的落地舱</router-link>
+        <details ref="managementMenu" class="management-menu">
+          <summary :class="{ active: isManagementActive }">管理 <span aria-hidden="true">⌄</span></summary>
+          <div class="management-links">
+            <router-link to="/ops-workbench">运营工作台</router-link>
+            <router-link to="/project-studio">项目管理</router-link>
+            <router-link to="/ai-workspace">AI 资产中心</router-link>
+            <router-link to="/content-studio">资源管理</router-link>
+          </div>
+        </details>
+      </nav>
 
-      <el-popover placement="bottom" :width="280" trigger="hover">
-        <template #reference>
-          <div class="header-status user-status">
-            <el-icon><User /></el-icon>
-            <span>{{ userDisplay.shortId }}</span>
-          </div>
-        </template>
-        <div class="user-info-popover">
-          <div class="user-info-row">
-            <span class="label">用户标识:</span>
-            <span class="value">{{ userDisplay.name }}</span>
-          </div>
-          <div class="user-info-row">
-            <span class="label">用户ID:</span>
-            <span class="value">{{ userDisplay.id }}</span>
-          </div>
-          <div class="user-tip">
-            <el-icon><InfoFilled /></el-icon>
-            您只能修改和删除自己上传的项目
-          </div>
-        </div>
-      </el-popover>
+      <form class="header-search" role="search" @submit.prevent="handleSearch">
+        <label class="sr-only" for="header-search-input">搜索门户资源</label>
+        <input id="header-search-input" v-model="searchKeyword" type="search" placeholder="搜索项目、文章、AI…" />
+        <button type="submit" aria-label="搜索"><span aria-hidden="true">⌕</span></button>
+      </form>
+
+      <div class="user-chip" :title="`用户标识：${userDisplay.name}`" :aria-label="`当前用户：${userDisplay.name}`">
+        {{ userDisplay.shortId }}
+      </div>
     </div>
   </header>
 </template>
@@ -65,233 +48,65 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Platform, Search, User, InfoFilled } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
 import { getUserDisplayInfo } from '@/utils/userIdentity'
 
-const router = useRouter()
 const route = useRoute()
-
+const router = useRouter()
 const userDisplay = getUserDisplayInfo()
+const mobileOpen = ref(false)
+const managementMenu = ref(null)
+const searchKeyword = ref(typeof route.query.keyword === 'string' ? route.query.keyword : '')
+const isExploreActive = computed(() => route.path.startsWith('/explore') || route.path.startsWith('/project/'))
+const isManagementActive = computed(() => ['/ops-workbench', '/project-studio', '/ai-workspace', '/content-studio'].includes(route.path))
 
-const navItems = [
-  { label: '总览', path: '/' },
-  { label: '资源广场', path: '/explore' },
-  { label: '我的落地舱', path: '/growth-capsule' },
-  { label: '运营工作台', path: '/ops-workbench' },
-  { label: '项目管理', path: '/project-studio' },
-  { label: 'AI 资产中心', path: '/ai-workspace' },
-  { label: '资源管理', path: '/content-studio' }
-]
-
-const routeKeyword = computed(() => {
-  const keyword = route.query.keyword
-  return typeof keyword === 'string' ? keyword : ''
-})
-
-const searchKeyword = ref(routeKeyword.value)
-
-watch(routeKeyword, (value) => {
-  searchKeyword.value = value
+watch(() => route.fullPath, () => {
+  mobileOpen.value = false
+  if (managementMenu.value) managementMenu.value.open = false
+  searchKeyword.value = typeof route.query.keyword === 'string' ? route.query.keyword : ''
 })
 
 const handleSearch = () => {
   const keyword = searchKeyword.value.trim()
-
-  if (!keyword) {
-    ElMessage.warning('请输入搜索关键词')
-    return
-  }
-
-  router.push({
-    path: '/explore',
-    query: { keyword }
-  })
+  router.push({ path: '/explore', query: keyword ? { keyword } : {} })
 }
 </script>
 
 <style scoped>
-.layout-header {
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 20px;
-  padding: 18px 28px;
-  border-bottom: 1px solid var(--portal-line);
-  backdrop-filter: blur(18px);
-  background: rgba(4, 12, 22, 0.72);
+.site-header { position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid var(--portal-line); background: rgba(5, 17, 31, .94); backdrop-filter: blur(18px); }
+.header-inner { max-width: 1600px; margin: 0 auto; padding: 13px 28px; display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(180px, 260px) auto; align-items: center; gap: 25px; }
+.brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.brand-mark { display: grid; place-items: center; flex: 0 0 42px; height: 42px; border-radius: 12px; background: var(--portal-accent); color: #071724; font-size: 14px; font-weight: 900; letter-spacing: -.04em; }
+.brand-copy { display: grid; gap: 2px; white-space: nowrap; }
+.brand-copy strong { font-size: 17px; }
+.brand-copy small { color: var(--portal-text-soft); font-size: 9px; letter-spacing: .12em; }
+.navigation { display: flex; justify-content: center; align-items: center; gap: 4px; }
+.navigation > a, .management-menu summary { display: block; border-radius: 9px; padding: 11px 12px; color: var(--portal-text-soft); font-size: 14px; white-space: nowrap; cursor: pointer; }
+.navigation > a:hover, .navigation > a.active, .management-menu summary:hover, .management-menu summary.active { color: var(--portal-text); background: rgba(89, 208, 255, .12); }
+.management-menu { position: relative; }
+.management-menu summary { list-style: none; }
+.management-menu summary::-webkit-details-marker { display: none; }
+.management-menu summary span { margin-left: 3px; }
+.management-links { position: absolute; top: calc(100% + 10px); left: 0; min-width: 180px; display: grid; padding: 8px; border: 1px solid var(--portal-line); border-radius: 14px; background: var(--portal-surface-strong); box-shadow: var(--portal-shadow); }
+.management-links a { border-radius: 8px; padding: 11px 12px; color: var(--portal-text-soft); white-space: nowrap; font-size: 14px; }
+.management-links a:hover, .management-links a.router-link-active { color: var(--portal-text); background: rgba(89, 208, 255, .12); }
+.header-search { display: flex; min-width: 0; border: 1px solid var(--portal-line); border-radius: 10px; background: rgba(255, 255, 255, .045); }
+.header-search input { flex: 1; min-width: 0; border: 0; outline: 0; padding: 10px 11px; background: transparent; color: var(--portal-text); font: inherit; font-size: 13px; }
+.header-search input::placeholder { color: var(--portal-text-soft); }
+.header-search:focus-within { border-color: var(--portal-accent); box-shadow: 0 0 0 2px rgba(114, 217, 245, .18); }
+.header-search button { border: 0; padding: 0 12px; color: var(--portal-accent); background: transparent; font-size: 22px; cursor: pointer; }
+.user-chip { max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 10px; border: 1px solid var(--portal-line); border-radius: 10px; color: var(--portal-text-soft); font-size: 12px; }
+.menu-toggle { display: none; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+@media (max-width: 1180px) {
+  .header-inner { grid-template-columns: 1fr auto; gap: 12px; }
+  .menu-toggle { display: flex; align-items: center; gap: 9px; border: 1px solid var(--portal-line); border-radius: 10px; padding: 10px 12px; color: var(--portal-text); background: var(--portal-surface); font: inherit; font-size: 13px; cursor: pointer; }
+  .menu-toggle span { font-size: 17px; line-height: 1; }
+  .header-search { grid-column: 1 / -1; grid-row: 2; }
+  .navigation { display: none; grid-column: 1 / -1; grid-row: 3; align-items: stretch; flex-direction: column; padding: 7px 0; }
+  .navigation.open { display: flex; }
+  .navigation > a, .management-menu summary { padding: 12px; }
+  .management-links { position: static; margin: 4px 0 0 10px; box-shadow: none; }
+  .user-chip { display: none; }
 }
-
-.header-brand {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  cursor: pointer;
-}
-
-.brand-mark {
-  width: 48px;
-  height: 48px;
-  border-radius: 16px;
-  display: grid;
-  place-items: center;
-  color: #06111e;
-  background: linear-gradient(135deg, var(--portal-accent), var(--portal-accent-2));
-  box-shadow: 0 10px 30px rgba(89, 208, 255, 0.28);
-}
-
-.brand-title {
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-}
-
-.brand-subtitle {
-  font-size: 12px;
-  color: var(--portal-text-soft);
-}
-
-.header-nav {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-}
-
-.nav-item {
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--portal-text-soft);
-  font: inherit;
-  padding: 10px 16px;
-  border-radius: 999px;
-  cursor: pointer;
-  transition: all 0.25s ease;
-}
-
-.nav-item:hover,
-.nav-item.active {
-  color: var(--portal-text);
-  border-color: rgba(89, 208, 255, 0.2);
-  background: rgba(89, 208, 255, 0.1);
-}
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.search-input {
-  width: 320px;
-}
-
-.search-input :deep(.el-input__wrapper) {
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.06);
-  box-shadow: none;
-}
-
-.search-input :deep(.el-input__inner) {
-  color: var(--portal-text);
-}
-
-.header-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  border-radius: 999px;
-  color: var(--portal-text-soft);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--portal-line);
-  font-size: 12px;
-  white-space: nowrap;
-}
-
-.user-status {
-  cursor: pointer;
-  transition: all 0.25s ease;
-}
-
-.user-status:hover {
-  color: var(--portal-accent);
-  border-color: rgba(89, 208, 255, 0.3);
-  background: rgba(89, 208, 255, 0.08);
-}
-
-.user-info-popover {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.user-info-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  font-size: 13px;
-}
-
-.user-info-row .label {
-  color: var(--portal-text-soft);
-}
-
-.user-info-row .value {
-  color: var(--portal-text);
-  font-family: 'Monaco', 'Consolas', monospace;
-  font-size: 11px;
-}
-
-.user-tip {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
-  border-radius: 8px;
-  background: rgba(89, 208, 255, 0.08);
-  color: var(--portal-accent);
-  font-size: 12px;
-  line-height: 1.6;
-}
-
-.status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--portal-accent-2);
-  box-shadow: 0 0 16px rgba(124, 255, 183, 0.8);
-}
-
-@media (max-width: 1080px) {
-  .layout-header {
-    grid-template-columns: 1fr;
-  }
-
-  .header-nav {
-    justify-content: flex-start;
-  }
-
-  .header-actions {
-    flex-wrap: wrap;
-  }
-
-  .search-input {
-    width: 100%;
-  }
-}
-
-@media (max-width: 640px) {
-  .layout-header {
-    padding: 16px;
-  }
-
-  .brand-subtitle,
-  .header-status {
-    display: none;
-  }
-}
+@media (max-width: 640px) { .header-inner { padding: 11px 16px; } .brand-copy small { display: none; } }
 </style>
