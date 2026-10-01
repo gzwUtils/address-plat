@@ -112,10 +112,10 @@ const handleSearch = () => {
 .header-search button { border: 0; padding: 0 12px; color: var(--portal-accent); background: transparent; font-size: 22px; cursor: pointer; }
 .theme-switcher { display: flex; align-items: center; gap: 8px; padding: 6px 0 6px 12px; border-left: 1px solid var(--portal-line); white-space: nowrap; }
 .theme-label { color: var(--portal-text-soft); font-size: 11px; margin-right: 1px; }
-.theme-swatch { width: 18px; height: 18px; border: 1px solid #fff; padding: 0; cursor: pointer; box-shadow: 0 0 0 1px var(--portal-line); }
-.theme-swatch.red { background: linear-gradient(135deg, #fffaf2 0 46%, #a63d38 47%); }
-.theme-swatch.blue { background: linear-gradient(135deg, #fffaf2 0 46%, #2b617c 47%); }
-.theme-swatch.green { background: linear-gradient(135deg, #fffaf2 0 46%, #456d55 47%); }
+.theme-swatch { width: 17px; height: 17px; border: 2px solid var(--portal-surface); border-radius: 50%; padding: 0; cursor: pointer; box-shadow: 0 0 0 1px var(--portal-line); }
+.theme-swatch.red { background: #a43d38; }
+.theme-swatch.blue { background: #2b5d78; }
+.theme-swatch.green { background: #416e55; }
 .theme-swatch.selected { box-shadow: 0 0 0 2px var(--portal-accent); }
 .user-chip { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 10px; border: 1px solid var(--portal-line); color: var(--portal-text); background: var(--portal-surface); font: inherit; font-size: 12px; cursor: pointer; }
 .menu-toggle { display: none; }

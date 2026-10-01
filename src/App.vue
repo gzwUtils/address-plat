@@ -7,21 +7,21 @@
 <style>
 :root {
   color-scheme: light;
-  --portal-bg: #f4f2ec;
-  --portal-bg-soft: #efede6;
-  --portal-surface: #fffefa;
-  --portal-surface-strong: #f6f3ec;
-  --portal-line: #d9d5ca;
-  --portal-text: #202a2e;
-  --portal-text-soft: #666e6d;
-  --portal-accent: #a53732;
-  --portal-accent-ink: #fffefa;
-  --portal-accent-2: #2d5368;
-  --portal-warm: #a53732;
-  --portal-glow: rgba(165, 55, 50, .08);
-  --portal-hero-top: #fffefa;
-  --portal-hero-bottom: #f6f3ec;
-  --portal-shadow: 0 5px 18px rgba(32, 42, 46, .035);
+  --portal-bg: #ffffff;
+  --portal-bg-soft: #f7f8f9;
+  --portal-surface: #ffffff;
+  --portal-surface-strong: #fafbfc;
+  --portal-line: #e3e7e9;
+  --portal-text: #1e2930;
+  --portal-text-soft: #657179;
+  --portal-accent: #a43d38;
+  --portal-accent-ink: #ffffff;
+  --portal-accent-2: #31596c;
+  --portal-warm: #a43d38;
+  --portal-glow: rgba(164, 61, 56, .05);
+  --portal-hero-top: #ffffff;
+  --portal-hero-bottom: #fafbfc;
+  --portal-shadow: 0 3px 12px rgba(30, 41, 48, .035);
   --el-color-primary: var(--portal-accent);
   --el-color-primary-light-3: color-mix(in srgb, var(--portal-accent) 70%, white);
   --el-color-primary-light-5: color-mix(in srgb, var(--portal-accent) 50%, white);
@@ -42,27 +42,27 @@
 }
 
 :root[data-theme='blue'] {
-  --portal-bg: #f2f4f3;
-  --portal-bg-soft: #e9efef;
-  --portal-surface-strong: #f2f6f5;
-  --portal-line: #d4dddc;
-  --portal-accent: #2d5368;
-  --portal-accent-2: #a53732;
-  --portal-warm: #a53732;
-  --portal-glow: rgba(45, 83, 104, .08);
-  --portal-hero-bottom: #f2f6f5;
+  --portal-bg: #fbfdff;
+  --portal-bg-soft: #f3f7fa;
+  --portal-surface-strong: #f8fbfd;
+  --portal-line: #e0e7eb;
+  --portal-accent: #2b5d78;
+  --portal-accent-2: #a43d38;
+  --portal-warm: #a43d38;
+  --portal-glow: rgba(43, 93, 120, .05);
+  --portal-hero-bottom: #f8fbfd;
 }
 
 :root[data-theme='green'] {
-  --portal-bg: #f3f4ed;
-  --portal-bg-soft: #e9eee5;
-  --portal-surface-strong: #f3f6ef;
-  --portal-line: #d7ded1;
-  --portal-accent: #456b56;
-  --portal-accent-2: #a53732;
-  --portal-warm: #a53732;
-  --portal-glow: rgba(69, 107, 86, .08);
-  --portal-hero-bottom: #f3f6ef;
+  --portal-bg: #fcfdfb;
+  --portal-bg-soft: #f4f8f4;
+  --portal-surface-strong: #f9fbf8;
+  --portal-line: #e1e9e1;
+  --portal-accent: #416e55;
+  --portal-accent-2: #a43d38;
+  --portal-warm: #a43d38;
+  --portal-glow: rgba(65, 110, 85, .05);
+  --portal-hero-bottom: #f9fbf8;
 }
 
 * {
