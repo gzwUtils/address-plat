@@ -50,8 +50,8 @@
         </section>
         <section class="sidebar-links">
           <span class="panel-kicker">把话题延伸出去</span>
-          <router-link :to="{ path: '/explore', query: { type: 'project' } }">发现项目 <span aria-hidden="true">↗</span></router-link>
-          <router-link :to="{ path: '/explore', query: { type: 'article' } }">阅读经验 <span aria-hidden="true">↗</span></router-link>
+          <router-link to="/projects">发现项目 <span aria-hidden="true">↗</span></router-link>
+          <router-link to="/reading">阅读经验 <span aria-hidden="true">↗</span></router-link>
         </section>
       </aside>
     </div>

@@ -4,6 +4,8 @@ import { adminMe } from '@/api/community'
 const LayoutView = () => import('../views/LayoutView.vue')
 const DashboardView = () => import('../views/DashboardView.vue')
 const ProjectsView = () => import('../views/ProjectsView.vue')
+const ProjectGalleryView = () => import('../views/ProjectGalleryView.vue')
+const ReadingView = () => import('../views/ReadingView.vue')
 const AiAssetsView = () => import('../views/AiAssetsView.vue')
 const ContentStudioView = () => import('../views/ContentStudioView.vue')
 const ProjectStudioView = () => import('../views/ProjectStudioView.vue')
@@ -32,6 +34,16 @@ const routes = [
         path: 'explore',
         name: 'explore',
         component: ProjectsView
+      },
+      {
+        path: 'projects',
+        name: 'projects',
+        component: ProjectGalleryView
+      },
+      {
+        path: 'reading',
+        name: 'reading',
+        component: ReadingView
       },
       {
         path: 'explore/:kind/:id',
@@ -108,10 +120,22 @@ const routes = [
 
 const router = createRouter({
   history: createWebHistory(),
-  routes
+  routes,
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) return savedPosition
+    if (to.hash) return { el: to.hash, top: 95, behavior: 'smooth' }
+    return { left: 0, top: 0 }
+  }
 })
 
 router.beforeEach(async (to) => {
+  if (to.path === '/explore' && ['project', 'article'].includes(to.query.type)) {
+    const destination = to.query.type === 'project' ? '/projects' : '/reading'
+    const query = { ...to.query }
+    delete query.type
+    if (destination === '/reading') delete query.category
+    return { path: destination, query, replace: true }
+  }
   if (!to.meta.admin) return true
   try {
     await adminMe()

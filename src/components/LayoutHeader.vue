@@ -5,8 +5,8 @@
       <nav class="navigation" aria-label="主导航">
         <router-link to="/" :class="{ active: route.path === '/' }" :aria-current="route.path === '/' ? 'page' : undefined">发现</router-link>
         <router-link to="/community" :class="{ active: isCommunityActive }" :aria-current="isCommunityActive ? 'page' : undefined">讨论</router-link>
-        <router-link :to="{ path: '/explore', query: { type: 'project' } }" :class="{ active: isProjectsActive }" :aria-current="isProjectsActive ? 'page' : undefined">项目</router-link>
-        <router-link :to="{ path: '/explore', query: { type: 'article' } }" :class="{ active: isReadingActive }" :aria-current="isReadingActive ? 'page' : undefined">阅读</router-link>
+        <router-link to="/projects" :class="{ active: isProjectsActive }" :aria-current="isProjectsActive ? 'page' : undefined">项目</router-link>
+        <router-link to="/reading" :class="{ active: isReadingActive }" :aria-current="isReadingActive ? 'page' : undefined">阅读</router-link>
         <details ref="moreMenu" class="more-menu"><summary :class="{ active: isMoreActive }">更多 <span aria-hidden="true">⌄</span></summary><div class="more-links"><router-link to="/explore">资源广场</router-link><router-link to="/growth-capsule">我的落地舱</router-link><div class="menu-divider" /><router-link to="/ops-workbench">运营工作台</router-link><router-link to="/project-studio">项目管理</router-link><router-link to="/ai-workspace">AI 资产中心</router-link><router-link to="/content-studio">资源管理</router-link><router-link to="/admin/community/reports">社区举报</router-link></div></details>
       </nav>
       <form class="header-search" role="search" @submit.prevent="handleSearch"><label class="sr-only" for="header-search-input">搜索话题、项目与文章</label><input id="header-search-input" v-model="searchKeyword" type="search" placeholder="搜索话题、项目与文章" /><button type="submit" aria-label="搜索">⌕</button></form>
@@ -34,8 +34,8 @@ const searchKeyword = ref(typeof route.query.keyword === 'string' ? route.query.
 const theme = ref(readPortalTheme())
 const setTheme = (value) => { theme.value = applyPortalTheme(value) }
 const isCommunityActive = computed(() => route.path.startsWith('/community'))
-const isProjectsActive = computed(() => route.path.startsWith('/project/') || (route.path.startsWith('/explore') && route.query.type === 'project'))
-const isReadingActive = computed(() => route.path.startsWith('/explore/article') || (route.path === '/explore' && route.query.type === 'article'))
+const isProjectsActive = computed(() => route.path === '/projects' || route.path.startsWith('/project/'))
+const isReadingActive = computed(() => route.path === '/reading' || route.path.startsWith('/explore/article/'))
 const isMoreActive = computed(() => ['/growth-capsule', '/ops-workbench', '/project-studio', '/ai-workspace', '/content-studio'].includes(route.path) || route.path.startsWith('/admin/') || (route.path.startsWith('/explore') && !isProjectsActive.value && !isReadingActive.value))
 
 onMounted(() => account.initialize())

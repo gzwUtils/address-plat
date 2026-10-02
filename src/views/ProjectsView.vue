@@ -171,7 +171,16 @@ const navigate = (updates) => {
 const submitSearch = () => navigate({ keyword: searchDraft.value.trim(), type: 'all', category: '', page: 1 })
 const clearSearch = () => navigate({ keyword: '', page: 1 })
 const clearFilters = () => navigate({ keyword: '', category: '', page: 1 })
-const openType = (type) => navigate({ type, category: type === 'project' ? current.value.category : '', page: 1 })
+const openType = (type) => {
+  if (type === 'project' || type === 'article') {
+    router.push({
+      path: type === 'project' ? '/projects' : '/reading',
+      query: { keyword: current.value.keyword || undefined, category: type === 'project' ? current.value.category || undefined : undefined }
+    })
+    return
+  }
+  navigate({ type, category: '', page: 1 })
+}
 const changeCategory = () => navigate({ category: categoryDraft.value, page: 1 })
 const setPage = (page) => navigate({ page })
 

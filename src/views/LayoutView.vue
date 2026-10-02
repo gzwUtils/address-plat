@@ -2,7 +2,7 @@
   <div class="layout-container">
     <LayoutHeader />
     <!-- 紧急推送已隐藏 -->
-    <main class="layout-main" :class="{ home: route.path === '/' }">
+    <main class="layout-main" :class="{ home: ['/', '/projects', '/reading'].includes(route.path) }">
       <router-view v-slot="{ Component }">
         <transition name="fade" mode="out-in">
           <component :is="Component" />

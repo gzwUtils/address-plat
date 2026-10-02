@@ -8,6 +8,9 @@ export const getCategories = () =>
 export const getProjects = (category, keyword) =>
   api.get('/projects', { params: { category, keyword } }).then(unwrap)
 
+export const getOpenSourceProjects = () =>
+  api.get('/open-source/featured').then(unwrap)
+
 export const saveProject = (project) =>
   api.post('/projects', project).then(unwrap)
 

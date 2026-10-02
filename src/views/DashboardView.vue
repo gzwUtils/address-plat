@@ -20,7 +20,7 @@
         </div>
         <div class="page-actions">
           <router-link to="/community">看全部讨论 ↗</router-link><i aria-hidden="true" />
-          <router-link :to="{ path: '/explore', query: { type: 'project' } }">发现项目 ↗</router-link>
+          <router-link to="/projects">发现项目 ↗</router-link>
         </div>
       </div>
 
@@ -50,7 +50,7 @@
           <div class="project-scene" aria-hidden="true"><div class="window-dots"><i /><i /><i /></div><div class="project-grid" /><div class="project-card"><strong>{{ featuredProject.shortName || featuredProject.projectName }}</strong><small>PROJECT NOTE</small></div></div>
           <div class="project-bottom"><div><strong>{{ featuredProject.projectName }}</strong><small>{{ featuredProject.category || '项目' }} · 看看它正在做什么</small></div><b aria-hidden="true">↗</b></div>
         </router-link>
-        <div v-else class="project-feature project-fallback"><div class="project-heading"><span>项目档案</span><router-link :to="{ path: '/explore', query: { type: 'project' } }">发现作品 ↗</router-link></div><div class="fallback-inner"><span>{{ groups.project.loading ? '正在整理项目…' : groups.project.error ? '项目暂时无法加载' : '你的项目，可以从这里被看见。' }}</span><button v-if="groups.project.error" type="button" @click="loadGroup('project')">重试 ↗</button><router-link v-else to="/project-studio">分享我的项目 ↗</router-link></div></div>
+        <div v-else class="project-feature project-fallback"><div class="project-heading"><span>项目档案</span><router-link to="/projects">发现作品 ↗</router-link></div><div class="fallback-inner"><span>{{ groups.project.loading ? '正在整理项目…' : groups.project.error ? '项目暂时无法加载' : '你的项目，可以从这里被看见。' }}</span><button v-if="groups.project.error" type="button" @click="loadGroup('project')">重试 ↗</button><router-link v-else to="/project-studio">分享我的项目 ↗</router-link></div></div>
       </div>
 
       <div v-if="quickProjects.length" class="quickline" aria-label="更多项目">
@@ -60,11 +60,11 @@
 
       <div class="lower">
         <section class="reading" aria-labelledby="reading-title">
-          <div class="section-heading"><div><small>换个角度 / 01</small><h2 id="reading-title">一些经验，慢慢读</h2></div><router-link :to="{ path: '/explore', query: { type: 'article' } }">全部文章 ↗</router-link></div>
+          <div class="section-heading"><div><small>换个角度 / 01</small><h2 id="reading-title">一些经验，慢慢读</h2></div><router-link to="/reading">全部文章 ↗</router-link></div>
           <div v-if="groups.article.loading" class="reading-state">正在加载文章…</div>
           <div v-else-if="groups.article.error" class="reading-state" role="alert">文章暂时无法加载。<button type="button" @click="loadGroup('article')">重试 ↗</button></div>
           <div v-else-if="articles.length" class="article-list"><router-link v-for="(article, index) in articles" :key="article.id" class="article-row" :to="`/explore/article/${article.id}`"><span class="article-thumb" :class="`tone-${index}`">{{ articleGlyph(article.title) }}</span><span class="article-copy"><strong>{{ article.title }}</strong><small>{{ article.category || '文章' }}<template v-if="article.excerpt"> · {{ article.excerpt }}</template></small></span><span class="read-link">阅读 ↗</span></router-link></div>
-          <div v-else class="reading-state">这里还没有文章。<router-link :to="{ path: '/explore', query: { type: 'article' } }">看看全部资源 ↗</router-link></div>
+          <div v-else class="reading-state">这里还没有文章。<router-link to="/reading">看看全部资源 ↗</router-link></div>
         </section>
         <aside class="editorial"><div class="section-heading"><div><small>写下你的经验 / 02</small><h2>轮到你开口</h2></div></div><div class="note"><strong>一个问题、一段经验，或者一个新项目。</strong><p>不用写成完整文章。把你正在想的事发出来，让下一位路过的人有话可接。</p><router-link to="/community?compose=1">发起话题 ↗</router-link></div></aside>
       </div>
