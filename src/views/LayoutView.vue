@@ -2,7 +2,7 @@
   <div class="layout-container">
     <LayoutHeader />
     <!-- 紧急推送已隐藏 -->
-    <main class="layout-main">
+    <main class="layout-main" :class="{ home: route.path === '/' }">
       <router-view v-slot="{ Component }">
         <transition name="fade" mode="out-in">
           <component :is="Component" />
@@ -14,6 +14,8 @@
 
 <script setup>
 import LayoutHeader from '@/components/LayoutHeader.vue'
+import { useRoute } from 'vue-router'
+const route = useRoute()
 // import EmergencyPushCenter from '@/components/EmergencyPushCenter.vue'
 </script>
 
@@ -24,6 +26,9 @@ import LayoutHeader from '@/components/LayoutHeader.vue'
 
 .layout-main {
   padding: 28px;
+}
+.layout-main.home {
+  padding: 0;
 }
 
 .fade-enter-active,

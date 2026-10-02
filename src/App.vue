@@ -7,21 +7,22 @@
 <style>
 :root {
   color-scheme: light;
-  --portal-bg: #ffffff;
-  --portal-bg-soft: #f7f8f9;
+  --portal-bg: #f5f4f0;
+  --portal-bg-soft: #efeee9;
   --portal-surface: #ffffff;
   --portal-surface-strong: #fafbfc;
-  --portal-line: #e3e7e9;
-  --portal-text: #1e2930;
-  --portal-text-soft: #657179;
-  --portal-accent: #a43d38;
+  --portal-line: #dcddd8;
+  --portal-text: #1c252c;
+  --portal-text-soft: #6a737a;
+  --portal-accent: #b5473d;
   --portal-accent-ink: #ffffff;
-  --portal-accent-2: #31596c;
+  --portal-accent-2: #1d4468;
   --portal-warm: #a43d38;
   --portal-glow: rgba(164, 61, 56, .05);
   --portal-hero-top: #ffffff;
   --portal-hero-bottom: #fafbfc;
   --portal-shadow: 0 3px 12px rgba(30, 41, 48, .035);
+  --home-project: #1d4468;
   --el-color-primary: var(--portal-accent);
   --el-color-primary-light-3: color-mix(in srgb, var(--portal-accent) 70%, white);
   --el-color-primary-light-5: color-mix(in srgb, var(--portal-accent) 50%, white);
@@ -42,27 +43,29 @@
 }
 
 :root[data-theme='blue'] {
-  --portal-bg: #fbfdff;
+  --portal-bg: #f1f5f6;
   --portal-bg-soft: #f3f7fa;
   --portal-surface-strong: #f8fbfd;
   --portal-line: #e0e7eb;
-  --portal-accent: #2b5d78;
+  --portal-accent: #2b6583;
   --portal-accent-2: #a43d38;
   --portal-warm: #a43d38;
   --portal-glow: rgba(43, 93, 120, .05);
   --portal-hero-bottom: #f8fbfd;
+  --home-project: #1d4468;
 }
 
 :root[data-theme='green'] {
-  --portal-bg: #fcfdfb;
+  --portal-bg: #f2f5ef;
   --portal-bg-soft: #f4f8f4;
   --portal-surface-strong: #f9fbf8;
   --portal-line: #e1e9e1;
-  --portal-accent: #416e55;
+  --portal-accent: #3c7053;
   --portal-accent-2: #a43d38;
   --portal-warm: #a43d38;
   --portal-glow: rgba(65, 110, 85, .05);
   --portal-hero-bottom: #f9fbf8;
+  --home-project: #2d5549;
 }
 
 * {

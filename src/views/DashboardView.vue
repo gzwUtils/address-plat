@@ -1,346 +1,221 @@
 <template>
   <div class="home-page">
-    <section v-if="alertItems.length" class="urgent-ribbon" role="alert" aria-label="当前告警">
-      <span class="urgent-label">重要告警</span>
-      <strong>{{ alertItems[0].title }}</strong>
-      <router-link :to="`/explore/life/${alertItems[0].id}`">查看详情 <span aria-hidden="true">↗</span></router-link>
-    </section>
-
-    <section class="welcome" aria-labelledby="welcome-title">
-      <div class="welcome-overline"><span>团队的项目、讨论与日常</span><span>一个可以接着聊的地方</span></div>
-      <div class="welcome-main">
-        <div><h1 id="welcome-title">今天，大家在做什么？</h1><p>看看正在推进的项目，接上一个讨论，也把自己的发现留在这里。</p></div>
-        <div class="welcome-actions"><router-link to="/community?compose=1">发起讨论 <span aria-hidden="true">↗</span></router-link><router-link to="/project-studio">分享项目 <span aria-hidden="true">↗</span></router-link></div>
+    <div class="page-wrap">
+      <div v-if="alert" class="alert-bar" role="alert">
+        <strong>告警</strong>
+        <router-link :to="`/explore/life/${alert.id}`">{{ alert.title }}</router-link>
+        <router-link :to="`/explore/life/${alert.id}`" aria-label="查看告警详情">↗</router-link>
       </div>
-    </section>
+      <div v-if="notice" class="announcement">
+        <strong>公告</strong>
+        <router-link :to="`/explore/life/${notice.id}`">{{ notice.title }}</router-link>
+        <router-link :to="{ path: '/explore', query: { type: 'life' } }">查看公告 ↗</router-link>
+      </div>
 
-    <div class="lead-grid">
-      <section class="feature-story" aria-labelledby="feature-title">
-        <div class="lead-label"><span>本期阅读</span><router-link :to="{ path: '/explore', query: { type: 'article' } }">全部文章 ↗</router-link></div>
-        <router-link v-if="featuredArticle" class="feature-link" :to="`/explore/article/${featuredArticle.id}`">
-          <div class="feature-image"><img v-if="featuredArticle.coverImage && !featureCoverFailed" :src="featuredArticle.coverImage" alt="" @error="featureCoverFailed = true" /><span v-else>{{ featuredArticle.category || '阅读' }}</span></div>
-          <div class="feature-copy"><span class="story-category">{{ featuredArticle.category || '团队文章' }}</span><h2 id="feature-title">{{ featuredArticle.title }}</h2><p>{{ featuredArticle.excerpt || featuredArticle.desc || '打开文章，看看完整内容。' }}</p><div class="story-foot"><span>{{ featuredArticle.author || '团队分享' }} <i>·</i> {{ featuredArticle.date || '近期' }}</span><span>阅读文章 ↗</span></div></div>
+      <div class="page-top">
+        <div>
+          <small>{{ monthLabel }} · 大家的讨论与作品</small>
+          <h1>今天，来聊点<em>真的。</em></h1>
+          <p>聊工作，聊生活，晒正在做的事。每个话题都从真实的人开始。</p>
+        </div>
+        <div class="page-actions">
+          <router-link to="/community">看全部讨论 ↗</router-link><i aria-hidden="true" />
+          <router-link :to="{ path: '/explore', query: { type: 'project' } }">发现项目 ↗</router-link>
+        </div>
+      </div>
+
+      <div class="top-grid">
+        <section class="conversation" aria-labelledby="conversation-title">
+          <div class="panel-top"><strong id="conversation-title">正在讨论</strong><span>你也可以加入</span></div>
+          <div v-if="groups.topic.loading" class="panel-state">正在加载话题…</div>
+          <div v-else-if="groups.topic.error" class="panel-state" role="alert">话题暂时无法加载。<button type="button" @click="loadGroup('topic')">重试 ↗</button></div>
+          <template v-else-if="featuredTopic">
+            <router-link class="featured-post" :to="`/community/topics/${featuredTopic.id}`">
+              <div class="post-head"><span class="dot" /><span>{{ featuredTopic.boardName || '社区' }} · {{ Number(featuredTopic.replyCount) > 0 ? '有人在聊' : '新话题' }}</span><span class="date">{{ topicDate(featuredTopic) }}</span></div>
+              <h2>{{ featuredTopic.title }}</h2>
+              <blockquote v-if="featuredTopic.body">{{ featuredTopic.body }}</blockquote>
+              <p v-else class="post-excerpt">打开话题，看看大家怎么说。</p>
+              <div class="post-foot"><span class="mini-avatar">{{ (featuredTopic.authorNickname || '访')[0] }}</span><b>{{ featuredTopic.authorNickname || '访客' }}</b><span class="separator">·</span><span>{{ Number(featuredTopic.replyCount) || 0 }} 条回复</span><span class="reply">进入讨论 ↗</span></div>
+            </router-link>
+            <router-link v-if="secondaryTopic" class="second-post" :to="`/community/topics/${secondaryTopic.id}`">
+              <span><strong>{{ secondaryTopic.title }}</strong><small>{{ secondaryTopic.authorNickname || '访客' }} · {{ secondaryTopic.boardName || '社区' }} · {{ Number(secondaryTopic.replyCount) || 0 }} 条回复</small></span><span>参与 ↗</span>
+            </router-link>
+            <router-link v-else class="second-post" to="/community?compose=1"><span><strong>你想聊什么？</strong><small>从一个问题，或一句话开始</small></span><span>发起 ↗</span></router-link>
+          </template>
+          <div v-else class="panel-state empty-talk"><strong>从你的第一句话开始。</strong><p>分享近况，聊一个问题，或找人一起做项目。</p><router-link to="/community?compose=1">发起话题 ↗</router-link></div>
+        </section>
+
+        <router-link v-if="featuredProject" class="project-feature" :to="`/project/${featuredProject.id}`">
+          <div class="project-heading"><span>项目档案 / 01</span><span>发现作品 ↗</span></div>
+          <div class="project-scene" aria-hidden="true"><div class="window-dots"><i /><i /><i /></div><div class="project-grid" /><div class="project-card"><strong>{{ featuredProject.shortName || featuredProject.projectName }}</strong><small>PROJECT NOTE</small></div></div>
+          <div class="project-bottom"><div><strong>{{ featuredProject.projectName }}</strong><small>{{ featuredProject.category || '项目' }} · 看看它正在做什么</small></div><b aria-hidden="true">↗</b></div>
         </router-link>
-        <div v-else-if="groups.article.loading" class="feature-state">正在整理团队的最新文章…</div>
-        <div v-else-if="groups.article.error" class="feature-state" role="alert">文章暂时无法加载。<button type="button" @click="loadGroup('article')">重试 ↗</button></div>
-        <div v-else class="feature-state"><strong id="feature-title">经验，值得留下来。</strong><router-link :to="{ path: '/explore', query: { type: 'article' } }">去看看文章 ↗</router-link></div>
-      </section>
-
-      <section class="forum-entry" aria-labelledby="forum-entry-title">
-        <div class="lead-label"><span>去论坛坐坐</span><router-link to="/community">全部讨论 ↗</router-link></div>
-        <h2 id="forum-entry-title">你想聊什么？</h2>
-        <p>项目进展、技术难题，或者工作之外的一句话。</p>
-        <nav class="forum-entry-list" aria-label="论坛板块">
-          <router-link v-for="board in displayBoards.slice(0, 3)" :key="board.code" :to="`/community/boards/${board.code}`"><span class="board-marker" :class="board.code" aria-hidden="true" /><span><strong>{{ board.name }}</strong><small>{{ board.description }}</small></span><span aria-hidden="true">↗</span></router-link>
-        </nav>
-        <router-link class="forum-entry-compose" to="/community?compose=1">写下第一个话题 <span aria-hidden="true">↗</span></router-link>
-      </section>
-    </div>
-
-    <div v-if="groups.life.error" class="notice-ticker notice-ticker-error" role="alert">
-      <span class="ticker-label">团队消息</span><span>消息暂时无法加载。</span><button type="button" @click="loadGroup('life')">重试 ↗</button>
-    </div>
-    <div v-else-if="noticeItems.length" class="notice-ticker">
-      <span class="ticker-label">团队快讯</span>
-      <span class="ticker-type">{{ noticeItems[0].type }}</span>
-      <router-link :to="`/explore/life/${noticeItems[0].id}`">{{ noticeItems[0].title }}</router-link>
-      <router-link class="ticker-more" :to="{ path: '/explore', query: { type: 'life' } }">更多消息 ↗</router-link>
-    </div>
-
-    <div class="activity-grid">
-      <section class="discussion-section" aria-labelledby="discussion-title">
-        <header class="section-heading">
-          <div><span class="section-kicker">一起讨论 / COMMUNITY</span><h2 id="discussion-title">{{ groups.topic.records.length ? '此刻在聊' : '从这里开聊' }}</h2></div>
-          <router-link to="/community">去社区 <span aria-hidden="true">↗</span></router-link>
-        </header>
-        <div v-if="groups.topic.loading" class="placeholder-stack"><div v-for="index in 3" :key="index" class="row-skeleton" /></div>
-        <div v-else-if="groups.topic.error" class="simple-state" role="alert">讨论暂时无法加载。<button type="button" @click="loadGroup('topic')">重试</button></div>
-        <div v-else-if="groups.topic.records.length" class="topic-stack"><TopicRow v-for="item in groups.topic.records.slice(0, 4)" :key="item.id" :topic="item" /></div>
-        <div v-else class="conversation-invite">
-          <p>还没有新的讨论。你想到的那个问题，或许也正困扰着别人。</p>
-          <div class="starter-grid">
-            <router-link to="/community/boards/tech-talk?compose=1"><small>技术交流</small><strong>最近遇到什么难题？</strong><span>一起拆解 ↗</span></router-link>
-            <router-link to="/community/boards/project-share?compose=1"><small>项目分享</small><strong>哪件进展值得讲讲？</strong><span>分享进展 ↗</span></router-link>
-          </div>
-        </div>
-      </section>
-
-      <aside class="bulletin" aria-labelledby="bulletin-title">
-        <div class="bulletin-top"><span>TEAM NOTES</span><span aria-hidden="true">✳</span></div>
-        <h2 id="bulletin-title">公告栏</h2>
-        <p>需要知道的事，放在容易找到的地方。</p>
-        <div v-if="groups.life.loading" class="bulletin-empty">正在加载团队消息…</div>
-        <div v-else-if="groups.life.error" class="bulletin-empty">团队消息暂时无法加载。</div>
-        <div v-else-if="noticeItems.length" class="bulletin-list">
-          <router-link v-for="item in noticeItems.slice(0, 3)" :key="item.id" :to="`/explore/life/${item.id}`">
-            <small>{{ item.type || '公告' }}</small><strong>{{ item.title }}</strong><span aria-hidden="true">↗</span>
-          </router-link>
-        </div>
-        <div v-else class="bulletin-empty">暂无已发布通知。</div>
-        <div class="bulletin-footer">
-          <span class="status-dot" :class="{ loading: groups.life.loading || groups.life.error }" />
-          <span>{{ groups.life.loading ? '正在检查告警' : groups.life.error ? '告警信息暂不可用' : '暂无已发布告警' }}</span>
-          <router-link :to="{ path: '/explore', query: { type: 'life' } }">全部消息 ↗</router-link>
-        </div>
-      </aside>
-    </div>
-
-    <section class="project-section" aria-labelledby="project-title">
-      <div class="project-intro"><span class="section-kicker">正在发生 / PROJECTS</span><h2 id="project-title">让项目被看见。</h2><p>从一个链接、一段介绍开始，找到愿意一起讨论和推进的人。</p><router-link to="/project-studio">分享我的项目 <span aria-hidden="true">↗</span></router-link></div>
-      <div class="project-content">
-        <div class="project-content-head"><span>项目索引</span><router-link :to="{ path: '/explore', query: { type: 'project' } }">浏览全部 ↗</router-link></div>
-        <div v-if="groups.project.loading" class="placeholder-stack"><div v-for="index in 3" :key="index" class="row-skeleton" /></div>
-        <div v-else-if="groups.project.error" class="project-empty" role="alert">项目暂时无法加载。<button type="button" @click="loadGroup('project')">重试</button></div>
-        <div v-else-if="groups.project.records.length" class="project-list"><router-link v-for="(item, index) in groups.project.records.slice(0, 4)" :key="item.id" :to="`/project/${item.id}`"><span>{{ String(index + 1).padStart(2, '0') }}</span><strong>{{ item.projectName }}</strong><span aria-hidden="true">↗</span></router-link></div>
-        <div v-else class="project-empty"><strong>这里还等着第一个项目。</strong><span>把你的项目放上来，让更多人发现它。</span></div>
+        <div v-else class="project-feature project-fallback"><div class="project-heading"><span>项目档案</span><router-link :to="{ path: '/explore', query: { type: 'project' } }">发现作品 ↗</router-link></div><div class="fallback-inner"><span>{{ groups.project.loading ? '正在整理项目…' : groups.project.error ? '项目暂时无法加载' : '你的项目，可以从这里被看见。' }}</span><button v-if="groups.project.error" type="button" @click="loadGroup('project')">重试 ↗</button><router-link v-else to="/project-studio">分享我的项目 ↗</router-link></div></div>
       </div>
-    </section>
 
-    <section class="reading-section" aria-labelledby="reading-title">
-      <header class="section-heading"><div><span class="section-kicker">经验沉淀 / STORIES</span><h2 id="reading-title">继续阅读</h2></div><router-link :to="{ path: '/explore', query: { type: 'article' } }">所有文章 ↗</router-link></header>
-      <div v-if="groups.article.loading" class="reading-grid"><div v-for="index in 2" :key="index" class="reading-placeholder" /></div>
-      <div v-else-if="groups.article.error" class="simple-state" role="alert">文章暂时无法加载。<button type="button" @click="loadGroup('article')">重试</button></div>
-      <div v-else-if="moreArticles.length" class="reading-grid">
-        <router-link v-for="item in moreArticles" :key="item.id" class="reading-story" :to="`/explore/article/${item.id}`">
-          <div class="reading-image"><img v-if="item.coverImage" :src="item.coverImage" alt="" loading="lazy" /><span v-else>{{ item.category || '文章' }}</span></div>
-          <div class="reading-copy"><small>{{ item.category || '团队文章' }} <span>·</span> {{ item.author || '团队分享' }}</small><strong>{{ item.title }}</strong><p>{{ item.excerpt || item.desc || '阅读完整文章' }}</p><span class="reading-link">阅读文章 ↗</span></div>
-        </router-link>
+      <div v-if="quickProjects.length" class="quickline" aria-label="更多项目">
+        <router-link v-for="(project, index) in quickProjects" :key="project.id" :to="`/project/${project.id}`"><span class="icon" :class="`tone-${index}`">{{ project.projectName?.[0] || '项' }}</span><span><strong>{{ project.projectName }}</strong><small>{{ project.category || project.type || '看看这个项目' }}</small></span><b aria-hidden="true">↗</b></router-link>
       </div>
-      <div v-else class="simple-state">更多文章正在路上。</div>
-    </section>
+      <div v-else class="quickline quickline-actions"><router-link to="/project-studio"><span class="icon">＋</span><span><strong>分享你的项目</strong><small>让更多人发现它</small></span><b aria-hidden="true">↗</b></router-link><router-link to="/community"><span class="icon tone-1">聊</span><span><strong>加入讨论</strong><small>看看大家在聊什么</small></span><b aria-hidden="true">↗</b></router-link></div>
 
-    <div class="bottom-grid">
-      <section class="tool-section" aria-labelledby="tool-title">
-        <header class="section-heading"><div><span class="section-kicker">工具箱 / TOOLS</span><h2 id="tool-title">顺手的工具</h2></div><router-link :to="{ path: '/explore', query: { type: 'ai' } }">全部工具 ↗</router-link></header>
-        <div v-if="groups.ai.loading" class="simple-state">正在加载工具…</div>
-        <div v-else-if="groups.ai.error" class="simple-state" role="alert">工具暂时无法加载。<button type="button" @click="loadGroup('ai')">重试</button></div>
-        <div v-else-if="groups.ai.records.length" class="tool-list"><router-link v-for="item in groups.ai.records.slice(0, 3)" :key="item.id" :to="`/explore/ai/${item.id}`"><span>{{ item.type || '工具' }}</span><strong>{{ item.name || item.title }}</strong><small>{{ item.desc || item.excerpt || '查看工具介绍' }}</small><span aria-hidden="true">↗</span></router-link></div>
-        <div v-else class="simple-state">暂无工具内容。</div>
-      </section>
-      <section class="team-section" aria-labelledby="team-title">
-        <header class="section-heading"><div><span class="section-kicker">团队日常 / PEOPLE</span><h2 id="team-title">工作之外</h2></div><router-link :to="{ path: '/explore', query: { type: 'life' } }">全部内容 ↗</router-link></header>
-        <div v-if="groups.life.loading" class="simple-state">正在加载团队动态…</div>
-        <div v-else-if="groups.life.error" class="simple-state" role="alert">团队动态暂时无法加载。<button type="button" @click="loadGroup('life')">重试</button></div>
-        <div v-else-if="lifeMoments.length" class="moment-list"><router-link v-for="item in lifeMoments.slice(0, 3)" :key="item.id" :to="`/explore/life/${item.id}`"><span>{{ item.type || '动态' }}</span><strong>{{ item.title }}</strong><span aria-hidden="true">↗</span></router-link></div>
-        <div v-else class="simple-state">暂无团队动态。</div>
-      </section>
+      <div class="lower">
+        <section class="reading" aria-labelledby="reading-title">
+          <div class="section-heading"><div><small>换个角度 / 01</small><h2 id="reading-title">一些经验，慢慢读</h2></div><router-link :to="{ path: '/explore', query: { type: 'article' } }">全部文章 ↗</router-link></div>
+          <div v-if="groups.article.loading" class="reading-state">正在加载文章…</div>
+          <div v-else-if="groups.article.error" class="reading-state" role="alert">文章暂时无法加载。<button type="button" @click="loadGroup('article')">重试 ↗</button></div>
+          <div v-else-if="articles.length" class="article-list"><router-link v-for="(article, index) in articles" :key="article.id" class="article-row" :to="`/explore/article/${article.id}`"><span class="article-thumb" :class="`tone-${index}`">{{ articleGlyph(article.title) }}</span><span class="article-copy"><strong>{{ article.title }}</strong><small>{{ article.category || '文章' }}<template v-if="article.excerpt"> · {{ article.excerpt }}</template></small></span><span class="read-link">阅读 ↗</span></router-link></div>
+          <div v-else class="reading-state">这里还没有文章。<router-link :to="{ path: '/explore', query: { type: 'article' } }">看看全部资源 ↗</router-link></div>
+        </section>
+        <aside class="editorial"><div class="section-heading"><div><small>写下你的经验 / 02</small><h2>轮到你开口</h2></div></div><div class="note"><strong>一个问题、一段经验，或者一个新项目。</strong><p>不用写成完整文章。把你正在想的事发出来，让下一位路过的人有话可接。</p><router-link to="/community?compose=1">发起话题 ↗</router-link></div></aside>
+      </div>
     </div>
-
-    <section v-if="recentItems.length" class="recent-section">
-      <header class="section-heading"><div><span class="section-kicker">你的足迹 / RECENT</span><h2>继续浏览</h2></div></header>
-      <div class="recent-grid"><router-link v-for="item in recentItems" :key="`${item.kind}-${item.targetId}`" :to="recentPath(item)"><small>{{ kindLabel(item.kind) }}</small><strong>{{ item.title }}</strong><span>继续浏览 ↗</span></router-link></div>
-    </section>
+    <footer class="home-footer"><div class="page-wrap">在场 · 话题与作品社区</div></footer>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue'
-import TopicRow from '@/components/TopicRow.vue'
-import { getRecentViews } from '@/api/content'
-import { listBoards } from '@/api/community'
-import { fallbackBoards } from '@/utils/communityBoards'
+import { computed, onMounted, reactive } from 'vue'
 import { fetchDiscoveryGroup } from '@/composables/useResourceDiscovery'
-import { getClientId } from '@/utils/clientId'
 
-const quickLinks = [
-  { type: 'project', label: '项目' }, { type: 'article', label: '文章' },
-  { type: 'ai', label: 'AI 资产' }, { type: 'life', label: '团队内容' }
-]
-const emptyGroup = () => ({ records: [], total: 0, loading: true, error: null })
-const groups = reactive({ project: emptyGroup(), topic: emptyGroup(), article: emptyGroup(), ai: emptyGroup(), life: emptyGroup() })
-const recentItems = ref([])
-const boards = ref([])
-const displayBoards = computed(() => boards.value.length ? boards.value : fallbackBoards)
-const featuredArticle = computed(() => groups.article.records[0] || null)
-const featureCoverFailed = ref(false)
-const moreArticles = computed(() => groups.article.records.slice(1, 3))
-const lifeRecords = computed(() => groups.life.records)
-const alertItems = computed(() => lifeRecords.value.filter((item) => item.type?.trim() === '告警'))
-const noticeItems = computed(() => lifeRecords.value.filter((item) => ['公告', '提醒'].includes(item.type?.trim())))
-const lifeMoments = computed(() => lifeRecords.value.filter((item) => !['告警', '公告', '提醒'].includes(item.type?.trim())))
-const kindLabel = (kind) => quickLinks.find((item) => item.type === kind)?.label || '资源'
-const recentPath = (item) => item.kind === 'project' ? `/project/${item.targetId}` : `/explore/${item.kind}/${item.targetId}`
+const groups = reactive(Object.fromEntries(['topic', 'project', 'article', 'life'].map((kind) => [kind, { records: [], loading: true, error: false }])))
+const monthLabel = new Intl.DateTimeFormat('zh-CN', { month: 'long' }).format(new Date())
+const activityTime = (topic) => Math.max(Date.parse(topic.createTime) || 0, Date.parse(topic.lastReplyTime) || 0)
+const topics = computed(() => [...groups.topic.records].sort((a, b) => {
+  const recent = activityTime(b) - activityTime(a)
+  return recent || (Number(b.replyCount) || 0) - (Number(a.replyCount) || 0)
+}))
+const featuredTopic = computed(() => topics.value[0] || null)
+const secondaryTopic = computed(() => topics.value[1] || null)
+const featuredProject = computed(() => groups.project.records.find((item) => item.projectName === '一稿通') || groups.project.records[0] || null)
+const quickProjects = computed(() => groups.project.records.filter((item) => item.id !== featuredProject.value?.id).slice(0, 3))
+const articles = computed(() => groups.article.records.slice(0, 3))
+const alert = computed(() => groups.life.records.find((item) => item.type?.trim() === '告警') || null)
+const notice = computed(() => groups.life.records.find((item) => item.type?.trim() === '公告') || null)
+
+function articleGlyph(title) {
+  return ['迁', '幂', '查'].find((character) => title?.includes(character)) || title?.match(/[\u4e00-\u9fff]/)?.[0] || title?.[0] || '读'
+}
+
+function topicDate(topic) {
+  const value = topic.lastReplyTime || topic.createTime
+  if (!value) return ''
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? '' : new Intl.DateTimeFormat('zh-CN', { month: '2-digit', day: '2-digit' }).format(date)
+}
 
 async function loadGroup(kind) {
-  groups[kind] = { ...emptyGroup(), loading: true }
+  const group = groups[kind]
+  group.loading = true
+  group.error = false
   try {
-    const size = { project: 6, topic: 5, article: 3, ai: 3, life: 200 }[kind] || 4
-    const result = await fetchDiscoveryGroup(kind, { size })
-    groups[kind] = { ...result, loading: false, error: null }
-  } catch (error) {
-    console.warn(`加载${kind}失败`, error)
-    groups[kind] = { records: [], total: 0, loading: false, error }
+    const result = await fetchDiscoveryGroup(kind, { size: kind === 'life' ? 30 : 6 })
+    group.records = result.records
+  } catch {
+    group.records = []
+    group.error = true
+  } finally {
+    group.loading = false
   }
 }
 
-async function loadBoards() {
-  try {
-    const result = await listBoards()
-    boards.value = Array.isArray(result) ? result : []
-  } catch (error) {
-    console.warn('加载社区板块失败', error)
-    boards.value = []
-  }
-}
-
-async function loadRecent() {
-  try {
-    const result = await getRecentViews(getClientId())
-    recentItems.value = Array.isArray(result)
-      ? result.filter((item) => ['project', 'article', 'ai', 'life'].includes(item.kind) && item.targetId && item.title).slice(0, 6)
-      : []
-  } catch (error) {
-    console.warn('加载最近浏览失败', error)
-    recentItems.value = []
-  }
-}
-
-onMounted(() => {
-  for (const kind of ['project', 'topic', 'article', 'ai', 'life']) loadGroup(kind)
-  loadBoards()
-  loadRecent()
-})
+onMounted(() => { for (const kind of Object.keys(groups)) loadGroup(kind) })
 </script>
 
 <style scoped>
-.home-page { max-width: 1440px; margin: 0 auto; display: grid; gap: 0; padding-bottom: 80px; }
-.urgent-ribbon { display: flex; align-items: center; gap: 20px; min-height: 54px; margin-bottom: 20px; padding: 11px 20px; background: #7e2f31; color: #fff; }
-.urgent-label { flex-shrink: 0; border-right: 1px solid #ffffff70; padding-right: 18px; font-size: 12px; font-weight: 800; letter-spacing: .08em; }
-.urgent-ribbon strong { overflow: hidden; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
-.urgent-ribbon a { flex-shrink: 0; margin-left: auto; font-size: 12px; font-weight: 700; }
-.welcome { border-top: 1px solid var(--portal-text); padding: 18px 0 39px; }
-.welcome-overline { display: flex; justify-content: space-between; gap: 16px; color: var(--portal-text-soft); font-size: 11px; letter-spacing: .08em; }
-.welcome-overline span:first-child { color: var(--portal-accent); font-weight: 700; }
-.welcome-main { display: flex; justify-content: space-between; align-items: end; gap: 28px; padding-top: 41px; }
-.welcome h1 { margin: 0; color: var(--portal-text); font-family: 'Songti SC', 'Noto Serif CJK SC', 'SimSun', serif; font-size: clamp(37px, 4vw, 61px); font-weight: 650; letter-spacing: -.06em; line-height: 1.22; }
-.welcome p { margin: 16px 0 0; color: var(--portal-text-soft); font-size: 14px; line-height: 1.8; }
-.welcome-actions { display: flex; flex-shrink: 0; gap: 20px; padding-bottom: 4px; }
-.welcome-actions a { border-bottom: 1px solid var(--portal-text); padding-bottom: 7px; color: var(--portal-text); font-size: 13px; font-weight: 660; white-space: nowrap; }
-.welcome-actions a:first-child { border-color: var(--portal-accent); color: var(--portal-accent); }
-.welcome-actions span { margin-left: 14px; }
-.lead-grid { display: grid; grid-template-columns: minmax(0, 1.78fr) minmax(290px, .82fr); gap: clamp(24px, 3vw, 46px); border-top: 1px solid var(--portal-line); padding-top: 21px; }
-.feature-story, .forum-entry { min-width: 0; }
-.lead-label { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 17px; color: var(--portal-accent); font-size: 11px; font-weight: 750; letter-spacing: .08em; }
-.lead-label a { color: var(--portal-text-soft); font-weight: 500; letter-spacing: 0; }
-.lead-label a:hover { color: var(--portal-accent); }
-.feature-link { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); min-height: 345px; border-top: 1px solid var(--portal-text); border-bottom: 1px solid var(--portal-line); }
-.feature-image { min-width: 0; min-height: 345px; overflow: hidden; background: #e5e4de; }
-.feature-image img { display: block; width: 100%; height: 100%; object-fit: cover; filter: saturate(.72); transition: transform .3s ease; }
-.feature-link:hover .feature-image img { transform: scale(1.025); }
-.feature-image > span { display: flex; align-items: end; width: 100%; height: 100%; padding: 25px; color: #6d706a; font-family: 'Songti SC', 'SimSun', serif; font-size: 38px; }
-.feature-copy { display: flex; flex-direction: column; min-width: 0; padding: 27px clamp(20px, 2.8vw, 42px) 19px; }
-.story-category { color: var(--portal-accent); font-size: 11px; font-weight: 750; letter-spacing: .09em; }
-.feature-copy h2 { margin: 24px 0 13px; font-family: 'Songti SC', 'Noto Serif CJK SC', 'SimSun', serif; font-size: clamp(26px, 2.65vw, 39px); font-weight: 650; letter-spacing: -.035em; line-height: 1.36; }
-.feature-copy p { display: -webkit-box; overflow: hidden; margin: 0; color: var(--portal-text-soft); font-size: 13px; line-height: 1.8; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
-.story-foot { display: flex; justify-content: space-between; gap: 14px; margin-top: auto; border-top: 1px solid var(--portal-line); padding-top: 17px; color: var(--portal-text-soft); font-size: 11px; }
-.story-foot i { padding: 0 3px; font-style: normal; }
-.story-foot span:last-child { color: var(--portal-accent); white-space: nowrap; }
-.feature-state { display: flex; flex-direction: column; justify-content: center; gap: 18px; min-height: 345px; border-top: 1px solid var(--portal-text); border-bottom: 1px solid var(--portal-line); color: var(--portal-text-soft); font-size: 13px; }
-.feature-state strong { color: var(--portal-text); font-family: 'Songti SC', 'SimSun', serif; font-size: 32px; }
-.feature-state a, .feature-state button { width: fit-content; border: 0; padding: 0; color: var(--portal-accent); background: none; font: inherit; cursor: pointer; }
-.forum-entry { display: flex; flex-direction: column; border-top: 1px solid var(--portal-text); padding-top: 14px; }
-.forum-entry .lead-label { margin-bottom: 28px; }
-.forum-entry h2 { margin: 0; font-family: 'Songti SC', 'Noto Serif CJK SC', 'SimSun', serif; font-size: clamp(29px, 2.5vw, 39px); font-weight: 650; letter-spacing: -.04em; }
-.forum-entry > p { margin: 9px 0 20px; color: var(--portal-text-soft); font-size: 12px; line-height: 1.7; }
-.forum-entry-list { display: grid; border-top: 1px solid var(--portal-line); }
-.forum-entry-list a { display: grid; grid-template-columns: 6px minmax(0, 1fr) auto; align-items: center; gap: 14px; min-height: 70px; border-bottom: 1px solid var(--portal-line); }
-.forum-entry-list a:hover strong { color: var(--portal-accent); }
-.board-marker { width: 6px; height: 22px; background: var(--portal-accent); }
-.board-marker.tech-talk { background: #44738a; }
-.board-marker.lounge { background: #698469; }
-.forum-entry-list a > span:nth-child(2) { display: grid; gap: 3px; }
-.forum-entry-list strong { font-size: 15px; font-weight: 660; }
-.forum-entry-list small { color: var(--portal-text-soft); font-size: 11px; }
-.forum-entry-list a > span:last-child { color: var(--portal-accent); }
-.forum-entry-compose { display: flex; justify-content: space-between; margin-top: auto; padding-top: 14px; color: var(--portal-accent); font-size: 12px; font-weight: 700; }
-.notice-ticker { display: flex; align-items: center; gap: 14px; min-height: 60px; border-bottom: 1px solid var(--portal-line); padding: 12px 1px; font-size: 13px; }
-.ticker-label { flex-shrink: 0; color: var(--portal-accent); font-weight: 800; letter-spacing: .06em; }
-.ticker-type { flex-shrink: 0; border: 1px solid #c4ac88; padding: 3px 7px; color: #805e35; font-size: 11px; }
-.notice-ticker > a:not(.ticker-more) { overflow: hidden; font-weight: 620; text-overflow: ellipsis; white-space: nowrap; }
-.notice-ticker > a:hover { text-decoration: underline; text-underline-offset: 3px; }
-.ticker-more, .notice-ticker button { flex-shrink: 0; margin-left: auto; color: var(--portal-accent); font-size: 12px; }
-.notice-ticker button { border: 0; background: none; cursor: pointer; }
-.activity-grid { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(290px, .85fr); gap: clamp(28px, 4vw, 60px); padding: 66px 0 72px; }
-.section-heading { display: flex; justify-content: space-between; align-items: end; gap: 18px; margin-bottom: 25px; }
-.section-kicker { color: var(--portal-accent); font-size: 11px; font-weight: 800; letter-spacing: .12em; }
-.section-heading h2 { margin: 7px 0 0; font-family: 'Songti SC', 'Noto Serif CJK SC', 'SimSun', serif; font-size: clamp(28px, 2.8vw, 38px); font-weight: 730; letter-spacing: -.035em; }
-.section-heading > a { flex-shrink: 0; color: var(--portal-accent); font-size: 13px; font-weight: 650; }
-.topic-stack { border-top: 2px solid var(--portal-text); }
-.topic-stack :deep(.topic-row) { padding-left: 0; padding-right: 0; background: transparent; }
-.conversation-invite { border-top: 1px solid var(--portal-text); border-bottom: 1px solid var(--portal-line); padding: 22px 0 0; }
-.conversation-invite > p { margin: 0 0 22px; color: var(--portal-text-soft); font-size: 13px; line-height: 1.7; }
-.starter-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1px solid var(--portal-line); }
-.starter-grid a { display: flex; flex-direction: column; align-items: start; min-height: 150px; padding: 18px 23px 16px 0; }
-.starter-grid a + a { border-left: 1px solid var(--portal-line); padding-left: 23px; }
-.starter-grid small { color: var(--portal-accent); font-size: 11px; font-weight: 720; }
-.starter-grid strong { margin: 16px 0; font-family: 'Songti SC', 'Noto Serif CJK SC', 'SimSun', serif; font-size: 23px; font-weight: 630; }
-.starter-grid span { margin-top: auto; color: var(--portal-accent); font-size: 11px; }
-.starter-grid a:hover strong { color: var(--portal-accent); }
-.bulletin { align-self: start; min-width: 0; padding: 26px 28px 22px; background: #f5f2eb; }
-.bulletin-top { display: flex; justify-content: space-between; color: #8a6841; font-size: 11px; font-weight: 750; letter-spacing: .12em; }
-.bulletin-top span:last-child { font-size: 22px; line-height: .7; }
-.bulletin h2 { margin: 27px 0 6px; font-family: inherit; font-size: 28px; }
-.bulletin > p { margin: 0 0 20px; color: #667078; font-size: 12px; }
-.bulletin-list { border-top: 1px solid #ddd7cb; }
-.bulletin-list a { display: grid; grid-template-columns: 1fr auto; gap: 6px; border-bottom: 1px solid #ddd7cb; padding: 16px 0; }
-.bulletin-list small { grid-column: 1 / -1; color: #8a6841; font-size: 11px; font-weight: 750; }
-.bulletin-list strong { font-size: 14px; font-weight: 670; line-height: 1.5; }
-.bulletin-list a > span { color: #8a6841; }
-.bulletin-list a:hover strong { text-decoration: underline; text-underline-offset: 3px; }
-.bulletin-empty { border-top: 1px solid #ddd7cb; padding: 20px 0; color: #667078; font-size: 12px; }
-.bulletin-footer { display: flex; align-items: center; gap: 8px; margin-top: 20px; font-size: 11px; }
-.status-dot { width: 7px; height: 7px; border-radius: 50%; background: #567b65; }
-.status-dot.loading { background: #a96a46; }
-.bulletin-footer > a { margin-left: auto; color: #8a6841; font-weight: 700; }
-.project-section { display: grid; grid-template-columns: minmax(0, .72fr) minmax(0, 1.28fr); gap: clamp(30px, 5vw, 80px); border-top: 1px solid var(--portal-text); border-bottom: 1px solid var(--portal-line); padding: 34px 0 42px; }
-.project-intro { display: flex; flex-direction: column; align-items: start; }
-.project-intro h2 { margin: 24px 0 12px; font-family: 'Songti SC', 'Noto Serif CJK SC', 'SimSun', serif; font-size: clamp(28px, 2.8vw, 39px); font-weight: 650; letter-spacing: -.035em; }
-.project-intro p { max-width: 27em; margin: 0 0 28px; color: var(--portal-text-soft); font-size: 13px; line-height: 1.8; }
-.project-intro > a { margin-top: auto; border-bottom: 1px solid var(--portal-accent); padding-bottom: 6px; color: var(--portal-accent); font-size: 13px; font-weight: 700; }
-.project-content { min-width: 0; }
-.project-content-head { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 15px; font-size: 12px; font-weight: 700; }
-.project-content-head a { color: var(--portal-accent); }
-.project-list { border-top: 1px solid var(--portal-line); }
-.project-list a { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 12px; align-items: center; min-height: 58px; border-bottom: 1px solid var(--portal-line); }
-.project-list a span { color: var(--portal-accent); font-size: 11px; }
-.project-list a strong { overflow: hidden; font-size: 15px; font-weight: 640; text-overflow: ellipsis; white-space: nowrap; }
-.project-empty { display: grid; align-content: center; gap: 8px; min-height: 155px; border-top: 1px solid var(--portal-line); color: var(--portal-text-soft); font-size: 13px; }
-.project-empty strong { color: var(--portal-text); font-size: 18px; }
-.project-empty button { width: fit-content; border: 0; padding: 0; background: none; color: var(--portal-accent); cursor: pointer; }
-.reading-section { padding: 76px 0 72px; }
-.reading-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px; }
-.reading-story { display: grid; grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr); min-height: 230px; border-top: 1px solid var(--portal-line); border-bottom: 1px solid var(--portal-line); }
-.reading-image { min-height: 230px; overflow: hidden; background: #dbe3e7; }
-.reading-image img { width: 100%; height: 100%; object-fit: cover; transition: transform .35s ease; }
-.reading-story:hover img { transform: scale(1.035); }
-.reading-image > span { display: block; padding: 20px; color: #31596c; font-size: 13px; }
-.reading-copy { display: flex; flex-direction: column; align-items: start; gap: 10px; padding: 21px; }
-.reading-copy small { color: var(--portal-accent); font-size: 11px; font-weight: 700; }
-.reading-copy small span { margin: 0 4px; }
-.reading-copy strong { font-size: clamp(18px, 1.6vw, 24px); font-weight: 700; line-height: 1.4; }
-.reading-copy p { display: -webkit-box; overflow: hidden; margin: 0; color: var(--portal-text-soft); font-size: 12px; line-height: 1.65; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
-.reading-link { margin-top: auto; color: var(--portal-accent); font-size: 12px; font-weight: 700; }
-.reading-placeholder { height: 230px; background: var(--portal-bg-soft); }
-.bottom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(28px, 4vw, 60px); }
-.tool-list, .moment-list { border-top: 2px solid var(--portal-text); }
-.tool-list a { display: grid; grid-template-columns: 60px minmax(0, .9fr) minmax(0, 1.2fr) auto; gap: 12px; align-items: center; min-height: 67px; border-bottom: 1px solid var(--portal-line); }
-.tool-list a > span:first-child, .moment-list a > span:first-child { color: var(--portal-accent); font-size: 11px; font-weight: 700; }
-.tool-list strong, .moment-list strong { overflow: hidden; font-size: 14px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
-.tool-list small { overflow: hidden; color: var(--portal-text-soft); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
-.tool-list a > span:last-child, .moment-list a > span:last-child { color: var(--portal-accent); }
-.moment-list a { display: grid; grid-template-columns: 60px minmax(0, 1fr) auto; gap: 12px; align-items: center; min-height: 67px; border-bottom: 1px solid var(--portal-line); }
-.recent-section { padding-top: 76px; }
-.recent-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)); gap: 12px; }
-.recent-grid a { display: grid; gap: 10px; min-height: 110px; border-top: 2px solid var(--portal-text); padding: 12px 0; }
-.recent-grid small { color: var(--portal-text-soft); font-size: 11px; }
-.recent-grid strong { font-size: 15px; }
-.recent-grid span { align-self: end; color: var(--portal-accent); font-size: 11px; }
-.placeholder-stack { border-top: 2px solid currentColor; }
-.row-skeleton { height: 55px; border-bottom: 1px solid currentColor; opacity: .2; }
-.simple-state { display: flex; align-items: center; gap: 9px; min-height: 90px; border-top: 2px solid var(--portal-text); color: var(--portal-text-soft); font-size: 13px; }
-.simple-state button { border: 0; background: none; color: var(--portal-accent); font: inherit; cursor: pointer; }
-@media (max-width: 1100px) { .lead-grid { grid-template-columns: minmax(0, 1.35fr) minmax(280px, .85fr); } .feature-link { grid-template-columns: 1fr; } .feature-image { min-height: 220px; height: 220px; } .feature-copy { min-height: 270px; } .activity-grid { grid-template-columns: 1fr; } .reading-story { grid-template-columns: 1fr; } .reading-image { height: 190px; min-height: 190px; } }
-@media (max-width: 760px) { .welcome-main { align-items: start; flex-direction: column; padding-top: 30px; } .welcome-overline span:last-child { display: none; } .lead-grid, .project-section, .reading-grid, .bottom-grid { grid-template-columns: 1fr; } .forum-entry { min-height: 330px; } .activity-grid { padding: 48px 0; } .reading-section { padding: 52px 0; } .reading-story { grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); } .reading-image { height: auto; min-height: 210px; } .bottom-grid { gap: 48px; } }
-@media (max-width: 520px) { .welcome { padding-bottom: 27px; } .welcome h1 { font-size: 37px; } .welcome-actions { gap: 16px; } .feature-copy { min-height: 265px; padding: 21px 8px; } .feature-copy h2 { margin-top: 14px; } .forum-entry { min-height: 0; } .starter-grid { grid-template-columns: 1fr; } .starter-grid a + a { border-top: 1px solid var(--portal-line); border-left: 0; padding-left: 0; } .forum-entry-compose { margin-top: 6px; } .notice-ticker { gap: 8px; } .ticker-more { display: none; } .reading-story { grid-template-columns: 1fr; } .reading-image { height: 210px; min-height: 210px; } .reading-copy { padding: 18px 0 22px; } .tool-list a { grid-template-columns: 54px minmax(0, 1fr) auto; } .tool-list small { display: none; } .bulletin { padding: 24px; } .urgent-ribbon { gap: 10px; } .urgent-label { padding-right: 10px; } }
-@media (prefers-reduced-motion: reduce) { .reading-image img { transition: none; } }
+.home-page { min-height: 100vh; background: var(--portal-bg); color: var(--portal-text); font-family: 'PingFang SC', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif; }
+.page-wrap { max-width: 1380px; margin: 0 auto; padding: 0 42px; }
+.home-page h1, .home-page h2 { font-family: inherit; }
+.alert-bar, .announcement { display: flex; align-items: center; gap: 11px; min-height: 43px; border-bottom: 1px solid var(--portal-line); font-size: 12px; }
+.alert-bar { color: #a92e29; }
+.alert-bar strong { font-weight: 850; }
+.alert-bar a:last-child, .announcement a:last-child { margin-left: auto; white-space: nowrap; }
+.announcement strong { flex: 0 0 auto; color: #946132; font-weight: 850; }
+.announcement a:nth-child(2), .alert-bar a:nth-child(2) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.announcement a:last-child { color: #797f82; }
+.page-top { display: flex; justify-content: space-between; align-items: end; gap: 20px; padding: 30px 0 25px; }
+.page-top small, .section-heading small { color: var(--portal-accent); font-size: 11px; font-weight: 800; letter-spacing: .1em; }
+.page-top h1 { margin: 9px 0 6px; font-size: clamp(35px, 3.6vw, 51px); font-weight: 850; letter-spacing: -.085em; line-height: 1.16; }
+.page-top h1 em { color: var(--portal-accent); font-style: normal; }
+.page-top p { margin: 0; color: var(--portal-text-soft); font-size: 13px; }
+.page-actions { display: flex; align-items: center; gap: 15px; padding-bottom: 3px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+.page-actions a:first-child, .section-heading a { color: var(--portal-accent-2); }
+.page-actions a:last-child { border-bottom: 1px solid var(--portal-accent); padding-bottom: 5px; color: var(--portal-accent); }
+.page-actions i { width: 1px; height: 18px; background: var(--portal-line); }
+.top-grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(325px, .9fr); gap: 18px; align-items: stretch; }
+.conversation { min-width: 0; overflow: hidden; border: 1px solid #d8dbd7; border-radius: 12px; background: #fff; }
+.panel-top { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e9eae7; padding: 17px 22px; }
+.panel-top strong { font-size: 14px; font-weight: 800; }
+.panel-top span { color: #8a9194; font-size: 11px; }
+.featured-post { position: relative; display: block; overflow: hidden; border-bottom: 1px solid #e5e5e0; padding: 25px 30px 27px; background: #fbf7ee; }
+.featured-post::after { position: absolute; right: -50px; bottom: -127px; width: 290px; height: 290px; border: 2px solid #d9b8a9; border-radius: 50%; content: ''; pointer-events: none; }
+.post-head { display: flex; align-items: center; gap: 8px; color: #976746; font-size: 11px; font-weight: 800; }
+.post-head .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--portal-accent); }
+.post-head .date { margin-left: auto; color: #aaa9a1; font-weight: 500; }
+.featured-post h2 { position: relative; z-index: 1; margin: 20px 0 11px; font-size: clamp(25px, 2.5vw, 34px); font-weight: 820; letter-spacing: -.07em; }
+.featured-post blockquote { position: relative; z-index: 1; display: -webkit-box; max-width: 470px; margin: 0; overflow: hidden; color: #56616a; font-family: 'Songti SC', 'Noto Serif CJK SC', serif; font-size: 17px; line-height: 1.65; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.post-excerpt { color: #56616a; font-size: 15px; }
+.post-foot { position: relative; z-index: 1; display: flex; align-items: center; gap: 9px; margin-top: 27px; color: #7b858b; font-size: 11px; }
+.mini-avatar { display: grid; place-items: center; width: 24px; height: 24px; flex: 0 0 auto; border-radius: 50%; background: #b9c9c4; color: #173c43; font-size: 10px; font-weight: 900; }
+.post-foot b { color: var(--portal-text); font-weight: 700; }
+.post-foot .reply { margin-left: auto; color: var(--portal-accent); font-weight: 800; white-space: nowrap; }
+.second-post { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; min-height: 76px; padding: 14px 22px; }
+.second-post strong { display: block; font-size: 15px; font-weight: 720; }
+.second-post small { display: block; margin-top: 5px; color: #90989a; font-size: 11px; }
+.second-post > span:last-child { color: var(--portal-accent-2); font-size: 12px; font-weight: 800; white-space: nowrap; }
+.panel-state { min-height: 300px; padding: 34px 30px; color: var(--portal-text-soft); font-size: 14px; }
+.panel-state strong { display: block; margin-bottom: 8px; color: var(--portal-text); font-size: 22px; }
+.panel-state a, .panel-state button, .reading-state a, .reading-state button { border: 0; padding: 0; color: var(--portal-accent); background: none; font: inherit; font-weight: 750; cursor: pointer; }
+.project-feature { display: flex; flex-direction: column; min-width: 0; overflow: hidden; border: 1px solid #294965; border-radius: 12px; background: var(--home-project, #1d4468); color: #fff; }
+.project-heading { display: flex; justify-content: space-between; gap: 12px; padding: 17px 20px 0; color: #b7c8d3; font-size: 11px; font-weight: 750; letter-spacing: .05em; }
+.project-scene { position: relative; display: grid; place-items: center; flex: 1; min-height: 188px; overflow: hidden; margin: 15px 19px 12px; border: 1px solid #a9bbbf; border-radius: 5px; background: #e5e8dc; }
+.project-scene::before { position: absolute; top: 0; right: 0; left: 0; height: 20px; border-bottom: 1px solid #bcc8c4; background: #f9f8ef; content: ''; }
+.window-dots { position: absolute; top: 7px; left: 10px; display: flex; gap: 4px; }
+.window-dots i { width: 5px; height: 5px; border-radius: 50%; background: #bac2bc; }
+.project-grid { position: absolute; top: 20px; right: 0; bottom: 0; left: 0; background-image: linear-gradient(#71889920 1px, transparent 1px), linear-gradient(90deg, #71889920 1px, transparent 1px); background-size: 23px 23px; }
+.project-card { position: relative; z-index: 1; display: grid; place-items: center; width: 64%; min-height: 108px; transform: rotate(-5deg); border: 2px solid #1f4262; box-shadow: 11px 11px 0 #c64f40; background: #fffaf2; text-align: center; }
+.project-card strong { max-width: 94%; overflow: hidden; color: #1c4263; font-family: 'Songti SC', 'Noto Serif CJK SC', serif; font-size: clamp(28px, 3vw, 45px); font-weight: 900; letter-spacing: -.09em; text-overflow: ellipsis; white-space: nowrap; }
+.project-card small { margin-top: -24px; color: #899095; font-size: 9px; letter-spacing: .16em; }
+.project-bottom { display: flex; align-items: end; justify-content: space-between; gap: 10px; padding: 0 20px 19px; }
+.project-bottom strong { display: block; font-size: 19px; font-weight: 750; }
+.project-bottom small { display: block; margin-top: 5px; color: #a7c0cf; font-size: 11px; }
+.project-bottom b { font-size: 22px; font-weight: 400; }
+.fallback-inner { display: flex; flex: 1; flex-direction: column; justify-content: center; gap: 20px; padding: 35px; font-size: 24px; font-weight: 750; }
+.fallback-inner a, .fallback-inner button { align-self: start; border: 0; padding: 0; color: #fff; background: transparent; font: inherit; font-size: 13px; cursor: pointer; }
+.quickline { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 17px 0 0; }
+.quickline a { display: flex; align-items: center; gap: 12px; min-width: 0; border: 1px solid var(--portal-line); border-radius: 10px; padding: 13px 16px; background: #fff; }
+.quickline .icon { display: grid; place-items: center; width: 33px; height: 33px; flex: 0 0 auto; border-radius: 7px; background: #f4e3df; color: var(--portal-accent); font-family: 'Songti SC', serif; font-size: 18px; font-weight: 900; }
+.quickline .icon.tone-1 { background: #e7eef1; color: #426a84; }
+.quickline .icon.tone-2 { background: #f4eddf; color: #a17734; }
+.quickline a > span:nth-child(2) { min-width: 0; }
+.quickline strong { display: block; overflow: hidden; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.quickline small { display: block; margin-top: 3px; overflow: hidden; color: #818a90; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.quickline b { margin-left: auto; color: #879198; font-size: 15px; font-weight: 400; }
+.lower { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(325px, .9fr); gap: 40px; padding: 48px 0 75px; }
+.section-heading { display: flex; align-items: end; justify-content: space-between; gap: 15px; margin-bottom: 18px; }
+.section-heading small { font-size: 10px; }
+.section-heading h2 { margin: 6px 0 0; font-size: 26px; font-weight: 800; letter-spacing: -.05em; }
+.section-heading a { font-size: 12px; font-weight: 750; white-space: nowrap; }
+.article-list, .reading-state { border-top: 2px solid var(--portal-text); }
+.article-row { display: grid; grid-template-columns: 69px minmax(0, 1fr) 70px; align-items: center; gap: 14px; border-bottom: 1px solid var(--portal-line); padding: 12px 6px; }
+.article-thumb { display: grid; place-items: center; width: 67px; height: 61px; border-radius: 6px; background: #eadbd1; color: #a64b3a; font-family: 'Songti SC', 'Noto Serif CJK SC', serif; font-size: 27px; font-weight: 900; }
+.article-thumb.tone-1 { background: #dce8ed; color: #2f647d; }
+.article-thumb.tone-2 { background: #ebe5d4; color: #95733e; }
+.article-copy { min-width: 0; }
+.article-copy strong { display: block; overflow: hidden; font-size: 15px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.article-copy small { display: block; margin-top: 6px; overflow: hidden; color: #8a9397; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.read-link { color: var(--portal-accent); font-size: 11px; font-weight: 750; text-align: right; }
+.reading-state { padding: 25px 6px; color: var(--portal-text-soft); font-size: 13px; }
+.note { border-top: 2px solid var(--portal-text); padding: 18px 0 0; }
+.note strong { display: block; font-size: 17px; }
+.note p { max-width: 400px; color: #68747b; font-size: 12px; line-height: 1.8; }
+.note a { display: inline-block; margin-top: 8px; border-bottom: 1px solid var(--portal-accent); padding-bottom: 4px; color: var(--portal-accent); font-size: 12px; font-weight: 800; }
+.home-footer { border-top: 1px solid var(--portal-line); padding: 24px 0 35px; color: #828a8e; font-size: 11px; }
+.home-page a:hover { color: var(--portal-accent); }
+.project-feature:hover, .featured-post:hover, .quickline a:hover { transform: translateY(-2px); }
+.project-feature, .featured-post, .quickline a { transition: transform .18s ease; }
+.project-feature:hover { color: #fff !important; }
+@media (max-width: 1050px) { .page-wrap { padding: 0 26px; } .top-grid, .lower { grid-template-columns: minmax(0, 1.35fr) minmax(280px, .9fr); } .project-scene { min-height: 155px; } .quickline { gap: 8px; } .quickline a { padding: 11px; } }
+@media (max-width: 760px) { .page-wrap { padding: 0 18px; } .page-top { padding: 22px 0 19px; } .page-top h1 { font-size: 38px; } .page-actions { display: none; } .top-grid, .lower { grid-template-columns: 1fr; } .featured-post { padding: 23px; } .project-feature { min-height: 245px; } .project-scene { min-height: 130px; } .quickline { grid-template-columns: 1fr 1fr; } .quickline a:nth-child(3) { grid-column: 1 / -1; } .lower { gap: 33px; padding-top: 34px; } }
+@media (max-width: 450px) { .page-top h1 { font-size: 34px; } .page-top p { font-size: 12px; } .featured-post h2 { font-size: 27px; } .featured-post blockquote { font-size: 15px; } .post-foot .reply { font-size: 10px; } .quickline a { gap: 8px; } .quickline .icon { width: 29px; height: 29px; } .quickline strong { font-size: 12px; } .quickline small { font-size: 9px; } }
+@media (prefers-reduced-motion: reduce) { .project-feature, .featured-post, .quickline a { transition: none; } }
 </style>
