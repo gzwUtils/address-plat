@@ -127,6 +127,13 @@ const recentLogs = ref([])
 
 const entryCards = [
   {
+    kicker: 'Sources',
+    title: '项目来源',
+    desc: '配置 GitHub 搜索或公开 RSS/Atom 订阅与收录节奏。',
+    meta: '适合站外项目发现',
+    path: '/admin/sources'
+  },
+  {
     kicker: 'Projects',
     title: '项目管理台',
     desc: '维护项目地址、分类、访问入口和项目描述。',

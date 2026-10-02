@@ -6,7 +6,7 @@
           <span class="eyebrow">在场 / PROJECTS</span>
           <h1>把正在做的事，<br><em>拿出来看看。</em></h1>
           <p>一个想法、一款工具、一项正在推进的计划。看看别人在做什么，也让你的项目找到同行的人。</p>
-          <div class="hero-actions"><a href="#project-collection">浏览项目 <span aria-hidden="true">↓</span></a><a href="#open-source">开源发现 ↓</a><router-link to="/project-studio">分享我的项目 ↗</router-link></div>
+          <div class="hero-actions"><a href="#project-collection">浏览项目 <span aria-hidden="true">↓</span></a><a href="#open-source">站外发现 ↓</a><router-link to="/project-studio">分享我的项目 ↗</router-link></div>
           <div class="hero-count" v-if="!loading && !error"><strong>{{ total }}</strong><span>个公开项目<br>正在被看见</span></div>
         </div>
         <router-link v-if="featured" class="spotlight" :to="`/project/${featured.id}`" :aria-label="`查看项目：${featured.projectName}`">
@@ -39,21 +39,21 @@
 
     <section id="open-source" class="open-source" aria-labelledby="open-source-title">
       <div class="open-source-inner">
-        <div class="open-source-heading"><div><span class="eyebrow">开源发现 / GITHUB</span><h2 id="open-source-title">看看世界正在做什么。</h2><p>收录时近 7 天新建、拥有明确开源许可证的 GitHub 项目。带着问题去看代码，也把学到的东西带回论坛。</p></div><span class="source-time" v-if="openSource.length">最近收录 {{ syncDate(openSource[0].syncedAt) }}</span></div>
-        <div v-if="openSourceLoading" class="open-source-state">正在整理本期开源项目…</div>
-        <div v-else-if="openSourceError" class="open-source-state" role="alert">开源项目暂时无法加载。<button type="button" @click="loadOpenSource">重试 ↗</button></div>
+        <div class="open-source-heading"><div><span class="eyebrow">站外项目 / SOURCES</span><h2 id="open-source-title">看看世界正在做什么。</h2><p>来自管理员配置的公开来源。带着问题去看项目，也把学到的东西带回论坛。</p></div><span class="source-time" v-if="openSource.length">最近收录 {{ lastSyncedDate }}</span></div>
+        <div v-if="openSourceLoading" class="open-source-state">正在整理本期站外项目…</div>
+        <div v-else-if="openSourceError" class="open-source-state" role="alert">站外项目暂时无法加载。<button type="button" @click="loadOpenSource">重试 ↗</button></div>
         <div v-else-if="openSource.length" class="open-source-grid">
-          <a v-for="(repository, index) in openSource" :key="repository.sourceRepoId" class="source-card" :href="repository.sourceUrl" target="_blank" rel="noopener noreferrer" :aria-label="`在 GitHub 查看 ${repository.fullName}`"><div class="source-card-top"><span>{{ String(index + 1).padStart(2, '0') }} / OPEN SOURCE</span><span>↗</span></div><h3>{{ repository.fullName }}</h3><p>{{ repository.description || '打开仓库，查看代码与项目说明。' }}</p><div class="source-card-bottom"><span>{{ repository.language || '多语言' }}</span><span>★ {{ formatStars(repository.starCount) }}</span><span>{{ repository.licenseSpdx }}</span></div></a>
+          <a v-for="(repository, index) in openSource" :key="`${repository.sourcePlatform}-${repository.sourceRepoId}`" class="source-card" :href="repository.sourceUrl" target="_blank" rel="noopener noreferrer" :aria-label="`在原站查看 ${repository.fullName}`"><div class="source-card-top"><span>{{ String(index + 1).padStart(2, '0') }} / {{ repository.sourceName || repository.sourcePlatform }}</span><span>↗</span></div><h3>{{ repository.fullName }}</h3><p>{{ repository.description || '打开原站，查看项目说明。' }}</p><div class="source-card-bottom"><span v-if="repository.language">{{ repository.language }}</span><span v-if="repository.starCount">★ {{ formatStars(repository.starCount) }}</span><span v-if="repository.licenseSpdx">{{ repository.licenseSpdx }}</span><span v-if="!repository.licenseSpdx">许可证以原站为准</span></div></a>
         </div>
         <div v-else class="open-source-state">这期精选还在整理中。稍后再来看看。</div>
-        <p class="source-note">来源：GitHub 官方仓库搜索 · 按收录时总星标数排序 · 计划每周更新。这里展示的是仓库摘要，项目内容和许可证请以原站为准。</p>
+        <p class="source-note">来源与更新节奏由管理员配置。这里仅展示摘要与原站链接；项目内容和许可证请以原站为准。</p>
       </div>
     </section>
   </div>
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getCategories, getOpenSourceProjects } from '@/api/project'
 import { fetchDiscoveryGroup } from '@/composables/useResourceDiscovery'
@@ -76,7 +76,13 @@ const openSourceError = ref(false)
 let requestId = 0
 const featured = computed(() => projects.value[0] || null)
 const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize)))
-const syncDate = (value) => value ? String(value).slice(0, 10) : '近期'
+const syncDate = (value) => {
+  if (!value) return '近期'
+  const date = new Date(String(value).endsWith('Z') ? value : `${value}Z`)
+  return Number.isNaN(date.getTime()) ? String(value).slice(0, 10)
+    : new Intl.DateTimeFormat('zh-CN', { timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit' }).format(date)
+}
+const lastSyncedDate = computed(() => syncDate(openSource.value.map((item) => item.syncedAt || '').sort().at(-1)))
 const formatStars = (value) => Number(value || 0).toLocaleString('en-US')
 
 async function loadOpenSource() {
@@ -84,7 +90,7 @@ async function loadOpenSource() {
   openSourceError.value = false
   try {
     const result = await getOpenSourceProjects()
-    if (!Array.isArray(result)) throw new Error('开源项目接口返回格式不正确')
+    if (!Array.isArray(result)) throw new Error('站外项目接口返回格式不正确')
     openSource.value = result
   } catch {
     openSourceError.value = true
@@ -119,7 +125,12 @@ async function loadProjects() {
     total.value = 0
     error.value = true
   } finally {
-    if (id === requestId) loading.value = false
+    if (id === requestId) {
+      loading.value = false
+      if (['#project-collection', '#open-source'].includes(window.location.hash)) {
+        nextTick(() => document.querySelector(window.location.hash)?.scrollIntoView())
+      }
+    }
   }
 }
 

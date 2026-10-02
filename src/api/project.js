@@ -16,3 +16,7 @@ export const saveProject = (project) =>
 
 export const deleteProject = (id) =>
   api.delete(`/projects/${id}`).then(unwrap)
+
+export const listExternalSources = () => api.get('/admin/external-sources').then(unwrap)
+export const saveExternalSource = (source) => api.post('/admin/external-sources', source).then(unwrap)
+export const runExternalSource = (id) => api.post(`/admin/external-sources/${id}/run`, null, { timeout: 15000 }).then(unwrap)

@@ -19,6 +19,7 @@ const CommunityTopicView = () => import('../views/CommunityTopicView.vue')
 const MyDiscussionsView = () => import('../views/MyDiscussionsView.vue')
 const AdminSignInView = () => import('../views/AdminSignInView.vue')
 const CommunityReportsView = () => import('../views/CommunityReportsView.vue')
+const SourceAdminView = () => import('../views/SourceAdminView.vue')
 
 const routes = [
   {
@@ -107,6 +108,12 @@ const routes = [
         path: 'admin/sign-in',
         name: 'admin-sign-in',
         component: AdminSignInView
+      },
+      {
+        path: 'admin/sources',
+        name: 'admin-sources',
+        meta: { admin: true },
+        component: SourceAdminView
       },
       {
         path: 'admin/community/reports',
