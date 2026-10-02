@@ -125,7 +125,17 @@
             <el-input v-model="primaryName" placeholder="请输入名称或标题" />
           </el-form-item>
           <el-form-item label="类型/分类">
-            <el-input v-model="secondaryType" placeholder="文章填分类，AI/生活填类型" />
+            <div v-if="editingResource.kind === 'life'" class="life-type-control">
+              <el-select v-model="secondaryType" filterable allow-create default-first-option placeholder="选择团队内容类型">
+                <el-option label="公告" value="公告" />
+                <el-option label="提醒" value="提醒" />
+                <el-option label="告警" value="告警" />
+                <el-option label="动态" value="动态" />
+                <el-option label="灵感" value="灵感" />
+              </el-select>
+              <small>告警在首页置顶；公告和提醒进入通知栏；其他类型显示在团队日常。</small>
+            </div>
+            <el-input v-else v-model="secondaryType" placeholder="文章填分类，AI 填类型" />
           </el-form-item>
           <el-form-item label="日期">
             <el-input v-model="editingResource.date" placeholder="例如：2026-03-28" />
@@ -876,6 +886,9 @@ watch(
 .markdown-body :deep(code) {
   font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
 }
+
+.life-type-control { display: grid; width: 100%; gap: 6px; }
+.life-type-control small { color: var(--portal-text-soft); font-size: 11px; line-height: 1.5; }
 
 .form-grid {
   display: grid;
