@@ -19,18 +19,22 @@
           <span><b>01</b> 分享项目</span><span><b>02</b> 讨论想法</span><span><b>03</b> 沉淀经验</span>
         </div>
       </div>
-      <router-link v-if="leadArticle" class="cover-story" :to="`/explore/article/${leadArticle.id}`">
-        <img v-if="leadArticle.coverImage && !coverFailed" :src="leadArticle.coverImage" alt="" @error="coverFailed = true" />
-        <span class="cover-story-tag">本期推荐 <span aria-hidden="true">↗</span></span>
-        <span class="cover-story-content">
-          <small>{{ leadArticle.category || '团队文章' }} · {{ leadArticle.author || '团队分享' }}</small>
-          <strong>{{ leadArticle.title }}</strong>
-          <span>{{ leadArticle.excerpt || leadArticle.desc || '阅读完整文章' }}</span>
-        </span>
-      </router-link>
-      <div v-else class="cover-story cover-story-empty">
-        <span class="cover-story-tag">从这里开始</span>
-        <span class="cover-story-content"><small>项目 · 讨论 · 资源</small><strong>每个好想法，<br>都值得被看见。</strong><router-link to="/community">进入社区 ↗</router-link></span>
+      <div class="cover-forum">
+        <div class="forum-topline"><span>论坛 / FORUM</span><router-link to="/community">进入社区 ↗</router-link></div>
+        <h2>今天，<br>从哪一桌聊起？</h2>
+        <div class="forum-board-list">
+          <router-link v-for="(board, index) in displayBoards.slice(0, 3)" :key="board.code" :to="`/community/boards/${board.code}`" :class="['forum-board', board.code]">
+            <span class="forum-board-no">{{ String(index + 1).padStart(2, '0') }}</span>
+            <span class="forum-board-copy"><strong>{{ board.name }}</strong><small>{{ board.description }}</small></span>
+            <span class="forum-board-count">{{ board.topicCount ? `${board.topicCount} 话题` : '等你开帖' }}</span>
+            <span class="forum-board-arrow" aria-hidden="true">↗</span>
+          </router-link>
+        </div>
+        <div class="forum-last-word">
+          <span>{{ groups.topic.records.length ? '正在聊' : '下一句' }}</span>
+          <router-link v-if="groups.topic.records.length" :to="`/community/topics/${groups.topic.records[0].id}`">{{ groups.topic.records[0].title }} ↗</router-link>
+          <router-link v-else to="/community?compose=1">第一句话，就等你说 ↗</router-link>
+        </div>
       </div>
     </section>
 
@@ -55,7 +59,7 @@
         <div v-else-if="groups.topic.records.length" class="topic-stack"><TopicRow v-for="item in groups.topic.records.slice(0, 4)" :key="item.id" :topic="item" /></div>
         <div v-else class="conversation-invite">
           <span class="invite-mark" aria-hidden="true">“</span>
-          <div><strong>下一场讨论，从你开始。</strong><p>聊聊正在做的项目、最近遇到的问题，或者一个刚冒出来的想法。</p><router-link to="/community">发起第一个话题 <span aria-hidden="true">↗</span></router-link></div>
+          <div><strong>下一场讨论，从你开始。</strong><p>聊聊正在做的项目、最近遇到的问题，或者一个刚冒出来的想法。</p><router-link to="/community?compose=1">发起第一个话题 <span aria-hidden="true">↗</span></router-link></div>
         </div>
         <nav class="board-links" aria-label="社区板块">
           <router-link to="/community/boards/project-share">项目分享 ↗</router-link>
@@ -100,7 +104,7 @@
       <div v-if="groups.article.loading" class="reading-grid"><div v-for="index in 2" :key="index" class="reading-placeholder" /></div>
       <div v-else-if="groups.article.error" class="simple-state" role="alert">文章暂时无法加载。<button type="button" @click="loadGroup('article')">重试</button></div>
       <div v-else-if="moreArticles.length" class="reading-grid">
-        <router-link v-for="item in moreArticles" :key="item.id" class="reading-story" :to="`/explore/article/${item.id}`">
+        <router-link v-for="(item, index) in moreArticles" :key="item.id" class="reading-story" :class="{ 'reading-story-lead': index === 0 }" :to="`/explore/article/${item.id}`">
           <div class="reading-image"><img v-if="item.coverImage" :src="item.coverImage" alt="" loading="lazy" /><span v-else>{{ item.category || '文章' }}</span></div>
           <div class="reading-copy"><small>{{ item.category || '团队文章' }} <span>·</span> {{ item.author || '团队分享' }}</small><strong>{{ item.title }}</strong><p>{{ item.excerpt || item.desc || '阅读完整文章' }}</p><span class="reading-link">阅读文章 ↗</span></div>
         </router-link>
@@ -136,6 +140,8 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import TopicRow from '@/components/TopicRow.vue'
 import { getRecentViews } from '@/api/content'
+import { listBoards } from '@/api/community'
+import { fallbackBoards } from '@/utils/communityBoards'
 import { fetchDiscoveryGroup } from '@/composables/useResourceDiscovery'
 import { getClientId } from '@/utils/clientId'
 
@@ -146,9 +152,9 @@ const quickLinks = [
 const emptyGroup = () => ({ records: [], total: 0, loading: true, error: null })
 const groups = reactive({ project: emptyGroup(), topic: emptyGroup(), article: emptyGroup(), ai: emptyGroup(), life: emptyGroup() })
 const recentItems = ref([])
-const coverFailed = ref(false)
-const leadArticle = computed(() => groups.article.records[0] || null)
-const moreArticles = computed(() => groups.article.records.slice(1, 3))
+const boards = ref([])
+const displayBoards = computed(() => boards.value.length ? boards.value : fallbackBoards)
+const moreArticles = computed(() => groups.article.records.slice(0, 3))
 const lifeRecords = computed(() => groups.life.records)
 const alertItems = computed(() => lifeRecords.value.filter((item) => item.type?.trim() === '告警'))
 const noticeItems = computed(() => lifeRecords.value.filter((item) => ['公告', '提醒'].includes(item.type?.trim())))
@@ -158,7 +164,6 @@ const recentPath = (item) => item.kind === 'project' ? `/project/${item.targetId
 
 async function loadGroup(kind) {
   groups[kind] = { ...emptyGroup(), loading: true }
-  if (kind === 'article') coverFailed.value = false
   try {
     const size = { project: 6, topic: 5, article: 3, ai: 3, life: 200 }[kind] || 4
     const result = await fetchDiscoveryGroup(kind, { size })
@@ -166,6 +171,16 @@ async function loadGroup(kind) {
   } catch (error) {
     console.warn(`加载${kind}失败`, error)
     groups[kind] = { records: [], total: 0, loading: false, error }
+  }
+}
+
+async function loadBoards() {
+  try {
+    const result = await listBoards()
+    boards.value = Array.isArray(result) ? result : []
+  } catch (error) {
+    console.warn('加载社区板块失败', error)
+    boards.value = []
   }
 }
 
@@ -183,6 +198,7 @@ async function loadRecent() {
 
 onMounted(() => {
   for (const kind of ['project', 'topic', 'article', 'ai', 'life']) loadGroup(kind)
+  loadBoards()
   loadRecent()
 })
 </script>
@@ -206,19 +222,26 @@ onMounted(() => {
 .secondary-action { padding: 12px 0; border-bottom: 1px solid currentColor; color: var(--portal-text); font-size: 14px; font-weight: 660; }
 .cover-bottom { display: flex; flex-wrap: wrap; gap: 15px 26px; width: 100%; margin-top: auto; border-top: 1px solid #d8d5cd; padding-top: 20px; color: #697178; font-size: 12px; }
 .cover-bottom b { margin-right: 6px; color: var(--portal-accent); font-size: 11px; }
-.cover-story { position: relative; display: flex; flex-direction: column; justify-content: space-between; min-width: 0; min-height: 500px; overflow: hidden; padding: 32px; background: #263a46; color: #fff; }
-.cover-story:before { position: absolute; z-index: 1; inset: 0; background: linear-gradient(180deg, #14232a5e 0%, #14232a1a 35%, #14232ae6 100%); content: ''; pointer-events: none; }
-.cover-story img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .35s ease; }
-.cover-story:hover img { transform: scale(1.035); }
-.cover-story-tag, .cover-story-content { position: relative; z-index: 2; }
-.cover-story-tag { display: flex; justify-content: space-between; max-width: 140px; border: 1px solid #ffffff8a; padding: 8px 10px; font-size: 11px; font-weight: 700; letter-spacing: .04em; }
-.cover-story-content { display: grid; gap: 13px; max-width: 500px; }
-.cover-story-content small { font-size: 12px; font-weight: 700; letter-spacing: .06em; }
-.cover-story-content strong { font-size: clamp(26px, 2.7vw, 41px); font-weight: 740; line-height: 1.3; }
-.cover-story-content > span { display: -webkit-box; overflow: hidden; max-width: 36em; font-size: 14px; line-height: 1.7; opacity: .88; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
-.cover-story-empty { background: #31596c; }
-.cover-story-empty:before { display: none; }
-.cover-story-empty .cover-story-content a { color: #fff; font-size: 13px; }
+.cover-forum { display: flex; flex-direction: column; min-width: 0; min-height: 500px; padding: 32px clamp(25px, 3.1vw, 44px) 26px; background: #263e4c; color: #fff; }
+.forum-topline { display: flex; justify-content: space-between; align-items: center; gap: 12px; color: #c9d8dd; font-size: 11px; font-weight: 700; letter-spacing: .09em; }
+.forum-topline a { color: #fff; font-size: 12px; letter-spacing: 0; }
+.cover-forum h2 { margin: 34px 0 26px; font-family: inherit; font-size: clamp(27px, 2.8vw, 42px); font-weight: 740; letter-spacing: -.04em; line-height: 1.3; }
+.forum-board-list { border-top: 1px solid #ffffff5c; }
+.forum-board { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto 20px; align-items: center; gap: 10px; min-height: 77px; border-bottom: 1px solid #ffffff4a; }
+.forum-board:hover { background: #ffffff12; }
+.forum-board-no { align-self: start; padding-top: 21px; color: #bad0d8; font-size: 11px; }
+.forum-board-copy { display: grid; min-width: 0; gap: 4px; }
+.forum-board-copy strong { font-size: 18px; font-weight: 680; }
+.forum-board-copy small { overflow: hidden; color: #c4d3d9; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.forum-board-count { color: #c4d3d9; font-size: 11px; white-space: nowrap; }
+.forum-board-arrow { color: #fff; font-size: 16px; }
+.forum-board.project-share .forum-board-no { color: #e7b6a7; }
+.forum-board.tech-talk .forum-board-no { color: #b3d6e8; }
+.forum-board.lounge .forum-board-no { color: #c7d8b1; }
+.forum-last-word { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 13px; align-items: center; margin-top: auto; padding-top: 18px; color: #c4d3d9; font-size: 11px; }
+.forum-last-word > span:first-child { flex-shrink: 0; border: 1px solid #ffffff6e; padding: 4px 7px; color: #fff; font-weight: 700; }
+.forum-last-word > span:last-child, .forum-last-word a { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.forum-last-word a { color: #fff; }
 .notice-ticker { display: flex; align-items: center; gap: 14px; min-height: 60px; border-bottom: 1px solid var(--portal-line); padding: 12px 1px; font-size: 13px; }
 .ticker-label { flex-shrink: 0; color: var(--portal-accent); font-weight: 800; letter-spacing: .06em; }
 .ticker-type { flex-shrink: 0; border: 1px solid #c4ac88; padding: 3px 7px; color: #805e35; font-size: 11px; }
@@ -287,6 +310,11 @@ onMounted(() => {
 .reading-copy strong { font-size: clamp(18px, 1.6vw, 24px); font-weight: 700; line-height: 1.4; }
 .reading-copy p { display: -webkit-box; overflow: hidden; margin: 0; color: var(--portal-text-soft); font-size: 12px; line-height: 1.65; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .reading-link { margin-top: auto; color: var(--portal-accent); font-size: 12px; font-weight: 700; }
+.reading-story-lead { grid-column: 1 / -1; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); min-height: 280px; }
+.reading-story-lead .reading-image { min-height: 280px; }
+.reading-story-lead .reading-copy { justify-content: center; padding: 36px; }
+.reading-story-lead .reading-copy strong { font-size: clamp(25px, 2.7vw, 38px); }
+.reading-story-lead .reading-copy p { max-width: 40em; font-size: 14px; }
 .reading-placeholder { height: 230px; background: var(--portal-bg-soft); }
 .bottom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(28px, 4vw, 60px); }
 .tool-list, .moment-list { border-top: 2px solid var(--portal-text); }
@@ -306,8 +334,8 @@ onMounted(() => {
 .row-skeleton { height: 55px; border-bottom: 1px solid currentColor; opacity: .2; }
 .simple-state { display: flex; align-items: center; gap: 9px; min-height: 90px; border-top: 2px solid var(--portal-text); color: var(--portal-text-soft); font-size: 13px; }
 .simple-state button { border: 0; background: none; color: var(--portal-accent); font: inherit; cursor: pointer; }
-@media (max-width: 1000px) { .cover { min-height: 450px; } .cover-story { min-height: 450px; } .activity-grid { grid-template-columns: 1fr; } .bulletin { max-width: none; } .reading-story { grid-template-columns: 1fr; } .reading-image { height: 190px; min-height: 190px; } }
-@media (max-width: 760px) { .cover, .project-section, .reading-grid, .bottom-grid { grid-template-columns: 1fr; } .cover-copy { min-height: 450px; } .cover-story { min-height: 340px; } .activity-grid { padding: 48px 0; } .project-content { border-top: 1px solid #ffffff3d; border-left: 0; } .reading-section { padding: 52px 0; } .reading-story { grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); } .reading-image { height: auto; min-height: 210px; } .bottom-grid { gap: 48px; } }
-@media (max-width: 520px) { .cover-copy { min-height: 430px; padding: 28px 24px 23px; } .cover h1 { margin-top: 28px; font-size: clamp(44px, 11vw, 60px); } .cover-story { min-height: 340px; padding: 24px; } .cover-story-content strong { font-size: 27px; } .notice-ticker { gap: 8px; } .ticker-more { display: none; } .reading-story { grid-template-columns: 1fr; } .reading-image { height: 210px; min-height: 210px; } .reading-copy { padding: 18px 0 22px; } .tool-list a { grid-template-columns: 54px minmax(0, 1fr) auto; } .tool-list small { display: none; } .bulletin { padding: 24px; } .urgent-ribbon { gap: 10px; } .urgent-label { padding-right: 10px; } }
-@media (prefers-reduced-motion: reduce) { .cover-story img, .reading-image img { transition: none; } }
+@media (max-width: 1000px) { .cover { min-height: 450px; } .cover-forum { min-height: 450px; } .activity-grid { grid-template-columns: 1fr; } .bulletin { max-width: none; } .reading-story { grid-template-columns: 1fr; } .reading-story-lead { grid-template-columns: 1fr; } .reading-story-lead .reading-image { min-height: 210px; } .reading-story-lead .reading-copy { padding: 18px 0 22px; } .reading-image { height: 190px; min-height: 190px; } }
+@media (max-width: 760px) { .cover, .project-section, .reading-grid, .bottom-grid { grid-template-columns: 1fr; } .cover-copy { min-height: 450px; } .cover-forum { min-height: 340px; } .activity-grid { padding: 48px 0; } .project-content { border-top: 1px solid #ffffff3d; border-left: 0; } .reading-section { padding: 52px 0; } .reading-story { grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); } .reading-image { height: auto; min-height: 210px; } .bottom-grid { gap: 48px; } }
+@media (max-width: 520px) { .cover-copy { min-height: 430px; padding: 28px 24px 23px; } .cover h1 { margin-top: 28px; font-size: clamp(44px, 11vw, 60px); } .cover-forum { min-height: 400px; padding: 24px; } .forum-board { grid-template-columns: 28px minmax(0, 1fr) 18px; } .forum-board-count { display: none; } .notice-ticker { gap: 8px; } .ticker-more { display: none; } .reading-story { grid-template-columns: 1fr; } .reading-story-lead { grid-template-columns: 1fr; } .reading-story-lead .reading-image { min-height: 210px; } .reading-story-lead .reading-copy { padding: 18px 0 22px; } .reading-image { height: 210px; min-height: 210px; } .reading-copy { padding: 18px 0 22px; } .tool-list a { grid-template-columns: 54px minmax(0, 1fr) auto; } .tool-list small { display: none; } .bulletin { padding: 24px; } .urgent-ribbon { gap: 10px; } .urgent-label { padding-right: 10px; } }
+@media (prefers-reduced-motion: reduce) { .reading-image img { transition: none; } }
 </style>
