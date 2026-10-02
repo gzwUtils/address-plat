@@ -1,30 +1,20 @@
 <template>
   <div class="community-page">
     <header class="community-masthead">
-      <div class="masthead-copy">
-        <span class="eyebrow">团队论坛 / 从这里接上话</span>
-        <h1>有项目就晒，<br><em>有问题就聊。</em></h1>
-        <p>展示进展、讨论难题，也可以聊点工作之外的事。每个主题都有人可以接着说。</p>
-        <div class="masthead-actions">
-          <button type="button" @click="openStarter('project-share')">发布主题 <span aria-hidden="true">↗</span></button>
-          <router-link to="/community/mine">我的讨论 <span aria-hidden="true">↗</span></router-link>
-        </div>
-      </div>
-      <div class="masthead-note" aria-hidden="true">
-        <span>让讨论有去处</span>
-        <strong>晒项目。<br>问技术。<br>聊生活。</strong>
-        <small>同一个地方，继续下一句。</small>
+      <div class="masthead-meta"><span>社区 / TEAM FORUM</span><span>项目 · 技术 · 日常</span></div>
+      <div class="masthead-main">
+        <div><h1>话题在这里继续。</h1><p>晒进展、提问题、聊聊工作之外的事。选一个板块，就能开始说。</p></div>
+        <div class="masthead-actions"><button type="button" @click="openStarter('project-share')">发布主题 <span aria-hidden="true">↗</span></button><router-link to="/community/mine">我的讨论 ↗</router-link></div>
       </div>
     </header>
 
     <section class="board-directory" aria-labelledby="board-directory-title">
-      <div class="directory-heading"><div><span class="section-kicker">选一个板块</span><h2 id="board-directory-title">你想聊什么？</h2></div><span>三个入口，各有自己的话题。</span></div>
+      <div class="directory-heading"><div><span class="section-kicker">挑个地方坐坐</span><h2 id="board-directory-title">你想聊什么？</h2></div><span>每个板块，都从一个好问题开始。</span></div>
       <div class="board-grid">
-        <router-link v-for="(board, index) in displayBoards" :key="board.code" :class="['board-tile', board.code]" :to="`/community/boards/${board.code}`">
-          <span class="board-index">{{ String(index + 1).padStart(2, '0') }}</span>
-          <strong>{{ board.name }}</strong>
-          <small>{{ board.description }}</small>
-          <span class="board-foot"><span>{{ board.topicCount ? `${board.topicCount} 个话题` : '等你开个头' }}</span><span aria-hidden="true">↗</span></span>
+        <router-link v-for="board in displayBoards" :key="board.code" :class="['board-tile', board.code]" :to="`/community/boards/${board.code}`">
+          <span class="board-marker" :class="board.code" aria-hidden="true" />
+          <span class="board-copy"><strong>{{ board.name }}</strong><small>{{ board.description }}</small></span>
+          <span class="board-foot">{{ board.topicCount ? `${board.topicCount} 个话题` : '进入板块' }} <span aria-hidden="true">↗</span></span>
         </router-link>
       </div>
     </section>
@@ -135,42 +125,39 @@ watch(() => route.fullPath, () => { if (route.query.compose === '1') composerOpe
 
 <style scoped>
 .community-page { max-width: 1360px; margin: 0 auto; display: grid; gap: 0; padding-bottom: 70px; }
-.community-masthead { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, .65fr); min-height: 320px; }
-.masthead-copy { display: flex; flex-direction: column; align-items: start; padding: 36px clamp(30px, 4vw, 58px) 36px; background: #f2f0ea; }
-.eyebrow, .section-kicker, .panel-kicker { color: var(--portal-accent); font-size: 11px; font-weight: 770; letter-spacing: .1em; }
-.masthead-copy h1 { margin: 24px 0 17px; font-family: inherit; font-size: clamp(38px, 4vw, 59px); font-weight: 760; letter-spacing: -.055em; line-height: 1.2; }
-.masthead-copy h1 em { color: var(--portal-accent); font-style: normal; }
-.masthead-copy p { max-width: 36em; margin: 0; color: #5d666a; font-size: 14px; line-height: 1.8; }
-.masthead-actions { display: flex; align-items: center; gap: 23px; margin-top: 25px; }
-.masthead-actions button { min-height: 44px; border: 0; padding: 0 18px; background: var(--portal-accent); color: #fff; font: inherit; font-size: 13px; font-weight: 690; cursor: pointer; }
-.masthead-actions button span { margin-left: 18px; }
-.masthead-actions button:hover { filter: brightness(.9); }
-.masthead-actions a { border-bottom: 1px solid currentColor; padding: 7px 0; font-size: 13px; font-weight: 650; }
-.masthead-note { display: flex; flex-direction: column; align-items: start; padding: 35px clamp(26px, 3vw, 45px); background: #273f50; color: #fff; }
-.masthead-note > span { color: #c4d5dd; font-size: 11px; font-weight: 710; letter-spacing: .1em; }
-.masthead-note strong { margin: auto 0; font-size: clamp(25px, 2.4vw, 38px); font-weight: 690; line-height: 1.55; }
-.masthead-note small { color: #c4d5dd; font-size: 12px; }
-.board-directory { padding: 49px 0 52px; }
-.directory-heading { display: flex; justify-content: space-between; align-items: end; gap: 15px; margin-bottom: 20px; }
-.directory-heading h2 { margin: 6px 0 0; font-family: inherit; font-size: 27px; font-weight: 700; }
+.community-masthead { border-top: 1px solid var(--portal-text); padding: 17px 0 38px; }
+.masthead-meta { display: flex; justify-content: space-between; gap: 14px; color: var(--portal-text-soft); font-size: 11px; letter-spacing: .08em; }
+.masthead-meta span:first-child { color: var(--portal-accent); font-weight: 760; }
+.masthead-main { display: flex; justify-content: space-between; align-items: end; gap: 28px; padding-top: 41px; }
+.masthead-main h1 { margin: 0; font-family: 'Songti SC', 'Noto Serif CJK SC', 'SimSun', serif; font-size: clamp(39px, 4vw, 61px); font-weight: 650; letter-spacing: -.06em; line-height: 1.25; }
+.masthead-main p { margin: 15px 0 0; color: var(--portal-text-soft); font-size: 14px; line-height: 1.8; }
+.masthead-actions { display: flex; align-items: center; gap: 20px; flex-shrink: 0; }
+.masthead-actions button { border: 0; border-bottom: 1px solid var(--portal-accent); padding: 0 0 8px; color: var(--portal-accent); background: transparent; font: inherit; font-size: 13px; font-weight: 730; cursor: pointer; }
+.masthead-actions button span { margin-left: 16px; }
+.masthead-actions a { border-bottom: 1px solid var(--portal-text); padding-bottom: 8px; font-size: 13px; font-weight: 650; }
+.section-kicker, .panel-kicker { color: var(--portal-accent); font-size: 11px; font-weight: 760; letter-spacing: .08em; }
+.board-directory { border-top: 1px solid var(--portal-line); padding: 24px 0 56px; }
+.directory-heading { display: flex; justify-content: space-between; align-items: end; gap: 15px; margin-bottom: 22px; }
+.directory-heading h2 { margin: 7px 0 0; font-family: 'Songti SC', 'Noto Serif CJK SC', 'SimSun', serif; font-size: 31px; font-weight: 650; }
 .directory-heading > span { color: var(--portal-text-soft); font-size: 12px; }
-.board-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 2px solid var(--portal-text); border-bottom: 1px solid var(--portal-line); }
-.board-tile { display: grid; align-content: start; gap: 6px; min-width: 0; min-height: 173px; padding: 21px clamp(14px, 2vw, 27px); }
+.board-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--portal-text); border-bottom: 1px solid var(--portal-line); }
+.board-tile { display: grid; grid-template-columns: 6px minmax(0, 1fr); align-content: center; column-gap: 15px; min-width: 0; min-height: 136px; padding: 22px clamp(14px, 2vw, 28px); }
 .board-tile + .board-tile { border-left: 1px solid var(--portal-line); }
 .board-tile:hover { background: var(--portal-bg-soft); }
-.board-index { color: var(--portal-accent); font-size: 11px; font-weight: 700; }
-.board-tile.tech-talk .board-index { color: #31596c; }
-.board-tile.lounge .board-index { color: #567b65; }
-.board-tile strong { margin-top: 9px; font-size: 21px; font-weight: 700; }
-.board-tile small { overflow: hidden; color: var(--portal-text-soft); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
-.board-foot { display: flex; justify-content: space-between; gap: 8px; margin-top: auto; color: var(--portal-text-soft); font-size: 11px; }
-.board-foot span:last-child { color: var(--portal-accent); font-size: 16px; }
+.board-marker { grid-row: 1 / 3; width: 6px; height: 29px; margin-top: 2px; background: var(--portal-accent); }
+.board-marker.tech-talk { background: #44738a; }
+.board-marker.lounge { background: #698469; }
+.board-copy { display: grid; gap: 6px; min-width: 0; }
+.board-copy strong { font-size: 20px; font-weight: 680; }
+.board-copy small { overflow: hidden; color: var(--portal-text-soft); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.board-foot { display: flex; justify-content: space-between; grid-column: 2; gap: 8px; margin-top: 18px; color: var(--portal-text-soft); font-size: 11px; }
+.board-foot span { color: var(--portal-accent); font-size: 15px; }
 .community-layout { display: grid; grid-template-columns: minmax(0, 1fr) 276px; align-items: start; gap: 38px; }
 .feed-column, .community-sidebar { min-width: 0; }
 .feed-toolbar { display: grid; gap: 16px; border-top: 2px solid var(--portal-text); border-bottom: 1px solid var(--portal-line); padding: 18px 0; }
 .feed-topline { display: flex; align-items: end; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
 .feed-title { display: flex; align-items: baseline; gap: 12px; }
-.feed-title h2 { margin: 0; font-family: inherit; font-size: 25px; font-weight: 700; }
+.feed-title h2 { margin: 0; font-family: 'Songti SC', 'Noto Serif CJK SC', 'SimSun', serif; font-size: 25px; font-weight: 700; }
 .feed-title > span:last-child { color: var(--portal-text-soft); font-size: 12px; }
 .sort-tabs { display: flex; gap: 17px; }
 .sort-tabs button { border: 0; border-bottom: 2px solid transparent; padding: 8px 0; color: var(--portal-text-soft); background: transparent; font: inherit; font-size: 12px; cursor: pointer; }
@@ -202,6 +189,6 @@ watch(() => route.fullPath, () => { if (route.query.compose === '1') composerOpe
 .sidebar-links a { display: flex; justify-content: space-between; gap: 8px; border-bottom: 1px solid var(--portal-line); padding: 12px 0; color: var(--portal-text-soft); font-size: 12px; }
 .sidebar-links a:hover { color: var(--portal-accent); }
 @media (max-width: 900px) { .community-layout { grid-template-columns: minmax(0, 1fr) 220px; gap: 20px; } }
-@media (max-width: 700px) { .community-masthead { grid-template-columns: 1fr; } .masthead-copy { min-height: 350px; } .masthead-note { display: none; } .board-grid { grid-template-columns: 1fr; } .board-tile { min-height: 120px; } .board-tile + .board-tile { border-top: 1px solid var(--portal-line); border-left: 0; } .community-layout { grid-template-columns: 1fr; } .community-sidebar { grid-row: 1; grid-template-columns: 1fr; } .sidebar-links { display: none; } .identity-panel { padding: 18px; } }
-@media (max-width: 440px) { .masthead-copy { padding: 28px 23px; } .masthead-copy h1 { font-size: 37px; } .masthead-actions { gap: 14px; } .directory-heading > span { display: none; } .feed-title { flex-wrap: wrap; } .feed-title .section-kicker { width: 100%; } }
+@media (max-width: 700px) { .masthead-main { align-items: start; flex-direction: column; padding-top: 28px; } .masthead-meta span:last-child { display: none; } .board-grid { grid-template-columns: 1fr; } .board-tile { min-height: 105px; } .board-tile + .board-tile { border-top: 1px solid var(--portal-line); border-left: 0; } .community-layout { grid-template-columns: 1fr; } .community-sidebar { grid-row: 1; grid-template-columns: 1fr; } .sidebar-links { display: none; } .identity-panel { padding: 18px; } }
+@media (max-width: 440px) { .community-masthead { padding-bottom: 29px; } .masthead-main h1 { font-size: 39px; } .masthead-actions { gap: 17px; } .directory-heading > span { display: none; } .feed-title { flex-wrap: wrap; } .feed-title .section-kicker { width: 100%; } }
 </style>
