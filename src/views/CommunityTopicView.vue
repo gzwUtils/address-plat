@@ -10,20 +10,22 @@
         <div class="floor-meta"><span class="floor-number">楼主</span><span>{{ topic.authorNickname }}</span><time>{{ formatDate(topic.createTime) }}</time></div>
         <SafeText :text="topic.body" />
         <div class="floor-actions">
+          <el-button text @click="beginReply">回复主题</el-button>
           <el-button v-if="topic.canEdit" text @click="composerOpen = true">编辑主题</el-button>
           <el-button v-if="topic.canEdit" text type="danger" @click="removeTopic">删除主题</el-button>
           <el-button text @click="report('topic', topic.id)">举报</el-button>
         </div>
       </article>
 
-      <div class="reply-heading"><h2>全部回复 <span>{{ topic.replyCount || 0 }}</span></h2><el-button @click="loadReplies">刷新</el-button></div>
+      <div class="reply-heading"><h2>全部回复 <span>{{ topic.replyCount || 0 }}</span></h2><div class="reply-heading-actions"><el-button type="primary" plain @click="beginReply">写回复</el-button><el-button @click="loadReplies">刷新</el-button></div></div>
       <button v-if="newCount > 0" type="button" class="new-replies" @click="showNewReplies">有 {{ newCount }} 条新回复，点击查看</button>
       <div v-if="replies.length" class="reply-list">
         <article v-for="reply in replies" :key="reply.id" :id="`floor-${reply.floorNo}`" class="floor">
           <div class="floor-meta"><span class="floor-number">{{ reply.floorNo }} 楼</span><span>{{ reply.authorNickname }}</span><time>{{ formatDate(reply.createTime) }}</time></div>
-          <div v-if="reply.replyToId" class="quote-ref">回复了前面的楼层</div>
+          <div v-if="reply.replyToId && reply.status === 'visible'" class="quote-ref"><strong>引用 {{ reply.replyToFloorNo ? `${reply.replyToFloorNo} 楼` : '前面的回复' }}<span v-if="reply.replyToAuthorNickname"> · {{ reply.replyToAuthorNickname }}</span></strong><p>{{ reply.replyToExcerpt || '原回复已删除或隐藏' }}</p></div>
           <SafeText :text="reply.body" />
           <div v-if="reply.status === 'visible'" class="floor-actions">
+            <el-button text @click="beginReply">普通回复</el-button>
             <el-button text @click="quote(reply)">引用回复</el-button>
             <el-button v-if="reply.canEdit" text @click="editReply(reply)">编辑</el-button>
             <el-button v-if="reply.canEdit" text type="danger" @click="removeReply(reply)">删除</el-button>
@@ -36,8 +38,8 @@
 
       <section ref="replyBox" class="reply-box">
         <h2>参与讨论</h2>
-        <p v-if="replyTo" class="reply-target">正在引用 {{ replyTo.floorNo }} 楼 <el-button text @click="replyTo = null">取消</el-button></p>
-        <el-input v-model="draft" type="textarea" :rows="5" maxlength="2000" show-word-limit placeholder="说说你的想法…" />
+        <div v-if="replyTo" class="reply-target"><strong>引用 {{ replyTo.floorNo }} 楼 · {{ replyTo.authorNickname }}</strong><p>{{ excerpt(replyTo.body) }}</p><el-button text @click="replyTo = null">取消引用</el-button></div>
+        <el-input ref="replyInput" v-model="draft" type="textarea" :rows="5" maxlength="2000" show-word-limit placeholder="说说你的想法…" />
         <div class="reply-submit"><el-button type="primary" :loading="sending" @click="sendReply">发布回复</el-button></div>
       </section>
     </template>
@@ -65,6 +67,7 @@ const composerOpen = ref(false)
 const draft = ref('')
 const replyTo = ref(null)
 const replyBox = ref(null)
+const replyInput = ref(null)
 const sending = ref(false)
 const newCount = ref(0)
 const knownCount = ref(0)
@@ -111,7 +114,14 @@ async function showNewReplies() {
 }
 
 function changePage(page) { replyPage.value = page; loadReplies() }
-function quote(reply) { replyTo.value = reply; replyBox.value?.scrollIntoView({ behavior: 'smooth' }) }
+const excerpt = (body) => body?.trim().slice(0, 180) || '原回复已删除或隐藏'
+async function focusReply() {
+  replyBox.value?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  await nextTick()
+  replyInput.value?.focus()
+}
+function beginReply() { replyTo.value = null; focusReply() }
+function quote(reply) { replyTo.value = reply; focusReply() }
 
 async function sendReply() {
   if (!draft.value.trim()) return ElMessage.warning('请输入回复内容')
@@ -157,10 +167,20 @@ async function removeTopic() {
 
 async function report(type, id) {
   try {
-    const { value } = await ElMessageBox.prompt('请简要说明原因', '举报内容', { inputType: 'textarea' })
-    await reportContent(type, id, value)
+    const { value } = await ElMessageBox.prompt('请填写举报原因（2–500 字）', '举报内容', {
+      inputType: 'textarea',
+      inputPlaceholder: '例如：广告引流、辱骂攻击',
+      inputValidator: (input) => {
+        const length = Array.from((input || '').trim()).length
+        return length >= 2 && length <= 500
+      },
+      inputErrorMessage: '请填写 2–500 字的举报原因'
+    })
+    await reportContent(type, id, value.trim())
     ElMessage.success('举报已提交')
-  } catch (error) { if (error !== 'cancel') ElMessage.error('举报失败') }
+  } catch (error) {
+    if (error !== 'cancel' && error !== 'close') ElMessage.error(error.response?.data?.message || '举报失败，请稍后再试')
+  }
 }
 
 function handleTopicSaved(updated) { topic.value = updated; ElMessage.success('主题已更新') }
@@ -185,13 +205,17 @@ watch(() => route.params.id, () => { replyPage.value = 1; replies.value = []; lo
 .labels a:hover { text-decoration: underline; }
 .floor-actions { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 21px; padding-top: 10px; border-top: 1px solid var(--portal-line); }
 .reply-heading { display: flex; align-items: center; justify-content: space-between; margin-top: 9px; }
+.reply-heading-actions { display: flex; gap: 8px; }
 .reply-heading h2, .reply-box h2 { margin: 0; font-family: inherit; font-size: 18px; }
 .reply-heading h2 span { margin-left: 6px; color: var(--portal-text-soft); font-size: 14px; font-weight: 400; }
 .reply-list { display: grid; border-radius: 8px; overflow: hidden; }
 .reply-list .floor { border-radius: 0; }
 .reply-list .floor + .floor { border-top: 0; }
 .reply-list .floor-meta { margin-bottom: 16px; }
-.quote-ref, .reply-target { margin: 10px 0; color: var(--portal-text-soft); font-size: 13px; }
+.quote-ref, .reply-target { margin: 10px 0 17px; border-left: 3px solid var(--portal-accent); padding: 10px 13px; background: var(--portal-bg-soft); color: var(--portal-text-soft); font-size: 13px; }
+.quote-ref strong, .reply-target strong { color: var(--portal-text); font-weight: 650; }
+.quote-ref p, .reply-target p { margin: 5px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.55; }
+.reply-target .el-button { margin-top: 6px; padding-left: 0; }
 .reply-box { display: grid; gap: 15px; }
 .reply-submit { display: flex; justify-content: end; }
 .new-replies { border: 1px solid var(--portal-line); border-radius: 5px; padding: 13px; color: var(--portal-accent); background: var(--portal-bg-soft); font: inherit; cursor: pointer; }
