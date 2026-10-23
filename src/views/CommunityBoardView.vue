@@ -20,7 +20,7 @@
             </div>
           </div>
         </div>
-        <p v-if="projectId" class="project-filter">正在查看项目 #{{ projectId }} 的讨论 <router-link :to="`/community/boards/${code}`">清除筛选</router-link></p>
+        <p v-if="projectId || externalProjectId" class="project-filter">正在查看{{ externalProjectId ? '站外项目' : '项目' }} #{{ externalProjectId || projectId }}{{ contentType === 'reflection' ? '的读后感' : '的讨论' }} <router-link :to="`/community/boards/${code}`">清除筛选</router-link></p>
         <div v-if="error" class="feed-state" role="alert">{{ error }} <button type="button" @click="load">重试</button></div>
         <div v-else-if="loading" class="feed-state">正在加载主题…</div>
         <div v-else-if="topics.length" class="topic-list"><TopicRow v-for="topic in topics" :key="topic.id" :topic="topic" /></div>
@@ -33,7 +33,7 @@
         <router-link class="all-link" to="/community">全部讨论 <span aria-hidden="true">↗</span></router-link>
       </aside>
     </div>
-    <CommunityComposer v-model="composerOpen" :board-code="code" :project-id="projectId" @saved="handleSaved" />
+    <CommunityComposer v-model="composerOpen" :board-code="code" :project-id="projectId" :external-project-id="externalProjectId" :content-type="contentType" @saved="handleSaved" />
   </div>
 </template>
 
@@ -56,6 +56,8 @@ const page = computed(() => {
 const keyword = computed(() => String(route.query.keyword || ''))
 const sort = computed(() => route.query.sort === 'new' ? 'new' : 'recent')
 const projectId = computed(() => route.query.projectId ? Number(route.query.projectId) : null)
+const externalProjectId = computed(() => route.query.externalProjectId ? Number(route.query.externalProjectId) : null)
+const contentType = computed(() => route.query.contentType === 'reflection' ? 'reflection' : '')
 const draftKeyword = ref('')
 const boards = ref([])
 const displayBoards = computed(() => boards.value.length ? boards.value : fallbackBoards)
@@ -76,6 +78,7 @@ async function load() {
   draftKeyword.value = keyword.value
   const [boardResult, topicResult] = await Promise.allSettled([
     listBoards(), listTopics({ board: code.value, projectId: projectId.value,
+      externalProjectId: externalProjectId.value, contentType: contentType.value,
       keyword: keyword.value, sort: sort.value, page: page.value, size: 20 })
   ])
   if (version !== loadVersion) return
@@ -93,6 +96,8 @@ async function load() {
 
 function applySearch() {
   router.push({ path: route.path, query: { ...(projectId.value ? { projectId: projectId.value } : {}),
+    ...(externalProjectId.value ? { externalProjectId: externalProjectId.value } : {}),
+    ...(contentType.value ? { contentType: contentType.value } : {}),
     ...(draftKeyword.value.trim() ? { keyword: draftKeyword.value.trim() } : {}),
     ...(sort.value === 'new' ? { sort: 'new' } : {}), page: 1 } })
 }

@@ -14,6 +14,27 @@ export const getOpenSourceProjects = () =>
 export const getOpenSourceProject = (id) =>
   api.get(`/open-source/${id}`).then(unwrap)
 
+export const getProjectReadingGuide = (id) =>
+  api.get(`/open-source/${id}/reading-guide`).then(unwrap)
+
+export const queueProjectReadingGuide = (id) =>
+  api.post(`/admin/open-source/${id}/reading-guide`).then(unwrap)
+
+export const getAdminProjectReadingGuide = (id) =>
+  api.get(`/admin/open-source/${id}/reading-guide`).then(unwrap)
+
+export const listProjectReadingCandidates = () =>
+  api.get('/admin/open-source/reading-guides').then(unwrap)
+
+export const listProjectReadingEngines = () =>
+  api.get('/admin/project-reading/engines').then(unwrap)
+
+export const saveProjectReadingEngine = (profile) =>
+  api.post('/admin/project-reading/engines', profile).then(unwrap)
+
+export const testProjectReadingEngine = (id) =>
+  api.post(`/admin/project-reading/engines/${id}/test`).then(unwrap)
+
 export const saveProject = (project) =>
   api.post('/projects', project).then(unwrap)
 

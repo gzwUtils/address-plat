@@ -5,7 +5,7 @@
     <div v-else-if="error" class="state-panel" role="alert">{{ error }} <el-button text @click="load">重试</el-button></div>
     <template v-else-if="topic">
       <article class="floor opener">
-        <div class="labels"><router-link :to="`/community/boards/${topic.boardCode}`">{{ topic.boardName }}</router-link><router-link v-if="topic.projectId" :to="`/project/${topic.projectId}`">关联项目 · {{ topic.projectName || topic.projectId }}</router-link></div>
+        <div class="labels"><router-link :to="`/community/boards/${topic.boardCode}`">{{ topic.boardName }}</router-link><span v-if="topic.contentType === 'reflection'" class="reflection-kind">读后感</span><router-link v-if="topic.projectId" :to="`/project/${topic.projectId}`">关联项目 · {{ topic.projectName || topic.projectId }}</router-link><router-link v-if="topic.externalProjectId" :to="`/open-source/${topic.externalProjectId}`">来源项目 · {{ topic.externalProjectName || topic.externalProjectId }}</router-link></div>
         <h1>{{ topic.title }}</h1>
         <div class="floor-meta"><span class="floor-number">楼主</span><span>{{ topic.authorNickname }}</span><time>{{ formatDate(topic.createTime) }}</time></div>
         <SafeText :text="topic.body" />
@@ -194,6 +194,7 @@ watch(() => route.params.id, () => { replyPage.value = 1; replies.value = []; lo
 .topic-page { max-width: 900px; margin: 0 auto; display: grid; gap: 18px; }
 .breadcrumbs { display: flex; align-items: center; gap: 9px; color: var(--portal-text-soft); font-size: 12px; }
 .breadcrumbs a:hover { color: var(--portal-accent); }
+.reflection-kind { border: 1px solid #d6b58b; padding: 3px 7px; color: #896544; font-size: 11px; }
 .floor, .reply-box, .state-panel { border: 1px solid var(--portal-line); border-radius: 8px; padding: 24px; background: var(--portal-surface); }
 .opener { padding: 32px; }
 .floor h1 { margin: 12px 0 15px; font-family: inherit; font-size: clamp(26px,3.2vw,35px); font-weight: 750; line-height: 1.4; }

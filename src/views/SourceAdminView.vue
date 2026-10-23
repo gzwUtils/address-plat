@@ -1,6 +1,6 @@
 <template>
   <div class="source-page">
-    <header class="source-intro"><div><span class="eyebrow">运营工作台 / 内容来源</span><h1>项目来源</h1><p>让好的项目自己走进来。选择来源、设定节奏，系统按规则收录；每次执行结果都留在这里。</p></div><button type="button" class="add-button" @click="startNew">＋ 添加来源</button></header>
+    <header class="source-intro"><div><span class="eyebrow">运营工作台 / 内容来源</span><h1>项目来源</h1><p>让好的项目自己走进来。选择来源、设定节奏，系统按规则收录；每次执行结果都留在这里。</p></div><div class="header-actions"><router-link class="engine-link" to="/admin/project-reading">解读引擎 ↗</router-link><button type="button" class="add-button" @click="startNew">＋ 添加来源</button></div></header>
 
     <div class="source-layout">
       <section class="source-list" aria-labelledby="source-list-title"><div class="section-heading"><div><span class="eyebrow">SOURCES / 01</span><h2 id="source-list-title">已连接的来源</h2></div><button type="button" @click="loadSources">刷新 ↻</button></div>
@@ -74,6 +74,8 @@ onMounted(loadSources)
 </script>
 
 <style scoped>
+.header-actions { display: flex; align-items: center; gap: 18px; }
+.engine-link { color: #376c55; font-size: 13px; font-weight: 740; }
 .source-page { max-width: 1360px; margin: 0 auto; color: var(--portal-text); }
 .source-intro { display: flex; justify-content: space-between; align-items: end; gap: 24px; border-bottom: 2px solid var(--portal-text); padding: 32px 12px 33px; }
 .eyebrow { color: var(--portal-accent); font-size: 11px; font-weight: 800; letter-spacing: .12em; }
