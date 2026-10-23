@@ -12,6 +12,7 @@ const ProjectStudioView = () => import('../views/ProjectStudioView.vue')
 const OpsWorkbenchView = () => import('../views/OpsWorkbenchView.vue')
 const ResourceDetailView = () => import('../views/ResourceDetailView.vue')
 const ProjectDetailView = () => import('../views/ProjectDetailView.vue')
+const ExternalProjectDetailView = () => import('../views/ExternalProjectDetailView.vue')
 const GrowthCapsuleView = () => import('../views/GrowthCapsuleView.vue')
 const CommunityHomeView = () => import('../views/CommunityHomeView.vue')
 const CommunityBoardView = () => import('../views/CommunityBoardView.vue')
@@ -55,6 +56,11 @@ const routes = [
         path: 'project/:id',
         name: 'project-detail',
         component: ProjectDetailView
+      },
+      {
+        path: 'open-source/:id',
+        name: 'open-source-project-detail',
+        component: ExternalProjectDetailView
       },
       {
         path: 'ai-workspace',

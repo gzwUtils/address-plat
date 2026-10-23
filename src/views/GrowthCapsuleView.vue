@@ -102,16 +102,16 @@
         </div>
 
         <section class="content-block">
-          <h3>AI 价值提炼</h3>
+          <h3>{{ isOpenSourceItem(selectedItem) ? '来源与说明' : '行动卡说明' }}</h3>
           <p>{{ selectedItem.valueSummary }}</p>
         </section>
 
         <section class="content-block">
-          <h3>第一步建议</h3>
+          <h3>{{ isOpenSourceItem(selectedItem) ? '建议的第一步' : '第一步建议' }}</h3>
           <p>{{ selectedItem.firstStep }}</p>
         </section>
 
-        <section class="content-block">
+        <section v-if="!isOpenSourceItem(selectedItem) && selectedItem.sevenDayPlan" class="content-block">
           <h3>7 天推进建议</h3>
           <p>{{ selectedItem.sevenDayPlan }}</p>
         </section>
@@ -216,10 +216,13 @@ const statusTypeMap = {
 
 const sourceKindMap = {
   project: '项目',
+  open_source_project: '站外项目',
   article: '文章',
   ai: 'AI 资产',
   life: '生活灵感'
 }
+
+const isOpenSourceItem = (item) => item?.sourceKind === 'open_source_project'
 
 const moodLabelMap = {
   steady: '稳定推进',
@@ -264,7 +267,11 @@ const loadOverview = async () => {
 }
 
 const jumpToSource = (item) => {
-  const path = item.sourceKind === 'project' ? `/project/${item.sourceId}` : `/explore/${item.sourceKind}/${item.sourceId}`
+  const path = item.sourceKind === 'project'
+    ? `/project/${item.sourceId}`
+    : item.sourceKind === 'open_source_project'
+      ? `/open-source/${item.sourceId}`
+      : `/explore/${item.sourceKind}/${item.sourceId}`
   router.push(path)
 }
 

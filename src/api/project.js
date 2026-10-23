@@ -11,6 +11,9 @@ export const getProjects = (category, keyword) =>
 export const getOpenSourceProjects = () =>
   api.get('/open-source/featured').then(unwrap)
 
+export const getOpenSourceProject = (id) =>
+  api.get(`/open-source/${id}`).then(unwrap)
+
 export const saveProject = (project) =>
   api.post('/projects', project).then(unwrap)
 

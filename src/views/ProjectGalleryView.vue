@@ -39,14 +39,14 @@
 
     <section id="open-source" class="open-source" aria-labelledby="open-source-title">
       <div class="open-source-inner">
-        <div class="open-source-heading"><div><span class="eyebrow">站外项目 / SOURCES</span><h2 id="open-source-title">看看世界正在做什么。</h2><p>来自管理员配置的公开来源。带着问题去看项目，也把学到的东西带回论坛。</p></div><span class="source-time" v-if="openSource.length">最近收录 {{ lastSyncedDate }}</span></div>
-        <div v-if="openSourceLoading" class="open-source-state">正在整理本期站外项目…</div>
+        <div class="open-source-heading"><div><span class="eyebrow">站外项目 / SOURCES</span><h2 id="open-source-title">看看世界正在做什么。</h2><p>来自管理员配置的公开来源。带着问题去看项目，也把学到的东西带回论坛。</p></div><span class="source-time" v-if="openSource.length">最近同步 {{ lastSyncedDate }}</span></div>
+        <div v-if="openSourceLoading" class="open-source-state">正在同步站外项目资料…</div>
         <div v-else-if="openSourceError" class="open-source-state" role="alert">站外项目暂时无法加载。<button type="button" @click="loadOpenSource">重试 ↗</button></div>
         <div v-else-if="openSource.length" class="open-source-grid">
-          <a v-for="(repository, index) in openSource" :key="`${repository.sourcePlatform}-${repository.sourceRepoId}`" class="source-card" :href="repository.sourceUrl" target="_blank" rel="noopener noreferrer" :aria-label="`在原站查看 ${repository.fullName}`"><div class="source-card-top"><span>{{ String(index + 1).padStart(2, '0') }} / {{ repository.sourceName || repository.sourcePlatform }}</span><span>↗</span></div><h3>{{ repository.fullName }}</h3><p>{{ repository.description || '打开原站，查看项目说明。' }}</p><div class="source-card-bottom"><span v-if="repository.language">{{ repository.language }}</span><span v-if="repository.starCount">★ {{ formatStars(repository.starCount) }}</span><span v-if="repository.licenseSpdx">{{ repository.licenseSpdx }}</span><span v-if="!repository.licenseSpdx">许可证以原站为准</span></div></a>
+          <router-link v-for="(repository, index) in openSource" :key="`${repository.sourcePlatform}-${repository.sourceRepoId}`" class="source-card" :to="`/open-source/${repository.id}`" :aria-label="`查看 ${repository.fullName} 的来源资料`"><div class="source-card-top"><span>{{ String(index + 1).padStart(2, '0') }} / {{ repository.sourceName || repository.sourcePlatform }}</span><span>↗</span></div><h3>{{ repository.fullName }}</h3><p>{{ repository.description || '打开项目资料，查看来源与原站说明。' }}</p><div class="source-card-bottom"><span v-if="repository.language">{{ repository.language }}</span><span v-if="repository.starCount !== null && repository.starCount !== undefined">★ {{ formatStars(repository.starCount) }}</span><span v-if="repository.licenseSpdx">{{ repository.licenseSpdx }}</span><span v-if="!repository.licenseSpdx">许可证以原站为准</span></div><span class="source-card-action">查看项目资料与学习入口 ↗</span></router-link>
         </div>
-        <div v-else class="open-source-state">这期精选还在整理中。稍后再来看看。</div>
-        <p class="source-note">来源与更新节奏由管理员配置。这里仅展示摘要与原站链接；项目内容和许可证请以原站为准。</p>
+        <div v-else class="open-source-state">暂无同步的站外项目。来源由管理员配置，运行同步后会在这里显示。</div>
+        <p class="source-note">来源与同步节奏由管理员配置。页面展示来源平台提供的摘要与统计；完整说明、维护状态和许可证请以原站为准。</p>
       </div>
     </section>
   </div>
@@ -187,6 +187,8 @@ watch(() => route.fullPath, () => { searchDraft.value = keyword.value; loadProje
 .source-card p { display: -webkit-box; overflow: hidden; margin: 0 0 26px; color: #697677; font-size: 12px; line-height: 1.8; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .source-card:first-child p { color: #c8dcda; }
 .source-card-bottom { justify-content: flex-start; gap: 17px; margin-top: auto; border-top: 1px solid currentColor; padding-top: 13px; opacity: .7; letter-spacing: 0; }
+.source-card-action { margin-top: 15px; color: #3d6d5a; font-size: 11px; font-weight: 800; }
+.source-card:first-child .source-card-action { color: #e1c5a7; }
 .open-source-state { display: flex; gap: 15px; align-items: center; min-height: 120px; color: #647270; font-size: 13px; }
 .open-source-state button { border: 0; color: #2f6b57; background: none; font: inherit; font-weight: 800; cursor: pointer; }
 .source-note { margin: 22px 0 0; color: #73817d; font-size: 11px; line-height: 1.7; }
