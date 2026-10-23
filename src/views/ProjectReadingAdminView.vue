@@ -40,6 +40,7 @@
           <label>API Key<input v-model="form.apiKey" type="password" autocomplete="new-password" :placeholder="hasSavedKey ? '已保存；留空会保留原密钥' : '无鉴权接口可留空'" /></label>
           <div class="field-pair"><label>超时（秒）<input v-model.number="form.timeoutSeconds" type="number" min="5" max="180" required /></label><label>启用状态<select v-model="form.enabled"><option :value="true">启用</option><option :value="false">停用</option></select></label></div>
           <label class="check-field"><input v-model="form.defaultForPublic" type="checkbox" :disabled="!form.enabled" /> 用作公开项目的默认解读引擎</label>
+          <p v-if="form.defaultForPublic" class="queue-note">保存默认引擎后，已收录但尚未生成的 GitHub 项目会自动加入解读队列。</p>
           <p class="key-note">保存 API Key 需要后端设置至少 32 字符的 <code>PORTAL_AI_ENCRYPTION_KEY</code>。建议使用 HTTPS 模型接口；密钥输入不会存入浏览器缓存。</p>
           <p v-if="saveMessage" class="form-message" :class="{ error: saveError }" role="status">{{ saveMessage }}</p>
           <div class="form-actions"><button type="submit" class="primary-button" :disabled="saving">{{ saving ? '保存中…' : '保存配置' }}</button><button v-if="editingId" type="button" class="text-button" @click="startNew">新建配置</button><button v-if="editingId" type="button" class="test-button" :disabled="testingId === editingId" @click="testEngine(editingId)">{{ testingId === editingId ? '测试中…' : '测试连接' }}</button></div>
@@ -134,13 +135,16 @@ async function saveEngine() {
   saveMessage.value = ''
   saveError.value = false
   try {
-    const saved = await saveProjectReadingEngine({ ...form, id: editingId.value })
-    saveMessage.value = '配置已加密保存。'
+    const result = await saveProjectReadingEngine({ ...form, id: editingId.value })
+    const saved = result.profile
     editingId.value = saved.id
     hasSavedKey.value = saved.hasApiKey
     form.apiKey = ''
-    await loadEngines()
-    ElMessage.success('解读引擎已保存')
+    await Promise.all([loadEngines(), loadCandidates()])
+    saveMessage.value = result.queuedProjectCount > 0
+      ? `配置已保存，${result.queuedProjectCount} 个尚未生成的项目已加入解读队列。`
+      : '配置已保存；当前没有尚未生成的项目需要排队。'
+    ElMessage.success(result.queuedProjectCount > 0 ? '解读引擎已保存，项目已开始排队' : '解读引擎已保存')
   } catch (error) { saveMessage.value = errorText(error); saveError.value = true } finally { saving.value = false }
 }
 async function testEngine(id) {
@@ -203,7 +207,7 @@ onUnmounted(() => window.clearInterval(pollTimer))
 .engine-actions { margin-top: 14px; border-top: 1px solid #e7ebe7; padding-top: 12px; color: #85908b; font-size: 10px; }.engine-actions button { border: 0; padding: 0; background: none; color: var(--portal-accent, #376c55); font: inherit; font-size: 11px; font-weight: 750; cursor: pointer; }
 .engine-editor { align-self: start; border: 1px solid #dce3dc; padding: 24px; background: #fff; }.editor-intro { margin: 12px 0 20px; color: #77827d; font-size: 11px; line-height: 1.75; }.engine-editor form { display: grid; gap: 14px; }.engine-editor label { display: grid; gap: 6px; font-size: 11px; font-weight: 750; }
 .engine-editor input:not([type=checkbox]), .engine-editor select, .candidate-tools input { width: 100%; min-width: 0; border: 1px solid #dce3dc; border-radius: 3px; padding: 10px 11px; background: #fff; color: var(--portal-text, #202b2d); font: inherit; font-size: 12px; }
-.field-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }.check-field { display: flex !important; align-items: center; gap: 8px; }.key-note { margin: -4px 0 0; color: #818b85; font-size: 10px; line-height: 1.7; }.key-note code { color: #526c60; font-size: 10px; }
+.field-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }.check-field { display: flex !important; align-items: center; gap: 8px; }.queue-note { margin: -8px 0 0 22px; color: #6f7f75; font-size: 10px; line-height: 1.6; }.key-note { margin: -4px 0 0; color: #818b85; font-size: 10px; line-height: 1.7; }.key-note code { color: #526c60; font-size: 10px; }
 .form-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }.primary-button { border: 0; border-radius: 3px; padding: 11px 17px; background: var(--portal-accent, #376c55); color: white; font: inherit; font-size: 11px; font-weight: 780; cursor: pointer; }.primary-button:disabled, .candidate-action button:disabled { opacity: .55; cursor: not-allowed; }.test-button { border: 1px solid #dce3dc; padding: 9px 12px; background: white; color: #52685e; font: inherit; font-size: 11px; font-weight: 730; cursor: pointer; }.test-button:disabled { opacity: .5; cursor: wait; }
 .form-message, .test-message { margin: 0; color: #32624b; font-size: 11px; line-height: 1.6; }.form-message.error, .test-message.error, .inline-error { color: #a4463f; }.inline-error { border-top: 1px solid #e4d6d2; padding: 16px 0; font-size: 12px; }
 .candidate-section { margin-top: 55px; border-top: 2px solid #263b37; padding-top: 22px; }.candidate-heading { align-items: end; }.candidate-heading h2 { margin-bottom: 6px; }.candidate-heading p { max-width: 690px; }.candidate-tools { display: flex; align-items: center; gap: 16px; flex: 0 0 auto; }.candidate-tools input { width: 190px; }
