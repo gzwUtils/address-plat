@@ -43,7 +43,7 @@
         <div v-if="openSourceLoading" class="open-source-state">正在同步站外项目资料…</div>
         <div v-else-if="openSourceError" class="open-source-state" role="alert">站外项目暂时无法加载。<button type="button" @click="loadOpenSource">重试 ↗</button></div>
         <div v-else-if="openSource.length" class="open-source-grid">
-          <router-link v-for="(repository, index) in openSource" :key="`${repository.sourcePlatform}-${repository.sourceRepoId}`" class="source-card" :to="`/open-source/${repository.id}`" :aria-label="`查看 ${repository.fullName} 的来源资料`"><div class="source-card-top"><span>{{ String(index + 1).padStart(2, '0') }} / {{ repository.sourceName || repository.sourcePlatform }}</span><span>↗</span></div><h3>{{ repository.fullName }}</h3><p>{{ repository.description || '打开项目资料，查看来源与原站说明。' }}</p><div class="source-card-bottom"><span v-if="repository.language">{{ repository.language }}</span><span v-if="repository.starCount !== null && repository.starCount !== undefined">★ {{ formatStars(repository.starCount) }}</span><span v-if="repository.licenseSpdx">{{ repository.licenseSpdx }}</span><span v-if="!repository.licenseSpdx">许可证以原站为准</span></div><span class="source-card-action">查看项目资料与学习入口 ↗</span></router-link>
+          <router-link v-for="(repository, index) in openSource" :key="`${repository.sourcePlatform}-${repository.sourceRepoId}`" class="source-card" :to="`/open-source/${repository.id}`" :aria-label="`查看 ${repository.fullName} 的来源资料`"><div class="source-card-top"><span>{{ String(index + 1).padStart(2, '0') }} / {{ repository.sourceName || repository.sourcePlatform }}</span><span class="source-guide-pill" :class="guideStatusClass(repository.readingGuideStatus)">{{ guideStatusLabel(repository.readingGuideStatus) }}</span></div><h3>{{ repository.fullName }}</h3><p>{{ repository.description || '打开项目资料，查看来源与原站说明。' }}</p><div class="source-card-bottom"><span v-if="repository.language">{{ repository.language }}</span><span v-if="repository.starCount !== null && repository.starCount !== undefined">★ {{ formatStars(repository.starCount) }}</span><span v-if="repository.licenseSpdx">{{ repository.licenseSpdx }}</span><span v-if="!repository.licenseSpdx">许可证以原站为准</span></div><span class="source-card-action">{{ repository.readingGuideStatus === 'SUCCESS' ? '阅读项目解读 ↗' : '查看项目资料 ↗' }}</span></router-link>
         </div>
         <div v-else class="open-source-state">暂无同步的站外项目。来源由管理员配置，运行同步后会在这里显示。</div>
         <p class="source-note">来源与同步节奏由管理员配置。页面展示来源平台提供的摘要与统计；完整说明、维护状态和许可证请以原站为准。</p>
@@ -84,6 +84,8 @@ const syncDate = (value) => {
 }
 const lastSyncedDate = computed(() => syncDate(openSource.value.map((item) => item.syncedAt || '').sort().at(-1)))
 const formatStars = (value) => Number(value || 0).toLocaleString('en-US')
+const guideStatusLabel = (status) => ({ SUCCESS: '已有解读', PENDING: '解读排队中', RUNNING: '正在解读', FAILED: '解读待重试' }[status] || '尚无解读')
+const guideStatusClass = (status) => ({ SUCCESS: 'published', PENDING: 'working', RUNNING: 'working', FAILED: 'failed' }[status] || 'unavailable')
 
 async function loadOpenSource() {
   openSourceLoading.value = true
@@ -182,6 +184,11 @@ watch(() => route.fullPath, () => { searchDraft.value = keyword.value; loadProje
 .source-card:hover { transform: translateY(-3px); box-shadow: 0 10px 20px #2b45431a; }
 .source-card:first-child { grid-column: span 2; background: #244648; color: #fff; }
 .source-card-top, .source-card-bottom { display: flex; justify-content: space-between; gap: 12px; font-size: 10px; font-weight: 800; letter-spacing: .08em; }
+.source-guide-pill { border: 1px solid #d5dcd5; border-radius: 99px; padding: 4px 8px; background: #f0f2ed; color: #727d75; font-size: 9px; font-weight: 750; letter-spacing: 0; white-space: nowrap; }
+.source-guide-pill.published { border-color: #b8d1c0; background: #e3eee6; color: #32624b; }
+.source-guide-pill.working { border-color: #ded0ab; background: #f3eddd; color: #8a6635; }
+.source-guide-pill.failed { border-color: #e0bdb6; background: #f5e7e3; color: #9a453c; }
+.source-card:first-child .source-guide-pill { border-color: #a5c3b8; background: #ffffff16; color: #eef4eb; }
 .source-card h3 { margin: 25px 0 10px; overflow-wrap: anywhere; font-size: 23px; letter-spacing: -.04em; }
 .source-card:first-child h3 { font-size: 31px; }
 .source-card p { display: -webkit-box; overflow: hidden; margin: 0 0 26px; color: #697677; font-size: 12px; line-height: 1.8; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }

@@ -39,6 +39,7 @@
               <a class="source-button" :href="project.sourceUrl" target="_blank" rel="noopener noreferrer">
                 打开原站项目 <span aria-hidden="true">↗</span>
               </a>
+              <a v-if="readingGuide?.content" class="reading-jump-button" href="#reading-guide">阅读项目解读 ↓</a>
               <button class="capsule-button" type="button" :disabled="adding" @click="addToCapsule">
                 {{ adding ? '正在加入…' : '加入我的落地舱 +' }}
               </button>
@@ -57,7 +58,7 @@
           </aside>
         </section>
 
-        <section class="reading-guide" aria-labelledby="reading-guide-title">
+        <section id="reading-guide" class="reading-guide" aria-labelledby="reading-guide-title">
           <div class="guide-heading">
             <div><span class="section-kicker">PROJECT READING / 读懂一个真实项目</span><h2 id="reading-guide-title">不止看它做什么，也看看它怎么想。</h2><p>从项目资料出发，整理出可核对的阅读路径、设计取舍与一个小练习。</p></div>
             <span v-if="readingGuide" class="guide-status" :class="readingGuide.status.toLowerCase()">{{ guideStatusText(readingGuide.status) }}</span>
@@ -153,7 +154,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { nextTick, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { getOpenSourceProject, getProjectReadingGuide } from '@/api/project'
@@ -201,6 +202,10 @@ async function loadProject() {
     error.value = true
   } finally {
     loading.value = false
+    if (route.hash === '#reading-guide' && project.value) {
+      await nextTick()
+      document.getElementById('reading-guide')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
   }
 }
 
@@ -306,9 +311,10 @@ watch(() => route.params.id, loadProject, { immediate: true })
 .project-metrics strong { color: #293a37; font-size: 15px; font-weight: 720; }
 .project-metrics span { margin-top: 5px; color: #8b9591; font-size: 10px; letter-spacing: .04em; }
 .overview-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 26px; }
-.source-button, .capsule-button { display: inline-flex; align-items: center; justify-content: center; gap: 16px; min-height: 46px; border: 1px solid #376c55; padding: 0 17px; font: inherit; font-size: 12px; font-weight: 760; cursor: pointer; }
+.source-button, .capsule-button, .reading-jump-button { display: inline-flex; align-items: center; justify-content: center; gap: 16px; min-height: 46px; border: 1px solid #376c55; padding: 0 17px; font: inherit; font-size: 12px; font-weight: 760; cursor: pointer; }
 .source-button { background: #376c55; color: #fff; }
 .capsule-button { background: #fff; color: #376c55; }
+.reading-jump-button { background: #f0eee6; color: #376c55; }
 .capsule-button:disabled { opacity: .6; cursor: wait; }
 .starting-note { align-self: stretch; padding: 28px; background: #f4f1e9; }
 .note-top { display: flex; justify-content: space-between; gap: 12px; color: #7b6a4e; font-size: 10px; font-weight: 800; letter-spacing: .1em; }
@@ -320,7 +326,7 @@ watch(() => route.params.id, loadProject, { immediate: true })
 .starting-note li p { margin: 0; color: #5d6761; font-size: 12px; line-height: 1.7; }
 .note-foot { margin: 8px 0 0; color: #8a8a7e; font-size: 10px; line-height: 1.7; }
 .source-record { margin-top: 20px; border: 1px solid #dce3dc; padding: clamp(24px, 4vw, 42px); background: #fff; }
-.reading-guide { margin-top: 20px; border: 1px solid #dce3dc; padding: clamp(24px, 4vw, 42px); background: #fff; }
+.reading-guide { scroll-margin-top: 96px; margin-top: 20px; border: 1px solid #dce3dc; padding: clamp(24px, 4vw, 42px); background: #fff; }
 .guide-heading { display: flex; justify-content: space-between; align-items: end; gap: 20px; }
 .guide-heading h2 { margin: 8px 0 8px; font-size: clamp(24px, 3vw, 34px); letter-spacing: -.05em; }
 .guide-heading p { margin: 0; color: #74807b; font-size: 12px; line-height: 1.7; }
