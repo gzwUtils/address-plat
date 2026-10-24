@@ -23,6 +23,9 @@ export const getProjectReadingGuide = (id) =>
 export const updateProjectHighlight = (id, payload) =>
   api.post(`/admin/external-projects/${id}/highlight`, payload).then(unwrap)
 
+export const updatePortalProjectHighlight = (id, payload) =>
+  api.post(`/projects/${id}/highlight`, payload).then(unwrap)
+
 export const queueProjectReadingGuide = (id) =>
   api.post(`/admin/open-source/${id}/reading-guide`).then(unwrap)
 

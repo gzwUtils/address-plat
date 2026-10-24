@@ -6,6 +6,16 @@
         <div class="detail-badge">{{ project.category || '未分类' }}</div>
         <h1>{{ project.projectName }}</h1>
         <p>{{ project.description || '暂无描述' }}</p>
+        <div v-if="project.featuredIntro" class="featured-intro">
+          <span>平台重点介绍</span>
+          <p>{{ project.featuredIntro }}</p>
+        </div>
+        <div class="detail-actions">
+          <a v-if="project.desktopDownloadUrl" class="download-button" :href="project.desktopDownloadUrl" target="_blank" rel="noopener noreferrer">
+            下载桌面端{{ project.desktopVersion ? ` v${project.desktopVersion}` : '' }} ↓
+          </a>
+          <el-button v-if="project.canEdit" text type="primary" @click="openHighlightEditor">编辑平台介绍</el-button>
+        </div>
       </div>
 
       <div class="detail-grid">
@@ -86,7 +96,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { addGrowthCapsuleItem, getRecentViews, saveRecentView } from '@/api/content'
-import { getCategories, getProjects } from '@/api/project'
+import { getCategories, getProjects, updatePortalProjectHighlight } from '@/api/project'
 import { listTopics } from '@/api/community'
 import TopicRow from '@/components/TopicRow.vue'
 import { getClientId } from '@/utils/clientId'
@@ -162,6 +172,34 @@ async function loadProject() {
     }
   } catch (error) {
     console.warn('加载项目详情失败', error)
+  }
+}
+
+const highlightEditorOpen = ref(false)
+const highlightSaving = ref(false)
+const highlightForm = ref({ featuredIntro: '', desktopDownloadUrl: '', desktopVersion: '' })
+
+function openHighlightEditor() {
+  highlightForm.value = {
+    featuredIntro: project.value?.featuredIntro || '',
+    desktopDownloadUrl: project.value?.desktopDownloadUrl || '',
+    desktopVersion: project.value?.desktopVersion || '',
+  }
+  highlightEditorOpen.value = true
+}
+
+async function saveHighlight() {
+  highlightSaving.value = true
+  try {
+    await updatePortalProjectHighlight(route.params.id, highlightForm.value)
+    highlightEditorOpen.value = false
+    ElMessage.success('已保存')
+    await loadProject()
+  } catch (saveError) {
+    console.warn('保存平台介绍失败', saveError)
+    ElMessage.error('保存失败，请确认你是项目所有者')
+  } finally {
+    highlightSaving.value = false
   }
 }
 
@@ -243,6 +281,18 @@ watch(() => route.params.id, () => { loadProject(); loadTopics() })
   border-top: 2px solid var(--portal-text);
 }
 
+.featured-intro {
+  margin-top: 14px; padding: 14px 18px; border-left: 4px solid #1f6f54;
+  background: #eef4f0; border-radius: 0 12px 12px 0; max-width: 760px;
+}
+.featured-intro span { font-size: 12px; letter-spacing: 0.1em; color: #1f6f54; font-weight: 800; }
+.featured-intro p { margin: 6px 0 0; color: #33413c; line-height: 1.9; white-space: pre-wrap; }
+.detail-actions { display: flex; align-items: center; gap: 12px; margin-top: 16px; }
+.download-button {
+  display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px;
+  border-radius: 10px; background: #1f6f54; color: #fff; font-weight: 700; text-decoration: none;
+}
+.download-button:hover { background: #17573f; }
 .detail-top h1 {
   margin: 16px 0 12px;
   font-size: clamp(32px, 5vw, 56px);
