@@ -20,6 +20,9 @@ export const getOpenSourceProject = (id) =>
 export const getProjectReadingGuide = (id) =>
   api.get(`/open-source/${id}/reading-guide`).then(unwrap)
 
+export const updateProjectHighlight = (id, payload) =>
+  api.post(`/admin/external-projects/${id}/highlight`, payload).then(unwrap)
+
 export const queueProjectReadingGuide = (id) =>
   api.post(`/admin/open-source/${id}/reading-guide`).then(unwrap)
 

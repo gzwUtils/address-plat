@@ -39,6 +39,12 @@
               <a class="source-button" :href="project.sourceUrl" target="_blank" rel="noopener noreferrer">
                 打开原站项目 <span aria-hidden="true">↗</span>
               </a>
+              <a v-if="project.desktopDownloadUrl" class="download-button" :href="project.desktopDownloadUrl" target="_blank" rel="noopener noreferrer">
+                下载桌面端{{ project.desktopVersion ? ` v${project.desktopVersion}` : '' }} ↓
+              </a>
+              <button class="highlight-edit-button" type="button" @click="openHighlightEditor">
+                编辑平台介绍
+              </button>
               <a v-if="readingGuide?.content" class="reading-jump-button" href="#reading-guide">阅读项目解读 ↓</a>
               <button class="capsule-button" type="button" :disabled="adding" @click="addToCapsule">
                 {{ adding ? '正在加入…' : '加入我的落地舱 +' }}
@@ -56,6 +62,12 @@
             </ol>
             <p class="note-foot">这是开始学习的提示。功能、维护状态与使用条件请以原站为准。</p>
           </aside>
+        </section>
+
+        <section v-if="project.featuredIntro" class="featured-intro" aria-label="平台重点介绍">
+          <span class="section-kicker">PLATFORM NOTE / 平台重点介绍</span>
+          <p>{{ project.featuredIntro }}</p>
+          <small v-if="project.desktopVersion">桌面端当前版本 v{{ project.desktopVersion }}，欢迎下载体验。</small>
         </section>
 
         <section id="reading-guide" class="reading-guide" aria-labelledby="reading-guide-title">
@@ -150,6 +162,26 @@
         @saved="handleReflectionSaved"
       />
     </div>
+
+    <el-dialog v-model="highlightEditorOpen" title="编辑平台介绍与桌面端下载" width="560px" class="highlight-editor-dialog">
+      <el-form label-position="top">
+        <el-form-item label="平台重点介绍">
+          <el-input v-model="highlightForm.featuredIntro" type="textarea" :rows="5" placeholder="平台自写的突出介绍，区别于来源平台简介" />
+        </el-form-item>
+        <el-form-item label="桌面端下载链接">
+          <el-input v-model="highlightForm.desktopDownloadUrl" placeholder="https://…/KD-Agent-mac-arm64.zip" />
+        </el-form-item>
+        <el-form-item label="桌面端版本号">
+          <el-input v-model="highlightForm.desktopVersion" placeholder="例如 1.0.0" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="highlightEditorOpen = false">取消</el-button>
+        <el-button type="primary" :disabled="highlightSaving" @click="saveHighlight">
+          {{ highlightSaving ? '正在保存…' : '保存' }}
+        </el-button>
+      </template>
+    </el-dialog>
   </main>
 </template>
 
@@ -157,7 +189,7 @@
 import { nextTick, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { getOpenSourceProject, getProjectReadingGuide } from '@/api/project'
+import { getOpenSourceProject, getProjectReadingGuide, updateProjectHighlight } from '@/api/project'
 import { listTopics } from '@/api/community'
 import { addGrowthCapsuleItem } from '@/api/content'
 import { getPortalUserId } from '@/utils/userIdentity'
@@ -177,6 +209,31 @@ const reflectionComposerOpen = ref(false)
 const readingGuide = ref(null)
 const guideLoading = ref(false)
 const guideError = ref(false)
+const highlightEditorOpen = ref(false)
+const highlightSaving = ref(false)
+const highlightForm = ref({ featuredIntro: '', desktopDownloadUrl: '', desktopVersion: '' })
+
+function openHighlightEditor() {
+  highlightForm.value = {
+    featuredIntro: project.value?.featuredIntro || '',
+    desktopDownloadUrl: project.value?.desktopDownloadUrl || '',
+    desktopVersion: project.value?.desktopVersion || '',
+  }
+  highlightEditorOpen.value = true
+}
+
+async function saveHighlight() {
+  highlightSaving.value = true
+  try {
+    await updateProjectHighlight(route.params.id, highlightForm.value)
+    highlightEditorOpen.value = false
+    await loadProject()
+  } catch (saveError) {
+    console.warn('保存平台介绍失败', saveError)
+  } finally {
+    highlightSaving.value = false
+  }
+}
 
 const formatCount = (value) => value === null || value === undefined ? '—' : Number(value).toLocaleString('en-US')
 
@@ -305,6 +362,25 @@ watch(() => route.params.id, loadProject, { immediate: true })
 .source-tag { margin-left: auto; border: 1px solid #d9e4dc; padding: 6px 9px; color: #527563; font-size: 10px; white-space: nowrap; }
 .overview-main h1 { margin: 35px 0 14px; overflow-wrap: anywhere; font-size: clamp(32px, 5vw, 54px); font-weight: 780; letter-spacing: -.055em; line-height: 1.12; }
 .project-description { max-width: 760px; margin: 0; color: #65716e; font-size: 15px; line-height: 1.9; }
+.download-button {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 10px 18px; border-radius: 10px;
+  background: #1f6f54; color: #f5f4f0; font-weight: 700; text-decoration: none;
+}
+.download-button:hover { background: #17573f; }
+.highlight-edit-button {
+  padding: 10px 14px; border-radius: 10px; border: 1px dashed #9aaba4;
+  background: transparent; color: #65716e; font-size: 13px; cursor: pointer;
+}
+.highlight-edit-button:hover { border-color: #1f6f54; color: #1f6f54; }
+.featured-intro {
+  max-width: 860px; margin: 28px auto 0; padding: 22px 26px;
+  border-left: 4px solid #1f6f54; border-radius: 0 14px 14px 0;
+  background: #eef4f0; color: #33413c;
+}
+.featured-intro .section-kicker { display: block; font-size: 12px; letter-spacing: 0.12em; color: #1f6f54; font-weight: 800; margin-bottom: 10px; }
+.featured-intro p { margin: 0; font-size: 15px; line-height: 1.9; white-space: pre-wrap; }
+.featured-intro small { display: block; margin-top: 10px; color: #65716e; font-size: 13px; }
 .project-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; margin-top: 36px; border-top: 1px solid #e3e8e3; border-bottom: 1px solid #e3e8e3; padding: 18px 0; }
 .project-metrics div { min-width: 0; }
 .project-metrics strong, .project-metrics span { display: block; overflow-wrap: anywhere; }
