@@ -12,7 +12,10 @@
         </div>
         <div class="detail-actions">
           <a v-if="project.desktopDownloadUrl" class="download-button" :href="project.desktopDownloadUrl" target="_blank" rel="noopener noreferrer">
-            下载桌面端{{ project.desktopVersion ? ` v${project.desktopVersion}` : '' }} ↓
+            下载桌面端 v{{ project.desktopVersion || '…' }}（Apple 芯片）↓
+          </a>
+          <a v-if="project.desktopDownloadUrlX64" class="download-button x64" :href="project.desktopDownloadUrlX64" target="_blank" rel="noopener noreferrer">
+            下载桌面端 v{{ project.desktopVersion || '…' }}（Intel）↓
           </a>
           <el-button v-if="project.canEdit" text type="primary" @click="openHighlightEditor">编辑平台介绍</el-button>
         </div>
@@ -177,12 +180,13 @@ async function loadProject() {
 
 const highlightEditorOpen = ref(false)
 const highlightSaving = ref(false)
-const highlightForm = ref({ featuredIntro: '', desktopDownloadUrl: '', desktopVersion: '' })
+const highlightForm = ref({ featuredIntro: '', desktopDownloadUrl: '', desktopDownloadUrlX64: '', desktopVersion: '' })
 
 function openHighlightEditor() {
   highlightForm.value = {
     featuredIntro: project.value?.featuredIntro || '',
     desktopDownloadUrl: project.value?.desktopDownloadUrl || '',
+    desktopDownloadUrlX64: project.value?.desktopDownloadUrlX64 || '',
     desktopVersion: project.value?.desktopVersion || '',
   }
   highlightEditorOpen.value = true
@@ -293,6 +297,8 @@ watch(() => route.params.id, () => { loadProject(); loadTopics() })
   border-radius: 10px; background: #1f6f54; color: #fff; font-weight: 700; text-decoration: none;
 }
 .download-button:hover { background: #17573f; }
+.download-button.x64 { background: #3d5a80; }
+.download-button.x64:hover { background: #2f4a6b; }
 .detail-top h1 {
   margin: 16px 0 12px;
   font-size: clamp(32px, 5vw, 56px);
